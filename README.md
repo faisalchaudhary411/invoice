@@ -17,12 +17,14 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 ## How it works
 1. **Customer** → type a name (old customers appear), pick the job.
 2. **Items** → tap the item box to search (English or Urdu) or type your own; enter the rate. Sq-ft items auto-calculate Qty from W × L (untick "Qty = W × L" to type a flat quantity).
-   For several identical pieces (e.g. 8 grills): tick **📦 Pieces + total sq ft**, enter Pieces, Total sq ft and the rate per sq ft — Amount = Total sq ft × Rate.
+   For several identical pieces (e.g. 8 grills): tick **📦 Bulk: pieces + total sq ft**, enter Pieces, Total sq ft and the rate per sq ft — Amount = Total sq ft × Rate.
 3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
 4. Signature and stamp each have their own checkbox (on by default).
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.
+- If nothing prints: open **⚙️ Printer settings** → **Test Print**, then try the other *Print mode*, *Speed* **Slowest**, or another *Bluetooth channel*.
+- Classic-Bluetooth printers: install the free **RawBT** print service, pair the printer there, then use **Print Mini** and choose RawBT in Android's print dialog.
 - Needs Chrome on Android and the app opened from its https link. Works with Bluetooth **LE** 58mm ESC/POS printers; Classic-only printers must use **Print Mini** (system print) instead.
 
 ## Backup (important)
