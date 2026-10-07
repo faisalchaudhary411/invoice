@@ -23,9 +23,10 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.
-- If nothing prints: open **⚙️ Printer settings** → **Test Print**, then try the other *Print mode*, *Speed* **Slowest**, or another *Bluetooth channel*.
+- **MXW01 / Fun Print printers** (cat-style mini printers) are detected automatically and use their own Bluetooth protocol (service AE30). Settings: *Darkness*, *Data chunk size*, *Rotate 180°* (untick if the print comes out upside down).
+- Other BLE ESC/POS printers use the *Image — GS v 0 / ESC ** modes. If nothing prints: **⚙️ Printer settings** → **Test Print**, then try another *Print mode*, *Speed* **Slowest**, or another *Bluetooth channel*.
 - Classic-Bluetooth printers: install the free **RawBT** print service, pair the printer there, then use **Print Mini** and choose RawBT in Android's print dialog.
-- Needs Chrome on Android and the app opened from its https link. Works with Bluetooth **LE** 58mm ESC/POS printers; Classic-only printers must use **Print Mini** (system print) instead.
+- Needs Chrome on Android and the app opened from its https link.
 
 ## Backup (important)
 - Customers tab → **Export Backup JSON** (or tick *download a backup after every save*).
