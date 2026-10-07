@@ -17,7 +17,10 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 ## How it works
 1. **Customer** → type a name (old customers appear), pick the job.
 2. **Items** → tap the item box to search (English or Urdu) or type your own; enter the rate. Sq-ft items auto-calculate Qty from W × L (untick "Qty = W × L" to type a flat quantity).
-   For several identical pieces (e.g. 8 grills): tick **📦 Bulk: pieces + total sq ft**, enter Pieces, Total sq ft and the rate per sq ft — Amount = Total sq ft × Rate.
+   Every item has 3 pricing modes (chips under the item name):
+   - **Qty × Rate** — normal; optional size and gauge.
+   - **📦 Pcs + sq ft** — pieces, total sq ft and rate per sq ft → Amount = sq ft × Rate (pieces are only printed).
+   - **💰 Lump sum** — pieces + total price (e.g. 10 pcs, Rs 200,000). Sq ft, rate and size are optional; if the price is empty, price = sq ft × rate.
 3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
 4. Signature and stamp each have their own checkbox (on by default).
 
