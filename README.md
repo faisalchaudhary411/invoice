@@ -23,6 +23,7 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
    - **💰 Lump sum** — pieces + total price (e.g. 10 pcs, Rs 200,000). Sq ft, rate and size are optional; if the price is empty, price = sq ft × rate.
 3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
 4. Signature and stamp each have their own checkbox (on by default).
+5. **Account statement / receipt:** Customers → **Use in Invoice** starts a fresh invoice for that customer. With no items, Preview / Print gives an **ACCOUNT STATEMENT** (all past bills, payments and running balance, e.g. "Account clear — Rs 0"). Nothing is saved for a statement. Tick **📜 Include account history** to print the last entries under a normal invoice too.
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.
