@@ -54,8 +54,10 @@ input[readonly]{background:#eef2f7;color:var(--mut)}
 
 .warn{background:#fffbeb;border:1px solid #fcd34d;color:#78350f;border-radius:12px;padding:10px;font-size:.76rem;margin-top:12px}
 .out-box{background:#fef2f2;border:1px solid #fca5a5;color:#7f1d1d;border-radius:11px;padding:9px 11px;margin-top:10px;font-size:.88rem;font-weight:700}
-.bank{background:linear-gradient(135deg,#f8fafc,#eef2f7);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:11px;padding:10px;margin-top:10px;font-size:.82rem;line-height:1.6}
-.bank strong{color:var(--navy)}
+.bank{background:linear-gradient(135deg,#0b1b2b 0%,#13304d 100%);border:1.5px solid var(--gold);border-left:5px solid var(--gold2);border-radius:12px;padding:12px 14px;margin-top:14px;font-size:.86rem;line-height:1.75;color:#e8eef6;box-shadow:0 4px 14px rgba(11,27,43,.25)}
+.bank strong{color:var(--gold2);font-size:.95rem}
+.bank b{color:#fff;font-weight:800}
+.bank .bank-lines{margin-top:4px}
 
 /* items */
 .item-card{border:1.5px solid var(--line);border-radius:14px;padding:10px;margin-bottom:10px;background:#fbfcfe;position:relative}
@@ -204,15 +206,8 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <div><label data-t="lblCustPhone">Customer Phone</label><input id="custPhone" inputmode="tel"></div>
     </div>
     <label data-t="lblCustAddr">Customer Address / Area</label><input id="custContact">
-    <label data-t="lblJob">Job / Reference</label>
-    <select id="jobRefSelect" onchange="onJobSelect()">
-      <option value="" data-t="selJob">-- Select job --</option>
-      <option>Main Gate</option><option>Sliding Gate</option><option>Door / Entrance</option><option>Chogath / Chowkhat</option>
-      <option>Window Grill</option><option>Safety Grill</option><option>Balcony Railing</option><option>Staircase Railing</option>
-      <option>Boundary Wall Grill</option><option>Shop Shutter</option><option>Repair / Welding</option><option>Full House Work</option>
-      <option value="__custom" data-t="selCustom">Other / Custom...</option>
-    </select>
-    <input id="jobRef" data-ph="phJob" placeholder="Job details (or custom)" style="margin-top:6px">
+    <input type="hidden" id="jobRef" value="">
+    <input type="hidden" id="jobRefSelect" value="">
     <div id="custPrevBox" class="out-box hidden"><span id="prevLabel">Previous outstanding:</span> <span id="prevOut">Rs 0</span></div>
   </div>
 
@@ -220,7 +215,34 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
     <h2><i>🔩</i><span data-t="secItems">Items</span></h2>
     <p class="hint" data-t="hintItems" style="margin:-4px 0 8px">Tap the item box to search, or type your own item. Enter rates manually.</p>
     <div id="itemsBody"></div>
-    <button class="btn b-ghost" style="width:100%" onclick="addItem()" data-t="btnAddItem">+ Add Item</button>
+    <div class="grid2" style="margin-top:8px">
+      <button class="btn b-ghost" style="width:100%" onclick="addItem()" data-t="btnAddItem">+ Add Item</button>
+      <button class="btn b-ghost" style="width:100%" onclick="openCustomItem()" data-t="btnCustomItem">+ Custom Item</button>
+    </div>
+    <button class="btn b-navy" style="width:100%;margin-top:8px" onclick="openMultiLump()" data-t="btnMultiLump">💰 Add Multiple (Lumpsum)</button>
+    <div id="customItemPanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
+      <div style="font-weight:800;color:var(--navy);margin-bottom:8px" data-t="customItemTitle">Add custom item to list</div>
+      <label data-t="customNameEn">Name (English)</label>
+      <input id="customNameEn" placeholder="e.g. Iron Gate Frame">
+      <label data-t="customNameUr" style="margin-top:6px;display:block">Name (Urdu) — optional</label>
+      <input id="customNameUr" placeholder="مثلاً آئرن گیٹ فریم" dir="rtl">
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn b-navy" onclick="saveCustomItem()" data-t="btnSaveCustom">Save &amp; Add</button>
+        <button class="btn b-ghost" onclick="closeCustomItem()" data-t="btnCancel">Cancel</button>
+      </div>
+    </div>
+    <div id="multiLumpPanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
+      <div style="font-weight:800;color:var(--navy);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+        <span data-t="multiLumpTitle">Select items (lumpsum)</span>
+        <button class="btn b-sm b-ghost" onclick="closeMultiLump()" data-t="btnCancel">✕</button>
+      </div>
+      <p class="hint" data-t="multiLumpHint" style="margin:0 0 8px">Tick multiple items, then add them all as lumpsum lines at once.</p>
+      <div id="multiLumpList" style="max-height:220px;overflow:auto;background:#fff;border-radius:10px;border:1px solid var(--line);padding:6px"></div>
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn b-navy" onclick="addMultiLump()" data-t="btnAddSelected">Add Selected</button>
+        <button class="btn b-ghost" onclick="toggleAllMultiLump()" data-t="btnSelectAll">Select All</button>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -238,10 +260,6 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       </div>
       <div class="go" id="dispGrandOut"></div>
     </div>
-    <div class="bank">
-      <strong id="bankTitle" data-t="bankTitle">Payment (Ghulam Yaseen)</strong><br>
-      Nayapay/Easypaisa: <b>0333 7681305</b><br>JazzCash: <b>0312 7080109</b><br>UBL: <b>0411332662464</b>
-    </div>
   </div>
 
   <div class="card">
@@ -257,6 +275,10 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
         <label class="ck"><input type="checkbox" id="useStamp" checked><span data-t="lblUseStamp">Add business stamp</span></label>
         <label class="ck"><input type="checkbox" id="useHist"><span data-t="lblUseHist">📜 Include account history on invoice</span></label>
       </div>
+    </div>
+    <div class="bank">
+      <strong id="bankTitle" data-t="bankTitle">Payment (Ghulam Yaseen)</strong>
+      <div class="bank-lines">Nayapay/Easypaisa: <b>0333 7681305</b><br>JazzCash: <b>0312 7080109</b><br>UBL: <b>0411332662464</b></div>
     </div>
   </div>
 
@@ -388,7 +410,7 @@ secInvoice:"Invoice",secCustomer:"Customer",secItems:"Items",secPayment:"Payment
 lblBizName:"Business Name",lblTagline:"Tagline",lblAddress:"Business Address",lblPhone:"Phone numbers (separate with ·)",lblOwner:"Owner",
 lblInvNo:"Invoice No",lblDate:"Date",lblTime:"Time",lblCust:"Customer Name *",lblHouse:"House / Shop No",lblCustPhone:"Customer Phone",lblCustAddr:"Customer Address / Area",
 lblJob:"Job / Reference",selJob:"-- Select job --",selCustom:"Other / Custom...",hintItems:"Tap item to search. Choose 📐 Sq ft (W×L×rate), 📏 Running ft (ft×rate), or 💰 Lumpsum (price as-is).",
-btnAddItem:"+ Add Item",lblTax:"Tax %",lblDiscount:"Discount Rs",lblTotal:"This Invoice Total",lblAdvance:"Advance / Paid Now (Rs)",lblRemain:"This Invoice Remaining",
+btnAddItem:"+ Add Item",btnCustomItem:"+ Custom Item",btnMultiLump:"💰 Add Multiple (Lumpsum)",customItemTitle:"Add custom item to list",customNameEn:"Name (English)",customNameUr:"Name (Urdu) — optional",btnSaveCustom:"Save & Add",btnCancel:"Cancel",multiLumpTitle:"Select items (lumpsum)",multiLumpHint:"Tick multiple items, then add them all as lumpsum lines at once.",btnAddSelected:"Add Selected",btnSelectAll:"Select All",customSaved:"Custom item saved",customNeedName:"Enter an English name",lblTax:"Tax %",lblDiscount:"Discount Rs",lblTotal:"This Invoice Total",lblAdvance:"Advance / Paid Now (Rs)",lblRemain:"This Invoice Remaining",
 lblNotes:"Notes",lblSign:"Signature Name",lblUseSig:"Add signature",lblUseStamp:"Add business stamp",lblAutoBk:"Also download a backup file after every save",
 btnGen:"💾 Save Invoice",btnSaveShort:"💾 Save",btnDlMini:"Mini 58mm PNG",btnPrint:"Print Mini",btnDlNorm:"Normal PNG",btnPvMini:"👁 Preview Mini",btnPvNorm:"👁 Preview Normal",btnNew:"➕ New Invoice",
 hintPrint:"Save first (updates customer history), then download or print. The invoice keeps the same number until you tap New Invoice.",
@@ -406,7 +428,7 @@ secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPaymen
 lblBizName:"کاروبار کا نام",lblTagline:"ٹیگ لائن",lblAddress:"کاروباری پتہ",lblPhone:"فون نمبر (· سے الگ کریں)",lblOwner:"مالک",
 lblInvNo:"انوائس نمبر",lblDate:"تاریخ",lblTime:"وقت",lblCust:"گاہک کا نام *",lblHouse:"مکان / دکان نمبر",lblCustPhone:"گاہک کا فون",lblCustAddr:"گاہک کا پتہ / علاقہ",
 lblJob:"جاب / ریفرنس",selJob:"-- جاب منتخب کریں --",selCustom:"دیگر / کسٹم...",hintItems:"آئٹم تلاش کریں۔ 📐 مربع فٹ (چوڑائی×لمبائی×ریٹ)، 📏 رننگ فٹ (فٹ×ریٹ)، یا 💰 یکمشت (جیسے ہے) منتخب کریں۔",
-btnAddItem:"+ آئٹم شامل",lblTax:"ٹیکس %",lblDiscount:"رعایت",lblTotal:"اس انوائس کا کل",lblAdvance:"ایڈوانس / ابھی ادا",lblRemain:"اس انوائس کی باقی",
+btnAddItem:"+ آئٹم شامل",btnCustomItem:"+ کسٹم آئٹم",btnMultiLump:"💰 ایک ساتھ متعدد (یکمشت)",customItemTitle:"فہرست میں کسٹم آئٹم شامل کریں",customNameEn:"نام (انگریزی)",customNameUr:"نام (اردو) — اختیاری",btnSaveCustom:"محفوظ اور شامل",btnCancel:"منسوخ",multiLumpTitle:"آئٹمز منتخب کریں (یکمشت)",multiLumpHint:"کئی آئٹمز چیک کریں، پھر سب یکمشت لائنز کے طور پر شامل کریں۔",btnAddSelected:"منتخب شامل کریں",btnSelectAll:"سب منتخب",customSaved:"کسٹم آئٹم محفوظ ہو گیا",customNeedName:"انگریزی نام لکھیں",lblTax:"ٹیکس %",lblDiscount:"رعایت",lblTotal:"اس انوائس کا کل",lblAdvance:"ایڈوانس / ابھی ادا",lblRemain:"اس انوائس کی باقی",
 lblNotes:"نوٹس",lblSign:"دستخط",lblUseSig:"دستخط شامل کریں",lblUseStamp:"کاروباری مہر شامل کریں",lblAutoBk:"ہر بار محفوظ کرنے پر بیک اپ فائل بھی ڈاؤن لوڈ کریں",
 btnGen:"💾 انوائس محفوظ کریں",btnSaveShort:"💾 محفوظ",btnDlMini:"منی 58mm PNG",btnPrint:"منی پرنٹ",btnDlNorm:"عام PNG",btnPvMini:"👁 منی پری ویو",btnPvNorm:"👁 عام پری ویو",btnNew:"➕ نئی انوائس",
 hintPrint:"پہلے محفوظ کریں، پھر ڈاؤن لوڈ یا پرنٹ کریں۔ نئی انوائس دبانے تک نمبر وہی رہتا ہے۔",
@@ -729,12 +751,67 @@ const PRESET=[
 {name:"Hardware (Hinges etc.)",nameUr:"ہارڈویئر",unit:"qty"},
 {name:"Other / Custom",nameUr:"دیگر / کسٹم",unit:"qty"}
 ];
+const CUSTOM_KEY='alghani_custom_items';
+function loadCustomItems(){try{const a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function saveCustomItems(arr){try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(arr))}catch(e){}}
+function getAllPresets(){return PRESET.concat(loadCustomItems())}
 const WIDTH_OPTS=["","2 ft","2.5 ft","2.75 ft","3 ft","3.5 ft","3.75 ft","4 ft","4.5 ft","4.75 ft","5 ft","5.5 ft","6 ft"];
 const LENGTH_OPTS=["","6.5 ft","7 ft","8 ft","8.5 ft","9 ft"];
 const DEPTH_OPTS=["","5 inch","5.5 inch","10 inch"];
 const GAUGE_OPTS=["","10 gauge","12 gauge","14 gauge","16 gauge","18 gauge","20 gauge","22 gauge","24 gauge"];
 const optHtml=a=>a.map(s=>'<option value="'+s+'">'+(s||'—')+'</option>').join('');
 const cleanName=s=>s.replace(/\s*\((per|فی)[^)]*\)\s*$/i,'').trim();
+
+function openCustomItem(){
+  el('customItemPanel').classList.remove('hidden');
+  el('multiLumpPanel').classList.add('hidden');
+  el('customNameEn').value='';el('customNameUr').value='';
+  el('customNameEn').focus();
+}
+function closeCustomItem(){el('customItemPanel').classList.add('hidden')}
+function saveCustomItem(){
+  const name=(el('customNameEn').value||'').trim();
+  const nameUr=(el('customNameUr').value||'').trim()||name;
+  if(!name){alert(tr('customNeedName'));return}
+  const arr=loadCustomItems();
+  if(arr.some(x=>x.name.toLowerCase()===name.toLowerCase())||PRESET.some(x=>x.name.toLowerCase()===name.toLowerCase())){
+    /* already exists — still add to invoice */
+  }else{
+    arr.push({name,nameUr,unit:'qty',custom:true});
+    saveCustomItems(arr);
+  }
+  closeCustomItem();
+  addItem({desc:name,mode:'lump'});
+  try{toast(tr('customSaved'))}catch(e){}
+}
+function openMultiLump(){
+  el('multiLumpPanel').classList.remove('hidden');
+  el('customItemPanel').classList.add('hidden');
+  const list=getAllPresets();
+  const box=el('multiLumpList');
+  box.innerHTML=list.map((p,i)=>{
+    const label=esc(lang==='ur'?(p.nameUr||p.name):p.name);
+    const sub=esc(lang==='ur'?p.name:(p.nameUr||''));
+    return '<label class="ck" style="margin:4px 0;padding:4px 6px;border-radius:8px"><input type="checkbox" data-mi="'+i+'"><span style="flex:1">'+label+(sub&&sub!==label?' <small style="color:var(--mut);font-weight:600">'+sub+'</small>':'')+'</span></label>';
+  }).join('');
+}
+function closeMultiLump(){el('multiLumpPanel').classList.add('hidden')}
+function toggleAllMultiLump(){
+  const boxes=el('multiLumpList').querySelectorAll('input[type=checkbox]');
+  const allOn=[...boxes].every(b=>b.checked);
+  boxes.forEach(b=>b.checked=!allOn);
+}
+function addMultiLump(){
+  const list=getAllPresets();
+  const checked=[...el('multiLumpList').querySelectorAll('input[type=checkbox]:checked')];
+  if(!checked.length){alert(lang==='ur'?'کم از کم ایک آئٹم منتخب کریں':'Select at least one item');return}
+  checked.forEach(cb=>{
+    const i=+cb.dataset.mi;const p=list[i];if(!p)return;
+    const desc=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
+    addItem({desc,mode:'lump'});
+  });
+  closeMultiLump();
+}
 
 function addItem(prefill){
   itemCount++;const id=itemCount;const n=document.querySelectorAll('#itemsBody .item-card').length+1;
@@ -787,14 +864,15 @@ function addItem(prefill){
 }
 function itemSuggest(id){
   const q=(v('desc-'+id)||'').trim().toLowerCase().replace(/\s+/g,' ');const box=el('isg-'+id);if(!box)return;
-  const list=PRESET.map((p,i)=>({p,i})).filter(({p})=>!q||p.name.toLowerCase().includes(q)||p.name.toLowerCase().replace(/\s+/g,'').includes(q.replace(/\s+/g,''))||p.nameUr.includes(q));
+  const all=getAllPresets();
+  const list=all.map((p,i)=>({p,i})).filter(({p})=>!q||p.name.toLowerCase().includes(q)||p.name.toLowerCase().replace(/\s+/g,'').includes(q.replace(/\s+/g,''))||(p.nameUr||'').includes(q));
   if(!list.length){box.style.display='none';return}
-  box.innerHTML=list.map(({p,i})=>'<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?p.nameUr:p.name)+'</span><small>'+esc(lang==='ur'?p.name:p.nameUr)+'</small></div>').join('');
+  box.innerHTML=list.map(({p,i})=>'<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+(p.custom?' ★':'')+'</span><small>'+esc(lang==='ur'?p.name:(p.nameUr||''))+'</small></div>').join('');
   box.style.display='block';
 }
 function pickItem(id,i){
-  const p=PRESET[i];if(!p)return;
-  el('desc-'+id).value=cleanName(lang==='ur'?p.nameUr:p.name);
+  const p=getAllPresets()[i];if(!p)return;
+  el('desc-'+id).value=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
   el('item-row-'+id).dataset.unit=p.unit||'qty';
   el('isg-'+id).style.display='none';
   if(p.unit==='sqft')setMode(id,'sqft');
@@ -1435,7 +1513,6 @@ function renderMini(){
   tx(ctx,t.billTo,12,y,15,B);y+=22;
   const cn=para(ctx,v('custName')||'—',12,y,20,{stroke:.6},W-24,23);y+=cn*23;
   const cl=custLine();if(cl){const k=para(ctx,cl,12,y+2,14.5,B,W-24,18);y+=k*18+2}
-  if(v('jobRef')){const k=para(ctx,t.jobRef+' '+v('jobRef'),12,y+2,14.5,B,W-24,18);y+=k*18+2}
   y+=8;ctx.fillStyle=K;ctx.fillRect(8,y,W-16,4);y+=8;
 
   if(d.stmt){y=miniStmt(ctx,y,W,t,d)}else{
@@ -1538,7 +1615,6 @@ function renderNormal(){
   ctx.fillStyle=GOLD;ctx.fillRect(36,y+24,40,3);
   const cn=para(ctx,v('custName')||'—',36,y+54,24,{color:INK},mx-60,28);let by=y+54+(cn-1)*28;
   const cl=custLine();if(cl){const k=para(ctx,cl,36,by+24,16,{color:MUT,weight:'normal'},mx-60,21);by+=24+(k-1)*21}
-  if(v('jobRef')){const k=para(ctx,t.jobRef+' '+v('jobRef'),36,by+24,16,{color:INK},mx-60,21);by+=24+(k-1)*21}
   y=Math.max(by+22,my+110);
 
   if(d.stmt){y=normLedgerTable(ctx,y,W,t,ledger(d.c,null,14),true)+26}else{
@@ -1645,26 +1721,42 @@ function renderNormal(){
     ty+=50+14;
   }
   }
-  let py=y;const pbH=26+PAY_LINES.length*24+34;
-  ctx.fillStyle='#e0d4c4';roundRectPath(ctx,36,py-8,tx1-36-24,pbH,10);ctx.fill();ctx.fillStyle=GOLD;ctx.fillRect(36,py-8,5,pbH);
-  tx(ctx,t.payDetails,54,py+14,15,{color:NAVY});tx(ctx,t.payTo,54,py+38,15,{color:INK});
-  PAY_LINES.forEach((l,i)=>tx(ctx,l,54,py+62+i*24,15,{color:INK,weight:'normal'}));
-  py+=pbH+10;
+  let py=y;
   const notes=(d.stmt&&(d.c.outstanding||0)<=0)?t.thanksPaid:v('notes');
-  if(notes){const k=para(ctx,notes,36,py+12,15,{color:MUT,weight:'normal',italic:true},tx1-36-30,20);py+=k*20+18}
-  y=Math.max(ty,py)+22;
+  if(notes){const k=para(ctx,notes,36,py+12,15,{color:MUT,weight:'normal',italic:true},W-72,20);py+=k*20+18}
+  y=Math.max(ty,py)+18;
   if(d.hist&&!d.stmt)y=normHistory(ctx,y,W,t,d);
 
-  const sh=d.useStamp?190:130;const ax=tx1,aw=trr-tx1;const midY=y+(sh-44)/2;
-  if(d.useStamp)drawStamp(ctx,d.useSig?ax+86:ax+aw/2,midY,70,'#1b3a8c',-.17);
+  /* Footer row: Payment (left) + Stamp & Signature (right) on same line */
+  const gap=16;
+  const leftW=Math.floor((W-72-gap)*.52);
+  const rightW=W-72-gap-leftW;
+  const rowH=Math.max(28+PAY_LINES.length*20+36,d.useStamp?168:130);
+  const leftX=36,rightX=36+leftW+gap;
+
+  /* Left — payment / bank (dark navy + gold) */
+  ctx.fillStyle='rgba(0,0,0,0.14)';
+  roundRectPath(ctx,leftX+2,y+3,leftW,rowH,12);ctx.fill();
+  const pgrad=ctx.createLinearGradient(leftX,y,leftX,y+rowH);
+  pgrad.addColorStop(0,'#0b1b2b');pgrad.addColorStop(1,'#13304d');
+  ctx.fillStyle=pgrad;roundRectPath(ctx,leftX,y,leftW,rowH,12);ctx.fill();
+  ctx.fillStyle='#e2b93b';ctx.fillRect(leftX,y,5,rowH);
+  ctx.strokeStyle='#c9a227';ctx.lineWidth=1.5;roundRectPath(ctx,leftX,y,leftW,rowH,12);ctx.stroke();
+  tx(ctx,t.payDetails,leftX+16,y+22,15,{color:'#e2b93b'});
+  tx(ctx,t.payTo,leftX+16,y+44,14,{color:'#e8eef6'});
+  PAY_LINES.forEach((l,i)=>tx(ctx,l,leftX+16,y+66+i*20,13.5,{color:'#ffffff',weight:'normal'}));
+
+  /* Right — stamp & signature */
+  const ax=rightX,aw=rightW,midY=y+(rowH-36)/2;
+  if(d.useStamp)drawStamp(ctx,d.useSig?ax+70:ax+aw/2,midY,58,'#1b3a8c',-.17);
   if(d.useSig){
     const sg=sigTint('#12255c');
-    if(sg){const sw=d.useStamp?190:230,sgh=sw*sg.height/sg.width;const cx=d.useStamp?ax+aw-110:ax+aw/2;ctx.drawImage(sg,cx-sw/2,midY-sgh/2+4,sw,sgh)}
+    if(sg){const sw=d.useStamp?150:200,sgh=sw*sg.height/sg.width;const cx=d.useStamp?ax+aw-80:ax+aw/2;ctx.drawImage(sg,cx-sw/2,midY-sgh/2+2,sw,sgh)}
   }
-  ctx.fillStyle=NAVY;ctx.fillRect(ax,y+sh-40,aw,1.5);
-  tx(ctx,v('signName')||v('ownerName'),ax+aw/2,y+sh-18,17,{align:'center',color:INK});
-  tx(ctx,t.signStamp,ax+aw/2,y+sh+2,13,{align:'center',color:MUT,weight:'normal'});
-  y+=sh+34;
+  ctx.fillStyle=NAVY;ctx.fillRect(ax+8,y+rowH-34,aw-16,1.5);
+  tx(ctx,v('signName')||v('ownerName'),ax+aw/2,y+rowH-16,15,{align:'center',color:INK});
+  tx(ctx,t.signStamp,ax+aw/2,y+rowH+2,12,{align:'center',color:MUT,weight:'normal'});
+  y+=rowH+28;
 
   ctx.fillStyle=GOLD;ctx.fillRect(0,y,W,5);ctx.fillStyle=NAVY;ctx.fillRect(0,y+5,W,50);
   tx(ctx,t.footer,W/2,y+28,14,{align:'center',color:'#fff',weight:'normal'});
