@@ -307,21 +307,26 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
     <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
     <p class="hint" data-t="hintBackup" style="margin-top:10px">Customers are saved on this phone. Export a backup regularly.</p>
     <hr style="border:0;border-top:1px solid var(--line);margin:16px 0 12px">
-    <h2 style="margin:0 0 8px"><i>☁️</i><span data-t="secSync">Cloud Sync (automatic)</span></h2>
-    <p class="hint" data-t="hintSync">Put customers.json on GitHub. Both phones pull/push the same file automatically — no manual export.</p>
-    <label data-t="lblSyncUrl">JSON URL (public raw link) or leave blank if using GitHub below</label>
-    <input id="syncUrl" type="url" placeholder="https://raw.githubusercontent.com/USER/REPO/main/customers.json" style="margin-bottom:8px">
-    <label data-t="lblSyncRepo">GitHub repo (owner/name)</label>
-    <input id="syncRepo" placeholder="username/alghani-data" style="margin-bottom:8px">
-    <div class="grid2">
-      <div><label data-t="lblSyncPath">File path</label><input id="syncPath" placeholder="customers.json" value="customers.json"></div>
-      <div><label data-t="lblSyncBranch">Branch</label><input id="syncBranch" placeholder="main" value="main"></div>
+    <h2 style="margin:0 0 8px;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <span><i>☁️</i><span data-t="secSync">Cloud Sync (automatic)</span></span>
+      <button type="button" class="btn b-ghost b-sm" id="syncSetupToggle" onclick="syncToggleSetup()" style="display:none;flex-shrink:0" data-t="btnSyncSettings">⚙️ Settings</button>
+    </h2>
+    <div id="syncSetup">
+      <p class="hint" data-t="hintSync">Put customers.json on GitHub. Both phones pull/push the same file automatically — no manual export.</p>
+      <label data-t="lblSyncUrl">JSON URL (public raw link) or leave blank if using GitHub below</label>
+      <input id="syncUrl" type="url" placeholder="https://raw.githubusercontent.com/USER/REPO/main/customers.json" style="margin-bottom:8px">
+      <label data-t="lblSyncRepo">GitHub repo (owner/name)</label>
+      <input id="syncRepo" placeholder="username/alghani-data" style="margin-bottom:8px">
+      <div class="grid2">
+        <div><label data-t="lblSyncPath">File path</label><input id="syncPath" placeholder="customers.json" value="customers.json"></div>
+        <div><label data-t="lblSyncBranch">Branch</label><input id="syncBranch" placeholder="main" value="main"></div>
+      </div>
+      <label data-t="lblSyncToken" style="margin-top:8px">GitHub token (for private repo + auto push)</label>
+      <input id="syncToken" type="password" placeholder="ghp_...." autocomplete="off" style="margin-bottom:8px">
+      <p class="hint" data-t="hintToken">Create at github.com/settings/tokens → classic → scope <b>repo</b>. Stored only on this phone.</p>
+      <label class="ck"><input type="checkbox" id="syncAutoPull" checked><span data-t="lblAutoPull">Auto-pull when app opens</span></label>
+      <label class="ck"><input type="checkbox" id="syncAutoPush"><span data-t="lblAutoPush">Auto-push after every save</span></label>
     </div>
-    <label data-t="lblSyncToken" style="margin-top:8px">GitHub token (for private repo + auto push)</label>
-    <input id="syncToken" type="password" placeholder="ghp_...." autocomplete="off" style="margin-bottom:8px">
-    <p class="hint" data-t="hintToken">Create at github.com/settings/tokens → classic → scope <b>repo</b>. Stored only on this phone.</p>
-    <label class="ck"><input type="checkbox" id="syncAutoPull" checked><span data-t="lblAutoPull">Auto-pull when app opens</span></label>
-    <label class="ck"><input type="checkbox" id="syncAutoPush"><span data-t="lblAutoPush">Auto-push after every save</span></label>
     <div class="grid2" style="margin-top:10px">
       <button class="btn b-navy" onclick="syncPull(true)" data-t="btnPull">⬇️ Pull now</button>
       <button class="btn b-gold" onclick="syncPush(true)" data-t="btnPush">⬆️ Push now</button>
@@ -360,7 +365,7 @@ lblNotes:"Notes",lblSign:"Signature Name",lblUseSig:"Add signature",lblUseStamp:
 btnGen:"💾 Save Invoice",btnSaveShort:"💾 Save",btnDlMini:"Mini 58mm PNG",btnPrint:"Print Mini",btnDlNorm:"Normal PNG",btnPvMini:"👁 Preview Mini",btnPvNorm:"👁 Preview Normal",btnNew:"➕ New Invoice",
 hintPrint:"Save first (updates customer history), then download or print. The invoice keeps the same number until you tap New Invoice.",
 secCust:"Customer Records",secBackup:"Backup & Tools",btnCopy:"📥 Save App Copy (with data)",btnExport:"Export Backup JSON",btnImport:"Import Backup",btnStamp:"Download Stamp PNG",
-hintBackup:"Customers are saved on this phone. Export a backup regularly. \"Save App Copy\" downloads this app with all customers inside it.",secSync:"Cloud Sync (automatic)",hintSync:"Host customers.json on GitHub. Both phones pull/push the same file — no manual export.",lblSyncUrl:"JSON URL (public raw link)",lblSyncRepo:"GitHub repo (owner/name)",lblSyncPath:"File path",lblSyncBranch:"Branch",lblSyncToken:"GitHub token (private + push)",hintToken:"github.com/settings/tokens → classic → scope repo. Stored only on this phone.",lblAutoPull:"Auto-pull when app opens",lblAutoPush:"Auto-push after every save",btnPull:"⬇️ Pull now",btnPush:"⬆️ Push now",syncPullOk:"Pulled & merged",syncPushOk:"Pushed to cloud",syncNoCfg:"Set a JSON URL or GitHub repo first",syncFail:"Sync failed",
+hintBackup:"Customers are saved on this phone. Export a backup regularly. \"Save App Copy\" downloads this app with all customers inside it.",secSync:"Cloud Sync (automatic)",hintSync:"Host customers.json on GitHub. Both phones pull/push the same file — no manual export.",lblSyncUrl:"JSON URL (public raw link)",lblSyncRepo:"GitHub repo (owner/name)",lblSyncPath:"File path",lblSyncBranch:"Branch",lblSyncToken:"GitHub token (private + push)",hintToken:"github.com/settings/tokens → classic → scope repo. Stored only on this phone.",lblAutoPull:"Auto-pull when app opens",lblAutoPush:"Auto-push after every save",btnPull:"⬇️ Pull now",btnPush:"⬆️ Push now",syncPullOk:"Pulled & merged",syncPushOk:"Pushed to cloud",syncNoCfg:"Set a JSON URL or GitHub repo first",syncFail:"Sync failed",btnSyncSettings:"⚙️ Settings",btnSyncHide:"Hide settings",syncReady:"Cloud sync ready",
 invTabL:"Invoice",custTabL:"Customers",bankTitle:"Payment (Ghulam Yaseen)",prevLabel:"Previous outstanding:",
 phCust:"Type name — existing customers appear",phJob:"Job details (or custom)",phSearchCust:"Search customer...",phItem:"Search or type item...",
 invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax:"Tax",discount:"Discount",total:"TOTAL",advance:"Advance Paid",remain:"Remaining",outstanding:"Outstanding",
@@ -384,7 +389,7 @@ phCust:"نام لکھیں — پرانے گاہک نظر آئیں گے",phJob:"�
 invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:",subtotal:"ذیلی کل",tax:"ٹیکس",discount:"رعایت",total:"کل",advance:"ایڈوانس ادا",remain:"باقی",outstanding:"بقایا",
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
-w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"کل قیمت (روپے)",lumpHint:"کل قیمت ہی رقم ہے۔ چوڑائی، لمبائی اور ریٹ اختیاری نوٹ ہیں — کبھی ضرب نہیں ہوتے۔",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",
+w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"کل قیمت (روپے)",lumpHint:"کل قیمت ہی رقم ہے۔ چوڑائی، لمبائی اور ریٹ اختیاری نوٹ ہیں — کبھی ضرب نہیں ہوتے۔",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",btnSyncSettings:"⚙️ سیٹنگز",btnSyncHide:"سیٹنگز چھپائیں",syncReady:"کلاؤڈ سنک تیار",
 paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی"}
 };
 
@@ -954,7 +959,37 @@ function bkState(){try{return JSON.parse(localStorage.getItem('alghani_bk')||'{}
 function bkSet(o){try{localStorage.setItem('alghani_bk',JSON.stringify(o))}catch(e){}}
 
 /* ---------- Cloud Sync (GitHub JSON / any HTTPS JSON) ---------- */
-const SYNC_KEYS={url:'alghani_sync_url',repo:'alghani_sync_repo',path:'alghani_sync_path',branch:'alghani_sync_branch',token:'alghani_sync_token',apull:'alghani_sync_apull',apush:'alghani_sync_apush'};
+const SYNC_KEYS={url:'alghani_sync_url',repo:'alghani_sync_repo',path:'alghani_sync_path',branch:'alghani_sync_branch',token:'alghani_sync_token',apull:'alghani_sync_apull',apush:'alghani_sync_apush',ready:'alghani_sync_ready'};
+function syncIsReady(){try{return localStorage.getItem(SYNC_KEYS.ready)==='1'}catch(e){return false}}
+function syncMarkReady(){try{localStorage.setItem(SYNC_KEYS.ready,'1')}catch(e){}syncApplyCollapsed(true)}
+function syncClearReady(){try{localStorage.removeItem(SYNC_KEYS.ready)}catch(e){}syncApplyCollapsed(false)}
+function syncApplyCollapsed(collapsed){
+  const setup=el('syncSetup'), tog=el('syncSetupToggle');
+  if(!setup)return;
+  if(collapsed){
+    setup.classList.add('hidden');
+    if(tog){tog.style.display='';tog.textContent=tr('btnSyncSettings')||'⚙️ Settings'}
+  }else{
+    setup.classList.remove('hidden');
+    if(tog){
+      if(syncIsReady()){tog.style.display='';tog.textContent=tr('btnSyncHide')||'Hide settings'}
+      else tog.style.display='none';
+    }
+  }
+}
+function syncToggleSetup(){
+  const setup=el('syncSetup');
+  if(!setup)return;
+  const open=!setup.classList.contains('hidden');
+  if(open){
+    syncPersistFromForm();
+    if(syncHasCfg(syncCfg()))syncMarkReady();
+    else syncApplyCollapsed(true);
+  }else{
+    syncApplyCollapsed(false);
+  }
+}
+
 function syncGet(k){try{return localStorage.getItem(SYNC_KEYS[k])||''}catch(e){return ''}}
 function syncSet(k,v){try{localStorage.setItem(SYNC_KEYS[k],v)}catch(e){}}
 function syncCfg(){
@@ -983,6 +1018,13 @@ function syncLoadForm(){
     if(el('syncToken'))el('syncToken').value=syncGet('token');
     if(el('syncAutoPull'))el('syncAutoPull').checked=syncGet('apull')!=='0';
     if(el('syncAutoPush'))el('syncAutoPush').checked=syncGet('apush')==='1';
+    // Hide setup fields after first successful pull/push; only buttons stay visible
+    if(syncIsReady()&&syncHasCfg(syncCfg())){
+      syncApplyCollapsed(true);
+      syncStatus(tr('syncReady')||'Cloud sync ready',true);
+    }else{
+      syncApplyCollapsed(false);
+    }
   }catch(e){}
 }
 function syncStatus(msg,ok){
@@ -1040,6 +1082,7 @@ async function syncPull(manual){
     syncStatus(msg,true);
     if(manual)toast(msg,true);
     if(remote.sha)try{localStorage.setItem('alghani_sync_sha',remote.sha)}catch(e){}
+    if(syncHasCfg(c))syncMarkReady();
   }catch(err){
     console.error(err);
     const msg=(tr('syncFail')||'Sync failed')+': '+(err.message||err);
@@ -1080,6 +1123,7 @@ async function syncPush(manual){
     const msg=tr('syncPushOk')||'Pushed to cloud';
     syncStatus(msg+' · '+loadDB().length+' customers',true);
     if(manual)toast(msg,true);
+    if(syncHasCfg(c))syncMarkReady();
   }catch(err){
     console.error(err);
     const msg=(tr('syncFail')||'Sync failed')+': '+(err.message||err);
