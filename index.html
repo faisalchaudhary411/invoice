@@ -276,7 +276,8 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <button class="btn b-green" onclick="downloadMini()" data-t="btnDlMini">Mini 58mm PNG</button>
       <button class="btn b-blue" onclick="printMini()" data-t="btnPrint">Print Mini</button>
       <button class="btn b-amber" onclick="downloadNormal()" data-t="btnDlNorm">Normal PNG</button>
-      <button class="btn b-green" onclick="shareInvoiceWA()" data-t="btnShareWA">📲 Share WhatsApp</button>
+      <button class="btn b-green" onclick="shareInvoiceWA()" data-t="btnShareWA">📲 Share WhatsApp (PDF)</button>
+      <button class="btn b-ghost" onclick="shareInvoiceWAImages()">🖼 Share as Images</button>
       <button class="btn b-navy" onclick="btConnectClick()" data-t="btnConn">🔌 Connect Printer</button>
       <button class="btn b-green" onclick="printDirect()" data-t="btnPrintDirect">⚡ Print Direct</button>
       <button class="btn b-ghost" onclick="previewInv('mini')" data-t="btnPvMini">👁 Preview Mini</button>
@@ -540,7 +541,7 @@ function initAssets(){
 
 /* ---------- customer database: localStorage + IndexedDB mirror ---------- */
 let MEM=null;
-function readLS(k){try{const s=localStorage.getItem(k);if(s){const a=JSON.parse(s);if(Array.isArray(a))return a}}catch(e){}return null}
+function readLS(k){try{const s=localStorage.getItem(k);if(s){const a=safeParseJSON(s);if(Array.isArray(a))return a}}catch(e){}return null}
 function loadDB(){return readLS(DB_KEY)||MEM||[]}
 function idb(fn){
   try{
@@ -1248,6 +1249,31 @@ function parseCustomersPayload(data){
   if(data&&Array.isArray(data.customers))return data.customers;
   throw new Error('JSON must be an array of customers');
 }
+/* Fix common bad JSON (trailing commas before ] or }, BOM, stray text). String-aware, so text inside quotes is never touched. */
+function stripTrailingCommas(s){
+  let out='',inStr=false,esc=false;
+  for(let i=0;i<s.length;i++){
+    const ch=s[i];
+    if(inStr){out+=ch;if(esc)esc=false;else if(ch==='\\')esc=true;else if(ch==='"')inStr=false;continue}
+    if(ch==='"'){inStr=true;out+=ch;continue}
+    if(ch===','){let j=i+1;while(j<s.length&&/\s/.test(s[j]))j++;if(s[j]===']'||s[j]==='}')continue}
+    out+=ch;
+  }
+  return out;
+}
+function safeParseJSON(text){
+  if(text==null)throw new Error('Empty response');
+  let s=String(text).replace(/^\uFEFF/,'').trim();
+  if(!s)return[];
+  try{return JSON.parse(s)}catch(e1){
+    const cleaned=stripTrailingCommas(s);
+    try{return JSON.parse(cleaned)}catch(e2){
+      const a=cleaned.indexOf('['),b=cleaned.lastIndexOf(']');
+      if(a>=0&&b>a){try{return JSON.parse(stripTrailingCommas(cleaned.slice(a,b+1)))}catch(e3){}}
+      throw new Error((e1.message||'Invalid JSON')+' — check the file for a trailing comma');
+    }
+  }
+}
 function syncHasCfg(c){return !!(c.url||(c.repo&&c.path))}
 async function syncFetchRemote(c){
   // Prefer GitHub API when repo+token (works private); else public URL
@@ -1259,13 +1285,14 @@ async function syncFetchRemote(c){
     if(res.status===404)return{customers:[],sha:null,empty:true};
     if(!res.ok)throw new Error('GitHub '+res.status+' '+(await res.text()).slice(0,120));
     const j=await res.json();
-    const text=decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))));
-    return{customers:parseCustomersPayload(JSON.parse(text)),sha:j.sha,empty:false};
+    const text=decodeURIComponent(escape(atob((j.content||'').replace(/\n/g,''))));
+    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:j.sha,empty:false};
   }
   if(c.url){
     const res=await fetch(c.url+(c.url.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
-    return{customers:parseCustomersPayload(await res.json()),sha:null,empty:false};
+    const text=await res.text();
+    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:null,empty:false};
   }
   if(c.repo){
     // public raw without token
@@ -1274,7 +1301,8 @@ async function syncFetchRemote(c){
     const res=await fetch(raw+'?_='+Date.now(),{cache:'no-store'});
     if(res.status===404)return{customers:[],sha:null,empty:true};
     if(!res.ok)throw new Error('HTTP '+res.status);
-    return{customers:parseCustomersPayload(await res.json()),sha:null,empty:false};
+    const text=await res.text();
+    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:null,empty:false};
   }
   throw new Error('no config');
 }
@@ -1379,7 +1407,7 @@ async function shareBackup(){
 }
 function importData(e){
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
-  r.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(!Array.isArray(d))throw 0;saveDB(mergeDB(loadDB(),d));renderCustList();updatePrev();markBackup();toast('Imported & merged '+d.length+' customers',true)}catch(err){alert('Invalid file')}};
+  r.onload=ev=>{try{let d=safeParseJSON(ev.target.result);if(d&&!Array.isArray(d)&&Array.isArray(d.customers))d=d.customers;if(!Array.isArray(d))throw 0;saveDB(mergeDB(loadDB(),d));renderCustList();updatePrev();markBackup();toast('Imported & merged '+d.length+' customers',true)}catch(err){alert('Invalid file: '+(err&&err.message?err.message:''))}};
   r.readAsText(f);e.target.value='';
 }
 function downloadAppCopy(){
@@ -1499,96 +1527,132 @@ function ledger(c,exclude,max){
   });
   return{rows:rows.slice(-max),hidden:Math.max(0,rows.length-max)};
 }
-function miniHistoryRows(ctx,y,W,t,led){
-  const B={stroke:.5};
+function miniHistoryRows(ctx,y,W,t,led,showItems){
+  const B={stroke:.55};
   if(led.hidden>0){tx(ctx,'… '+led.hidden+' '+t.earlier,12,y+12,12.5,{weight:'normal',stroke:.3});y+=20}
   led.rows.slice().reverse().forEach(r=>{
-    tx(ctx,(r.date||'').slice(2)+'  '+(r.pay?t.payRecv:r.ref),12,y+14,14,B);
-    tx(ctx,r.pay?'- '+num(r.paid):num(r.billed),W-12,y+14,14,Object.assign({align:'right'},B));y+=19;
-    tx(ctx,r.pay?(t.balance+' '+num(r.bal)):(t.paid+' '+num(r.paid)+' · '+t.balance+' '+num(r.bal)),12,y+12,12.5,{weight:'normal',stroke:.3});y+=19;
-    ctx.fillStyle='#000';ctx.fillRect(12,y,W-24,2);y+=6;
+    // Invoice / payment header line
+    tx(ctx,(r.date||'').slice(2)+'  '+(r.pay?t.payRecv:r.ref),12,y+14,14.5,B);
+    tx(ctx,r.pay?'- '+num(r.paid):num(r.billed),W-12,y+14,14.5,Object.assign({align:'right'},B));y+=20;
+    tx(ctx,r.pay?(t.balance+' '+num(r.bal)):(t.paid+' '+num(r.paid)+' · '+t.balance+' '+num(r.bal)),12,y+12,12.5,{weight:'normal',stroke:.35});y+=18;
+    // Item lines under each invoice (same data as digital statement)
+    if(showItems&&!r.pay&&r.items&&r.items.length){
+      r.items.forEach(it=>{
+        const line='· '+it.desc+(it.sub?' '+it.sub:'')+(it.lump?'':' qty '+qtyFmt(it.qty||0))+(it.amount?' '+num(it.amount):'');
+        const ls=wrapLines(ctx,line,12.5,{stroke:.3},W-24);
+        ls.forEach((l,k)=>tx(ctx,l,16,y+13+k*15,12.5,{stroke:.3}));
+        y+=ls.length*15+2;
+      });
+      y+=4;
+    }
+    ctx.fillStyle='#000';ctx.fillRect(12,y,W-24,2);y+=7;
   });
   return y;
 }
 function miniHistory(ctx,y,W,t,d){
   const led=ledger(d.c,v('invNo'),5);
   if(!led.rows.length&&!(d.pastPurch&&d.pastPurch.length))return y;
-  y+=10;ctx.fillStyle='#000';ctx.fillRect(8,y,W-16,3);y+=22;
+  y+=10;ctx.fillStyle='#000';ctx.fillRect(8,y,W-16,3);y+=20;
   if(led.rows.length){
-    tx(ctx,t.histTitle,12,y,15,{stroke:.5});y+=8;
-    y=miniHistoryRows(ctx,y,W,t,led);
+    tx(ctx,t.histTitle,12,y,15.5,{stroke:.6});y+=10;
+    y=miniHistoryRows(ctx,y,W,t,led,true);
   }
-  // Previous purchases — compact, same data as digital (when history is on)
   if(d.pastPurch&&d.pastPurch.length){
-    y+=8;ctx.fillStyle='#000';ctx.fillRect(8,y,W-16,2.5);y+=16;
-    tx(ctx,t.pastPurch||'PREVIOUS PURCHASES',12,y,14,{stroke:.5});y+=8;
-    const B2={stroke:.35};
-    d.pastPurch.slice(0,12).forEach(it=>{
+    y+=6;ctx.fillStyle='#000';ctx.fillRect(8,y,W-16,2.5);y+=16;
+    tx(ctx,t.pastPurch||'PREVIOUS PURCHASES',12,y,14.5,{stroke:.55});y+=10;
+    d.pastPurch.slice(0,15).forEach(it=>{
       const line=(it.date?it.date.slice(2)+' ':'')+it.desc+(it.sub?' · '+it.sub:'');
-      const ls=wrapLines(ctx,line,13,B2,W-100);
-      ls.forEach((l,k)=>tx(ctx,l,12,y+14+k*16,13,B2));
-      tx(ctx,num(it.amount||0),W-12,y+14,13,{align:'right',stroke:.45});
-      y+=Math.max(18,ls.length*16)+4;
-      ctx.fillStyle='#000';ctx.fillRect(12,y,W-24,1.5);y+=5;
+      const ls=wrapLines(ctx,line,12.5,{stroke:.3},W-90);
+      ls.forEach((l,k)=>tx(ctx,l,12,y+13+k*15,12.5,{stroke:.3}));
+      tx(ctx,num(it.amount||0),W-12,y+13,12.5,{align:'right',stroke:.4});
+      y+=Math.max(16,ls.length*15)+3;
+      ctx.fillStyle='#000';ctx.fillRect(12,y,W-24,1.2);y+=4;
     });
-    if(d.pastPurch.length>12){tx(ctx,'… +'+(d.pastPurch.length-12)+' more',12,y+12,12,{stroke:.3});y+=20}
+    if(d.pastPurch.length>15){tx(ctx,'… +'+(d.pastPurch.length-15)+' more',12,y+12,12,{stroke:.3});y+=18}
   }
   return y;
 }
 function miniStmt(ctx,y,W,t,d){
   const led=ledger(d.c,null,8);
-  tx(ctx,t.histTitle,12,y+16,16,{stroke:.6});y+=26;
-  if(!led.rows.length){tx(ctx,'—',12,y+14,14,{stroke:.4});y+=24}else y=miniHistoryRows(ctx,y,W,t,led);
-  y+=8;const out=d.c.outstanding||0;
+  tx(ctx,t.histTitle,12,y+16,17,{stroke:.7});y+=28;
+  if(!led.rows.length){tx(ctx,'—',12,y+14,14,{stroke:.4});y+=24}
+  else y=miniHistoryRows(ctx,y,W,t,led,true);
+  y+=10;const out=d.c.outstanding||0;
   ctx.strokeStyle='#000';ctx.lineWidth=3.5;ctx.strokeRect(10,y,W-20,44);
   tx(ctx,t.outstanding,20,y+30,21,{stroke:.8});tx(ctx,fmt(out),W-20,y+30,21,{align:'right',stroke:.8});y+=44+12;
   if(out<=0){tx(ctx,t.clear,W/2,y+14,13.5,{align:'center',stroke:.5});y+=28}
   return y;
 }
 function normLedgerTable(ctx,y,W,t,led,showItems){
-  const NAVY='#0b1b2b',INK='#1a1a1a',MUT='#5a6577',GOLD='#c9a227';
-  const c={d:48,r:168,b:520,p:620,l:W-48};
-  // Rounded navy header — same style as items table
-  ctx.fillStyle='rgba(0,0,0,0.10)';
-  roundRectPath(ctx,38,y+3,W-72,36,10);ctx.fill();
+  const NAVY='#0b1b2b',INK='#0f172a',MUT='#64748b',GOLD='#c9a227';
+  const ROW_A='#ffffff',ROW_B='#f8fafc',LINE='#e2e8f0';
+  const c={d:52,r:172,b:510,p:610,l:W-52};
+  // Summary header — DATE / REF / BILLED / PAID / BALANCE
+  ctx.fillStyle='rgba(11,27,43,0.12)';
+  roundRectPath(ctx,38,y+3,W-72,40,12);ctx.fill();
   ctx.fillStyle=NAVY;
-  roundRectPath(ctx,36,y,W-72,36,10);ctx.fill();
+  roundRectPath(ctx,36,y,W-72,40,12);ctx.fill();
+  ctx.fillStyle=GOLD;ctx.fillRect(36,y,5,40);
   const hd={color:'#fff'};
-  tx(ctx,t.colDate,c.d,y+24,13,hd);tx(ctx,t.colRef,c.r,y+24,13,hd);
-  tx(ctx,t.colBilled,c.b,y+24,13,Object.assign({align:'right'},hd));tx(ctx,t.colPaid,c.p,y+24,13,Object.assign({align:'right'},hd));tx(ctx,t.colBal,c.l,y+24,13,Object.assign({align:'right'},hd));
-  y+=36;
-  if(led.hidden>0){tx(ctx,'… '+led.hidden+' '+t.earlier,48,y+18,12.5,{color:MUT,weight:'normal',italic:true});y+=26}
-  if(!led.rows.length){tx(ctx,'—',48,y+20,15,{color:MUT});y+=30}
+  tx(ctx,t.colDate,c.d,y+26,13.5,hd);tx(ctx,t.colRef,c.r,y+26,13.5,hd);
+  tx(ctx,t.colBilled,c.b,y+26,13.5,Object.assign({align:'right'},hd));tx(ctx,t.colPaid,c.p,y+26,13.5,Object.assign({align:'right'},hd));tx(ctx,t.colBal,c.l,y+26,13.5,Object.assign({align:'right'},hd));
+  y+=40;
+  if(led.hidden>0){tx(ctx,'… '+led.hidden+' '+t.earlier,52,y+18,12.5,{color:MUT,weight:'normal',italic:true});y+=26}
+  if(!led.rows.length){tx(ctx,'—',52,y+20,15,{color:MUT});y+=30}
   led.rows.forEach((r,i)=>{
-    const items=(showItems&&!r.pay&&r.items&&r.items.length)?r.items:[];
-    let itemLines=[];
-    if(items.length){
-      items.forEach(it=>{
-        const line=it.desc+(it.sub?' · '+it.sub:'')+(it.lump?'':' · qty '+qtyFmt(it.qty||0))+(it.amount?' · '+fmt(it.amount):'');
-        itemLines=itemLines.concat(wrapLines(ctx,line,12.5,{color:MUT,weight:'normal'},W-72-48));
-      });
-    }
-    const rh=34+(itemLines.length?itemLines.length*16+10:0);
-    ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);
-    ctx.fillStyle='#d9cbb8';ctx.fillRect(36,y+rh-1,W-72,1);
-    tx(ctx,r.date,c.d,y+22,14.5,{color:MUT,weight:'normal'});
-    tx(ctx,r.pay?t.payRecv:r.ref,c.r,y+22,14.5,{color:r.pay?'#166534':INK});
-    tx(ctx,r.pay?'—':num(r.billed),c.b,y+22,14.5,{align:'right',color:INK,weight:'normal'});
-    tx(ctx,r.paid?num(r.paid):'—',c.p,y+22,14.5,{align:'right',color:r.paid?'#166534':MUT,weight:r.paid?'bold':'normal'});
-    tx(ctx,num(r.bal),c.l,y+22,14.5,{align:'right',color:r.bal>0?'#b91c1c':INK});
-    if(itemLines.length){
-      itemLines.forEach((l,k)=>tx(ctx,l,56,y+38+k*16,12.5,{color:MUT,weight:'normal'}));
-    }
+    // Invoice summary row
+    const rh=40;
+    ctx.fillStyle=i%2?ROW_B:ROW_A;ctx.fillRect(36,y,W-72,rh);
+    ctx.fillStyle=LINE;ctx.fillRect(36,y+rh-1,W-72,1);
+    tx(ctx,r.date,c.d,y+26,15,{color:MUT,weight:'normal'});
+    tx(ctx,r.pay?t.payRecv:r.ref,c.r,y+26,15,{color:r.pay?'#15803d':INK});
+    tx(ctx,r.pay?'—':num(r.billed),c.b,y+26,15,{align:'right',color:INK,weight:'normal'});
+    tx(ctx,r.paid?num(r.paid):'—',c.p,y+26,15,{align:'right',color:r.paid?'#15803d':MUT,weight:r.paid?'bold':'normal'});
+    tx(ctx,num(r.bal),c.l,y+26,15,{align:'right',color:r.bal>0?'#dc2626':INK});
     y+=rh;
+    // Items under this invoice — full table like main invoice (# ITEM QTY RATE AMT)
+    const items=(showItems&&!r.pay&&r.items&&r.items.length)?r.items:[];
+    if(items.length){
+      const ic={n:52,ix:88,iw:340,q:520,r:620,a:W-52};
+      const ih=32;
+      ctx.fillStyle='#1e293b';
+      roundRectPath(ctx,48,y,W-96,ih,8);ctx.fill();
+      const ihd={color:'#e2e8f0'};
+      tx(ctx,'#',ic.n,y+21,12,ihd);tx(ctx,t.colItem,ic.ix,y+21,12,ihd);
+      tx(ctx,t.colQty,ic.q,y+21,12,Object.assign({align:'right'},ihd));
+      tx(ctx,t.colRate,ic.r,y+21,12,Object.assign({align:'right'},ihd));
+      tx(ctx,t.colAmt,ic.a,y+21,12,Object.assign({align:'right'},ihd));
+      y+=ih;
+      items.forEach((it,j)=>{
+        const ls=wrapLines(ctx,it.desc||'',14,{color:INK},ic.iw);
+        const sl=it.sub?wrapLines(ctx,it.sub,12.5,{color:MUT,weight:'normal'},ic.iw):[];
+        const irh=ls.length*18+10+sl.length*16;
+        ctx.fillStyle=j%2?'#f1f5f9':'#ffffff';ctx.fillRect(48,y,W-96,irh);
+        ctx.fillStyle=LINE;ctx.fillRect(48,y+irh-1,W-96,1);
+        tx(ctx,String(j+1),ic.n,y+18,13,{color:MUT,weight:'normal'});
+        ls.forEach((l,k)=>tx(ctx,l,ic.ix,y+18+k*18,14,{color:INK}));
+        sl.forEach((l,k)=>tx(ctx,l,ic.ix,y+18+ls.length*18+k*16,12.5,{color:MUT,weight:'normal'}));
+        tx(ctx,qtyFmt(it.qty||0),ic.q,y+18,13.5,{align:'right',color:INK,weight:'normal'});
+        tx(ctx,(it.lump?'—':num(it.rate||0)),ic.r,y+18,13.5,{align:'right',color:INK,weight:'normal'});
+        tx(ctx,(it.lump&&!(it.amount>0)?'—':num(it.amount||0)),ic.a,y+18,13.5,{align:'right',color:INK});
+        y+=irh;
+      });
+      y+=10;
+    }
   });
   return y;
 }
 function normHistory(ctx,y,W,t,d){
   const led=ledger(d.c,v('invNo'),6);if(!led.rows.length)return y;
-  const GOLD='#c9a227';
-  tx(ctx,t.histTitle,36,y+16,14,{color:GOLD});
-  ctx.fillStyle=GOLD;ctx.fillRect(36,y+24,48,3);
-  y+=42;
+  const GOLD='#c9a227',GOLD2='#e2b93b',NAVY='#0b1b2b';
+  // Same navy header bar as items / previous purchases
+  ctx.fillStyle='rgba(11,27,43,0.12)';
+  roundRectPath(ctx,38,y+3,W-72,38,12);ctx.fill();
+  ctx.fillStyle=NAVY;
+  roundRectPath(ctx,36,y,W-72,38,12);ctx.fill();
+  ctx.fillStyle=GOLD;ctx.fillRect(36,y,5,38);
+  tx(ctx,t.histTitle,52,y+25,14,{color:GOLD2});
+  y+=48;
   return normLedgerTable(ctx,y,W,t,led,true)+20;
 }
 
@@ -1687,29 +1751,32 @@ function renderMini(){
 
 /* ---------- NORMAL INVOICE (800px, scale 2) ---------- */
 function renderNormal(){
-  // S=3 → sharper text on phones (was 2 — looked soft / stretched when zoomed)
+  // S=3 → sharper text on phones
   const S=3,W=800,t=T[lang],d=gather();
   const big=mkCanvas(W*S,6000*S);const ctx=big.getContext('2d');
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.scale(S,S);
-  const NAVY='#0b1b2b',GOLD='#c9a227',INK='#1a1a1a',MUT='#5a6577';
-  // Warm cream paper (3D card face)
-  ctx.fillStyle='#ebe0d0';ctx.fillRect(0,0,W,5000);
+  const NAVY='#0b1b2b',GOLD='#c9a227',GOLD2='#e2b93b',INK='#0f172a',MUT='#64748b';
+  const ROW_A='#ffffff',ROW_B='#f8fafc',LINE='#e2e8f0',SOFT='#f1f5f9';
+  // Clean white paper
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,6000);
   const phl=phoneLines();const hdrH=Math.max(156,128+phl.length*22+24);
   ctx.fillStyle=NAVY;ctx.fillRect(0,0,W,hdrH);
   let tx0=36;
   if(logoImg&&logoImg.naturalWidth){const lh=Math.min(120,hdrH-36),lw=lh*logoImg.naturalWidth/logoImg.naturalHeight;ctx.drawImage(logoImg,34,(hdrH-lh)/2,lw,lh);tx0=34+lw+30}
   let hy=52;
-  tx(ctx,v('bizName'),tx0,hy,34,{color:'#e2b93b'});hy+=26;
+  tx(ctx,v('bizName'),tx0,hy,34,{color:GOLD2});hy+=26;
   if(v('bizTagline')){tx(ctx,v('bizTagline'),tx0,hy,16,{color:'#cbd5e1',weight:'normal'});hy+=26}
   phl.forEach(l=>{tx(ctx,l,tx0,hy,17,{color:'#fff'});hy+=22});
-  para(ctx,v('bizAddress'),tx0,hy+2,14.5,{color:'#cbd5e1',weight:'normal'},W-tx0-30,19);
-  ctx.fillStyle=GOLD;ctx.fillRect(0,hdrH,W,6);
+  para(ctx,v('bizAddress'),tx0,hy+2,14.5,{color:'#94a3b8',weight:'normal'},W-tx0-30,19);
+  ctx.fillStyle=GOLD;ctx.fillRect(0,hdrH,W,5);
 
   let y=hdrH+50;
   tx(ctx,d.stmt?t.stmtTitle:t.invTitle,36,y,d.stmt?27:30,{color:NAVY});
   const mx=470,mw=W-36-mx,my=hdrH+22;
-  ctx.fillStyle='#e0d4c4';roundRectPath(ctx,mx,my,mw,84,10);ctx.fill();ctx.fillStyle=GOLD;ctx.fillRect(mx,my,5,84);
+  ctx.fillStyle=SOFT;roundRectPath(ctx,mx,my,mw,84,12);ctx.fill();
+  ctx.strokeStyle=LINE;ctx.lineWidth=1;roundRectPath(ctx,mx,my,mw,84,12);ctx.stroke();
+  ctx.fillStyle=GOLD;ctx.fillRect(mx,my,5,84);
   tx(ctx,t.invNoLabel,mx+20,my+25,15,{color:MUT});tx(ctx,v('invNo'),W-52,my+25,16,{align:'right',color:INK});
   tx(ctx,t.dateLabel,mx+20,my+49,15,{color:MUT});tx(ctx,v('invDate'),W-52,my+49,16,{align:'right',color:INK});
   tx(ctx,t.timeLabel,mx+20,my+73,15,{color:MUT});tx(ctx,v('invTime'),W-52,my+73,16,{align:'right',color:INK});
@@ -1723,19 +1790,20 @@ function renderNormal(){
 
   if(d.stmt){y=normLedgerTable(ctx,y,W,t,ledger(d.c,null,14),true)+26}else{
   const col={n:48,ix:84,iw:360,q:560,r:660,a:W-40};
-  // Raised table header
-  ctx.fillStyle='rgba(0,0,0,0.12)';
-  roundRectPath(ctx,38,y+3,W-72,38,10);ctx.fill();
+  // Items table header
+  ctx.fillStyle='rgba(11,27,43,0.12)';
+  roundRectPath(ctx,38,y+3,W-72,38,12);ctx.fill();
   ctx.fillStyle=NAVY;
-  roundRectPath(ctx,36,y,W-72,38,10);ctx.fill();
+  roundRectPath(ctx,36,y,W-72,38,12);ctx.fill();
+  ctx.fillStyle=GOLD;ctx.fillRect(36,y,5,38);
   const hd={color:'#fff',stroke:0};
   tx(ctx,'#',col.n,y+25,14,hd);tx(ctx,t.colItem,col.ix,y+25,14,hd);
   tx(ctx,t.colQty,col.q,y+25,14,Object.assign({align:'right'},hd));tx(ctx,t.colRate,col.r,y+25,14,Object.assign({align:'right'},hd));tx(ctx,t.colAmt,col.a,y+25,14,Object.assign({align:'right'},hd));
   y+=38;
   d.items.forEach((it,i)=>{
     const ls=wrapLines(ctx,it.desc,16.5,{color:INK},col.iw);const sl=it.sub?wrapLines(ctx,it.sub,14,{color:MUT,weight:'normal'},W-72-70):[];const rh=ls.length*22+16+sl.length*20;
-    ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);
-    ctx.fillStyle='#d9cbb8';ctx.fillRect(36,y+rh-1,W-72,1);
+    ctx.fillStyle=i%2?ROW_B:ROW_A;ctx.fillRect(36,y,W-72,rh);
+    ctx.fillStyle=LINE;ctx.fillRect(36,y+rh-1,W-72,1);
     tx(ctx,String(i+1),col.n,y+26,16,{color:MUT,weight:'normal'});
     ls.forEach((l,k)=>tx(ctx,l,col.ix,y+26+k*22,16.5,{color:INK}));
     sl.forEach((l,k)=>tx(ctx,l,col.ix,y+26+ls.length*22-2+k*20,14,{color:MUT,weight:'normal'}));
@@ -1745,23 +1813,24 @@ function renderNormal(){
     y+=rh;
   });
   y+=26;
-  // Previous purchases — styled like items table
+  // Previous purchases / history — same table style as items
   if(d.pastPurch&&d.pastPurch.length){
     y+=14;
-    ctx.fillStyle='rgba(0,0,0,0.10)';
-    roundRectPath(ctx,38,y+3,W-72,36,10);ctx.fill();
+    ctx.fillStyle='rgba(11,27,43,0.12)';
+    roundRectPath(ctx,38,y+3,W-72,38,12);ctx.fill();
     ctx.fillStyle=NAVY;
-    roundRectPath(ctx,36,y,W-72,36,10);ctx.fill();
-    tx(ctx,t.pastPurch||'PREVIOUS PURCHASES',48,y+24,14,{color:'#e2b93b'});
-    y+=36;
+    roundRectPath(ctx,36,y,W-72,38,12);ctx.fill();
+    ctx.fillStyle=GOLD;ctx.fillRect(36,y,5,38);
+    tx(ctx,t.pastPurch||'PREVIOUS PURCHASES',52,y+25,14,{color:GOLD2});
+    y+=38;
     d.pastPurch.slice(0,30).forEach((it,i)=>{
       const line=(it.date?it.date+' · ':'')+(it.invNo?it.invNo+' · ':'')+it.desc+(it.sub?' · '+it.sub:'');
-      const ls=wrapLines(ctx,line,13.5,{color:MUT,weight:'normal'},W-72-130);
-      const rh=Math.max(28,ls.length*18+10);
-      ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);
-      ctx.fillStyle='#d9cbb8';ctx.fillRect(36,y+rh-1,W-72,1);
-      ls.forEach((l,k)=>tx(ctx,l,48,y+18+k*18,13.5,{color:INK,weight:'normal'}));
-      tx(ctx,fmt(it.amount||0),W-48,y+18,14,{align:'right',color:INK});
+      const ls=wrapLines(ctx,line,14,{color:INK,weight:'normal'},W-72-130);
+      const rh=Math.max(30,ls.length*18+12);
+      ctx.fillStyle=i%2?ROW_B:ROW_A;ctx.fillRect(36,y,W-72,rh);
+      ctx.fillStyle=LINE;ctx.fillRect(36,y+rh-1,W-72,1);
+      ls.forEach((l,k)=>tx(ctx,l,48,y+20+k*18,14,{color:INK,weight:'normal'}));
+      tx(ctx,fmt(it.amount||0),W-48,y+20,14.5,{align:'right',color:INK});
       y+=rh;
     });
     if(d.pastPurch.length>30){tx(ctx,'… +'+(d.pastPurch.length-30)+' more',48,y+14,12,{color:MUT,weight:'normal'});y+=22}
@@ -2140,51 +2209,81 @@ async function testPrint(){
 /* ---------- output actions ---------- */
 async function downloadMini(){await assetsP;const c=renderMini();const name=(v('invNo')||'inv')+'_Mini58mm.png';c.toBlob(b=>{download(b,name);toast('Mini invoice ready',true)},'image/png')}
 async function downloadNormal(){await assetsP;const c=renderNormal();const name=(v('invNo')||'inv')+'_AlGhani.png';c.toBlob(b=>{download(b,name);toast('Invoice ready',true)},'image/png')}
-/* WhatsApp: large/tall PNGs get crushed or stretched.
-   Cap width & height, lock aspect, share as JPEG. */
-function canvasForWhatsApp(src){
-  // WA chat viewport is narrow — 1280px wide is sharp and safe
-  const MAX_W=1280,MAX_H=8000;
-  let w=src.width,h=src.height;
-  let scale=1;
-  if(w>MAX_W)scale=Math.min(scale,MAX_W/w);
-  if(h*scale>MAX_H)scale=Math.min(scale,MAX_H/h);
-  const nw=Math.round(w*scale),nh=Math.round(h*scale);
-  if(nw===w&&nh===h)return src;
-  const c=mkCanvas(nw,nh);
-  const x=c.getContext('2d');
-  x.imageSmoothingEnabled=true;
-  x.imageSmoothingQuality='high';
-  x.fillStyle='#05070a';
-  x.fillRect(0,0,nw,nh);
-  x.drawImage(src,0,0,w,h,0,0,nw,nh);
-  return c;
+/* WhatsApp: WhatsApp squashes/stretches very tall images in chat. So the invoice is shared as a PDF
+   (never recompressed or resized), or as several page-shaped images. */
+function canvasToJpegBytes(c,q){return new Promise((res,rej)=>c.toBlob(async b=>{if(!b)return rej(new Error('encode'));res(new Uint8Array(await b.arrayBuffer()))},'image/jpeg',q))}
+function whiteCopy(src,sx,sy,sw,sh,dw){
+  const dh=Math.round(sh*dw/sw),c=mkCanvas(dw,dh),x=c.getContext('2d');
+  x.fillStyle='#ffffff';x.fillRect(0,0,dw,dh);x.imageSmoothingEnabled=true;x.imageSmoothingQuality='high';
+  x.drawImage(src,sx,sy,sw,sh,0,0,dw,dh);return c;
 }
-async function shareInvoiceWA(){
-  await assetsP;
-  const full=renderNormal();
-  const c=canvasForWhatsApp(full);
-  const name=(v('invNo')||'inv')+'_AlGhani.jpg';
-  const cust=(v('custName')||'').trim();
-  const total=fmt(invoiceTotal().grand);
-  const text='Al Ghani Steel Arts Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+total;
-  // Slightly lower quality on very tall images → smaller file, less WA crushing
-  const q=c.height>5000?0.85:0.90;
-  c.toBlob(async b=>{
-    if(!b){toast('Share failed',false);return}
-    const file=new File([b],name,{type:'image/jpeg'});
-    try{
-      if(navigator.canShare&&navigator.canShare({files:[file]})){
-        await navigator.share({files:[file],title:'Invoice '+v('invNo'),text:text});
-        toast(lang==='ur'?'انوائس شیئر ہو گئی':'Invoice shared',true);return;
-      }
-    }catch(e){if(e&&e.name==='AbortError')return}
-    download(b,name);
-    const phone=(v('custPhone')||'').replace(/\D/g,'');
-    const waUrl='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice image downloaded — attach it in WhatsApp)');
-    window.open(waUrl,'_blank');
-    toast(lang==='ur'?'تصویر ڈاؤن لوڈ + واٹس ایپ کھلا':'Image downloaded — attach in WhatsApp',true);
-  },'image/jpeg',q);
+/* Cut points: split tall canvas into near-equal pages (aspect <= ~1.45), preferring a blank (white) row near each cut */
+function pageSlices(src,maxAspect){
+  const w=src.width,h=src.height,maxH=Math.round(w*maxAspect);
+  if(h<=maxH)return[[0,h]];
+  const n=Math.ceil(h/maxH),target=h/n,cuts=[0],x=src.getContext('2d');
+  for(let i=1;i<n;i++){
+    let best=Math.round(target*i);const lo=Math.max(cuts[cuts.length-1]+200,best-Math.round(target*0.12)),hi=Math.min(h-200,best+Math.round(target*0.12));
+    let bestScore=1e9;
+    for(let y=lo;y<=hi;y+=4){
+      const d=x.getImageData(0,y,w,1).data;let sc=0;
+      for(let k=0;k<d.length;k+=64)sc+=255*3-(d[k]+d[k+1]+d[k+2]);
+      if(sc<bestScore){bestScore=sc;best=y}
+    }
+    cuts.push(best);
+  }
+  cuts.push(h);const out=[];for(let i=0;i<cuts.length-1;i++)out.push([cuts[i],cuts[i+1]]);return out;
+}
+function buildPDF(pages){ // pages: [{jpg:Uint8Array,w,h}] -> Blob (A4 width, page height follows the image)
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=d=>{const u=typeof d==='string'?enc.encode(d):d;parts.push(u);len+=u.length};
+  const obj=(n,d)=>{offs[n]=len;push(n+' 0 obj\n');push(d);push('\nendobj\n')};
+  const N=pages.length,PW=595;
+  push('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,'<< /Type /Pages /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] /Count '+N+' >>');
+  pages.forEach((p,i)=>{
+    const po=3+i*3,co=po+1,io=po+2,ph=(PW*p.h/p.w).toFixed(2);
+    obj(po,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+PW+' '+ph+'] /Resources << /XObject << /Im0 '+io+' 0 R >> >> /Contents '+co+' 0 R >>');
+    const cs='q '+PW+' 0 0 '+ph+' 0 0 cm /Im0 Do Q';
+    obj(co,'<< /Length '+cs.length+' >>\nstream\n'+cs+'\nendstream');
+    offs[io]=len;push(io+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+p.w+' /Height '+p.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+p.jpg.length+' >>\nstream\n');push(p.jpg);push('\nendstream\nendobj\n');
+  });
+  const total=2+N*3,xr=len;let x='xref\n0 '+(total+1)+'\n0000000000 65535 f \n';
+  for(let i=1;i<=total;i++)x+=String(offs[i]).padStart(10,'0')+' 00000 n \n';
+  push(x+'trailer\n<< /Size '+(total+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF');
+  return new Blob(parts,{type:'application/pdf'});
+}
+async function waShareFiles(files,text,title){
+  try{
+    if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title,text});toast(lang==='ur'?'انوائس شیئر ہو گئی':'Invoice shared',true);return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  files.forEach(f=>download(f,f.name));
+  const phone=(v('custPhone')||'').replace(/\D/g,'');
+  window.open('https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice downloaded — attach it in WhatsApp)'),'_blank');
+  toast(lang==='ur'?'فائل ڈاؤن لوڈ + واٹس ایپ کھلا':'Downloaded — attach in WhatsApp',true);
+}
+function waText(){const cust=(v('custName')||'').trim();return 'Al Ghani Steel Arts Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+fmt(invoiceTotal().grand)}
+async function shareInvoiceWA(){ // PDF: crisp, never stretched
+  try{
+    await assetsP;const full=renderNormal(),base=(v('invNo')||'inv')+'_AlGhani';
+    const slices=pageSlices(full,3.2),pages=[];
+    for(const [y0,y1] of slices){const c=whiteCopy(full,0,y0,full.width,y1-y0,1600);pages.push({jpg:await canvasToJpegBytes(c,0.92),w:c.width,h:c.height})}
+    const pdf=buildPDF(pages);
+    await waShareFiles([new File([pdf],base+'.pdf',{type:'application/pdf'})],waText(),'Invoice '+v('invNo'));
+  }catch(e){toast('Share failed: '+(e&&e.message?e.message:e),false)}
+}
+async function shareInvoiceWAImages(){ // several page-shaped images (no stretching in chat)
+  try{
+    await assetsP;const full=renderNormal(),base=(v('invNo')||'inv')+'_AlGhani';
+    const slices=pageSlices(full,1.45),files=[];
+    for(let i=0;i<slices.length;i++){
+      const [y0,y1]=slices[i],c=whiteCopy(full,0,y0,full.width,y1-y0,1280);
+      const b=await new Promise(r=>c.toBlob(r,'image/jpeg',0.92));
+      files.push(new File([b],base+(slices.length>1?'_p'+(i+1)+'of'+slices.length:'')+'.jpg',{type:'image/jpeg'}));
+    }
+    await waShareFiles(files,waText(),'Invoice '+v('invNo'));
+  }catch(e){toast('Share failed: '+(e&&e.message?e.message:e),false)}
 }
 async function previewInv(kind){
   await assetsP;const c=kind==='mini'?renderMini():renderNormal();

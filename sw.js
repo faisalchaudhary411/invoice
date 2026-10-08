@@ -1,5 +1,5 @@
-/* Al Ghani Invoice service worker 20261008v */
-const CACHE = 'alghani-invoice-20261008v-hist-style';
+/* Al Ghani Invoice service worker 20261009b */
+const CACHE = 'alghani-inv-20261009c-wa-pdf';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
