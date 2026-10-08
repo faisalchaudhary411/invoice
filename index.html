@@ -105,7 +105,10 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .hc-top h3{font-size:.98rem;color:var(--navy)}.hc-top .meta{font-size:.76rem;color:var(--mut)}
 .nums{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;font-size:.78rem;font-weight:700}
 .nums span{background:#eef2f7;padding:4px 10px;border-radius:20px}.nums .o{background:#fee2e2;color:var(--err)}.nums .z{background:#dcfce7;color:var(--ok)}.nums .cr{background:#dbeafe;color:#1d4ed8}
-.hist-list{font-size:.76rem;margin-top:8px;max-height:130px;overflow:auto;color:var(--mut)}
+.hist-list{font-size:.76rem;margin-top:8px;max-height:200px;overflow:auto;color:var(--mut)}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.hbtn{flex:none;white-space:nowrap}
+.hbtn button{border:0;background:#eef1f6;border-radius:6px;padding:3px 8px;margin-left:4px;font-size:.85rem;cursor:pointer}
 .hist-list div{padding:4px 0;border-bottom:1px solid #f0f2f6}
 /* Slim customer rows — expand on tap */
 .hist-card{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;background:#fff;cursor:pointer;transition:box-shadow .15s}
@@ -358,8 +361,9 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
         <div><label data-t="lblSyncBranch">Branch</label><input id="syncBranch" placeholder="main" value="main"></div>
       </div>
       <label data-t="lblSyncToken" style="margin-top:8px">GitHub token (for private repo + auto push)</label>
-      <input id="syncToken" type="password" placeholder="ghp_...." autocomplete="off" style="margin-bottom:8px">
-      <p class="hint" data-t="hintToken">Create at github.com/settings/tokens → classic → scope <b>repo</b>. Stored only on this phone.</p>
+      <input id="syncToken" type="password" placeholder="github_pat_...." autocomplete="off" style="margin-bottom:8px">
+      <button type="button" class="btn b-ghost b-sm" onclick="syncForgetToken()" style="margin-bottom:6px">🔒 Forget token on this phone</button>
+      <p class="hint" data-t="hintToken">Safest: github.com/settings/personal-access-tokens → <b>Fine-grained</b> → only this data repo → Contents: <b>Read and write</b>. Stored only on this phone — never use a token that can reach your other repos.</p>
       <label class="ck"><input type="checkbox" id="syncAutoPull" checked><span data-t="lblAutoPull">Auto-pull when app opens</span></label>
       <label class="ck"><input type="checkbox" id="syncAutoPush"><span data-t="lblAutoPush">Auto-push after every save</span></label>
     </div>
@@ -527,7 +531,12 @@ function compose3DCard(content,S){
 }
 const localDate=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const localTime=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
-function genInvNo(){const n=new Date();return 'AG-'+String(n.getFullYear()).slice(-2)+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0')+'-'+(Math.floor(Math.random()*900)+100)}
+function genInvNo(){
+  const n=new Date(),pre='AG-'+String(n.getFullYear()).slice(-2)+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0')+'-';
+  const used=new Set();try{loadDB().forEach(c=>(c.invoices||[]).forEach(i=>used.add(i.invNo)))}catch(e){}
+  let no,t=0;do{no=pre+(Math.floor(Math.random()*900)+100);t++}while(used.has(no)&&t<200);
+  return no;
+}
 let toastT=null;
 function toast(text,ok){const t=el('toast');t.textContent=text;t.className='toast show '+(ok===false?'err':'ok');clearTimeout(toastT);toastT=setTimeout(()=>{t.className='toast'},3800)}
 
@@ -583,18 +592,49 @@ function recompute(c){
   c.credit=Math.max(0,paid-billed);
   return c;
 }
+/* ---------- deletions that survive sync/merge ("tombstones") ---------- */
+const DEL_KEY='alghani_deleted';
+function loadDel(){try{const d=JSON.parse(localStorage.getItem(DEL_KEY)||'{}');return{c:d.c||{},i:d.i||{}}}catch(e){return{c:{},i:{}}}}
+function saveDel(d){try{localStorage.setItem(DEL_KEY,JSON.stringify(d))}catch(e){}}
+function mergeDel(r){
+  if(!r||typeof r!=='object')return;const d=loadDel();
+  ['c','i'].forEach(k=>{const rk=r[k];if(rk&&typeof rk==='object')Object.keys(rk).forEach(x=>{const t=+rk[x]||0;if(t>(d[k][x]||0))d[k][x]=t})});
+  saveDel(d);
+}
+function invKey(i){return i.invNo==='PAY'?'PAY|'+i.ts:String(i.invNo)}
+function digits(x){return String(x||'').replace(/\D/g,'')}
+function custKey(c){return (c.name||'').trim().toLowerCase()}
+function applyDeletes(db){
+  const D=loadDel(),out=[];
+  db.forEach(c=>{
+    const t=Math.max(D.c[c.id]||0,D.c['n:'+custKey(c)+'|'+digits(c.phone)]||0);
+    let inv=c.invoices||[],ch=false;
+    if(t){const f=inv.filter(i=>(i.ts||0)>t);if(f.length!==inv.length){inv=f;ch=true}}
+    const f2=inv.filter(i=>!D.i[invKey(i)]);if(f2.length!==inv.length){inv=f2;ch=true}
+    if(t&&!inv.length)return; // deleted customer
+    out.push(ch?recompute(Object.assign({},c,{invoices:inv})):c);
+  });
+  return out;
+}
+/* Same name = same person, unless both have a phone number and the numbers differ (then two people). */
 function mergeDB(a,b){
   const map=new Map();
   [...a,...b].forEach(c=>{
-    const k=(c.name||'').trim().toLowerCase();if(!k)return;
+    if(!c||typeof c!=='object')return;
+    const n=custKey(c);if(!n)return;
+    const ph=digits(c.phone);let k=n;
+    if(map.has(k)){const ep=digits(map.get(k).phone);if(ph&&ep&&ph!==ep)k=n+'|'+ph}
     const ex=map.get(k);if(!ex){map.set(k,c);return}
-    const seen=new Set();
-    const inv=[...(ex.invoices||[]),...(c.invoices||[])].sort((x,y)=>(y.ts||0)-(x.ts||0)).filter(i=>{const key=i.invNo==='PAY'?'PAY|'+i.ts+'|'+i.advance:i.invNo;if(seen.has(key))return false;seen.add(key);return true});
-    const same=JSON.stringify((ex.invoices||[]).map(i=>i.invNo+i.ts))===JSON.stringify(inv.map(i=>i.invNo+i.ts));
-    const out=Object.assign({},ex,{house:ex.house||c.house,phone:ex.phone||c.phone,address:ex.address||c.address,invoices:inv});
-    map.set(k,same?ex:recompute(out));
+    const best=new Map(); // per invoice keep the most recently edited copy
+    [...(ex.invoices||[]),...(c.invoices||[])].forEach(i=>{
+      if(!i||typeof i!=='object')return;
+      const key=invKey(i),cur=best.get(key);
+      if(!cur||(i.upd||i.ts||0)>(cur.upd||cur.ts||0))best.set(key,i);
+    });
+    const inv=[...best.values()].sort((x,y)=>(y.ts||0)-(x.ts||0));
+    map.set(k,recompute(Object.assign({},ex,{house:ex.house||c.house,phone:ex.phone||c.phone,address:ex.address||c.address,invoices:inv})));
   });
-  return [...map.values()];
+  return applyDeletes([...map.values()]);
 }
 function migrateAndSeed(){
   try{
@@ -606,7 +646,14 @@ function migrateAndSeed(){
     }
   }catch(e){}
 }
-function findCust(name){const n=(name||'').trim().toLowerCase();if(!n)return null;return loadDB().find(c=>(c.name||'').toLowerCase()===n)||null}
+function findCustIn(db,name,phone){
+  const n=(name||'').trim().toLowerCase();if(!n)return null;
+  const list=db.filter(c=>(c.name||'').trim().toLowerCase()===n);if(!list.length)return null;
+  if(phone===undefined){const e=el('custPhone');phone=e?e.value:''}
+  const p=digits(phone);if(!p)return list[0];
+  return list.find(c=>digits(c.phone)===p)||list.find(c=>!digits(c.phone))||null; // different phone = different person
+}
+function findCust(name,phone){return findCustIn(loadDB(),name,phone)}
 function prevOutFor(c,invNo){
   // Outstanding from all OTHER invoices (exclude the one being edited), before current form advance
   if(!c)return 0;
@@ -948,12 +995,12 @@ function itemCalc(id){
     const w=+v('sw-'+id)||0,l=+v('sl-'+id)||0;
     const qty=+(w*l).toFixed(2);
     const sub=[w&&l?w+' × '+l+' ft':'',qty?qtyFmt(qty)+' sq ft':'',g].filter(Boolean).join(' · ');
-    return{mode,qty:qty||0,rate,amount:qty*rate,sub,lump:false,w,l};
+    return{mode,qty:qty||0,rate,amount:Math.round(qty*rate*100)/100,sub,lump:false,w,l};
   }
   if(mode==='rft'){
     const ft=+v('rft-'+id)||0;
     const sub=[ft?qtyFmt(ft)+' rft':'',g].filter(Boolean).join(' · ');
-    return{mode,qty:ft,rate,amount:ft*rate,sub,lump:false};
+    return{mode,qty:ft,rate,amount:Math.round(ft*rate*100)/100,sub,lump:false};
   }
   // lumpsum — multi select: name/qty/gauge per item, ONE total price for all
   const price=+v('lprice-'+id)||0;
@@ -1014,7 +1061,7 @@ function getItems(){
 }
 function invoiceTotal(){
   const items=getItems();const sub=items.reduce((s,i)=>s+i.amount,0);
-  const taxP=+v('taxPct')||0,disc=+v('discount')||0;const taxA=sub*taxP/100;
+  const taxP=Math.max(0,+v('taxPct')||0);const taxA=Math.round(sub*taxP)/100;const disc=Math.min(Math.max(0,+v('discount')||0),sub+taxA);
   return{sub,taxA,disc,grand:sub+taxA-disc,items};
 }
 function recalcPay(){
@@ -1052,12 +1099,13 @@ function saveAndGenerate(){
   }
   const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AG-'+Date.now());
   const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items,sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
-  const db=loadDB();let c=db.find(x=>(x.name||'').toLowerCase()===name.toLowerCase());
+  const db=loadDB();let c=findCustIn(db,name,v('custPhone'));
   if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:v('custPhone'),address:v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
   else{c.house=v('custHouse')||c.house;c.phone=v('custPhone')||c.phone;c.address=v('custContact')||c.address}
   const prevBefore=prevOutFor(c,invNo);
   c.invoices=(c.invoices||[]).filter(i=>!(i.invNo===invNo&&i.invNo!=='PAY'));
   c.invoices.unshift(inv);recompute(c);
+  {const D=loadDel();if(D.i[invNo]){delete D.i[invNo];saveDel(D)}}
   const stored=saveDB(db);updatePrev();
   if(stored){
     const balMsg=(c.credit||0)>0?(tr('credit')+' '+fmt(c.credit)):(tr('outstanding')+' '+fmt(c.outstanding||0));
@@ -1108,14 +1156,15 @@ function renderCustList(){
     const balSpan=cr>0
       ? `<span class="cr">${tr('credit')}: ${fmt(cr)}</span>`
       : `<span class="${out>0?'o':'z'}">${tr('outstanding')}: ${fmt(out)}</span>`;
-    const hist=(c.invoices||[]).slice(0,15).map(i=>{
+    const hist=(c.invoices||[]).slice(0,60).map(i=>{
       const adv=i.advance||0, tot=i.total||0, rem=i.remaining||0;
       const invCr=Math.max(0,adv-tot);
       let line=esc(i.date)+' · '+esc(i.invNo)+' · '+fmt(tot)+' · Adv '+fmt(adv);
       if(rem>0)line+=' · Rem '+fmt(rem);
       else if(invCr>0)line+=' · '+tr('credit')+' '+fmt(invCr);
       else line+=' · Rem '+fmt(0);
-      return '<div>'+line+'</div>';
+      const ek=encodeURIComponent(invKey(i));
+      return '<div class="hrow"><span>'+line+'</span><span class="hbtn"><button title="Edit paid amount" onclick="event.stopPropagation();editInv(\''+c.id+'\',\''+ek+'\')">✎</button><button title="Delete" onclick="event.stopPropagation();delInv(\''+c.id+'\',\''+ek+'\')">🗑</button></span></div>';
     }).join('')||'<div>—</div>';
     const meta=esc([c.phone,c.house,c.address].filter(Boolean).join(' · '));
     const invN=(c.invoices||[]).length;
@@ -1159,9 +1208,37 @@ function loadCustToInv(id){
   const past=custPastItems(c);
   if(past.length)toast(lang==='ur'?'پرانی خریداریاں صرف ڈیجیٹل انوائس پر دکھائی جائیں گی (آئٹم فیلڈز میں نہیں)':'Past purchases will appear only on digital invoice (not in item fields)',true);
 }
-function delCust(id){if(!confirm(lang==='ur'?'گاہک حذف کریں؟':'Delete customer?'))return;saveDB(loadDB().filter(c=>c.id!==id));renderCustList();updatePrev()}
+function delCust(id){
+  if(!confirm(lang==='ur'?'گاہک حذف کریں؟':'Delete customer?'))return;
+  const db=loadDB(),c=db.find(x=>x.id===id),D=loadDel(),now=Date.now();
+  D.c[id]=now;if(c)D.c['n:'+custKey(c)+'|'+digits(c.phone)]=now;saveDel(D);
+  saveDB(db.filter(x=>x.id!==id));renderCustList();updatePrev();try{syncPushDebounced()}catch(e){}
+}
+function parseAmt(raw){
+  return parseFloat(String(raw).replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[,\s٬،]/g,'').replace(/^rs\.?/i,''));
+}
+function editInv(cid,keyEnc){
+  const key=decodeURIComponent(keyEnc),db=loadDB(),c=db.find(x=>x.id===cid);if(!c)return;
+  const i=(c.invoices||[]).find(x=>invKey(x)===key);if(!i)return;
+  const isPay=i.invNo==='PAY';
+  const raw=prompt(isPay?(lang==='ur'?'ادائیگی کی صحیح رقم:':'Correct payment amount (Rs):'):((lang==='ur'?'وصول شدہ رقم — ':'Amount paid on ')+i.invNo+' ('+fmt(i.total||0)+') Rs:'),String(i.advance||0));
+  if(raw==null)return;
+  const amt=parseAmt(raw);if(!(amt>=0)||(isPay&&amt===0)){toast(lang==='ur'?'غلط رقم':'Enter a valid amount',false);return}
+  i.advance=amt;if(!isPay)i.remaining=Math.max(0,(i.total||0)-amt);i.upd=Date.now();
+  recompute(c);saveDB(db);renderCustList();updatePrev();toast(lang==='ur'?'اپڈیٹ ہو گیا':'Updated',true);try{syncPushDebounced()}catch(e){}
+}
+function delInv(cid,keyEnc){
+  const key=decodeURIComponent(keyEnc),db=loadDB(),c=db.find(x=>x.id===cid);if(!c)return;
+  const i=(c.invoices||[]).find(x=>invKey(x)===key);if(!i)return;
+  if(!confirm((lang==='ur'?'حذف کریں؟ ':'Delete ')+(i.invNo==='PAY'?'payment '+fmt(i.advance||0):'invoice '+i.invNo+' ('+fmt(i.total||0)+')')+'?'))return;
+  const D=loadDel();D.i[key]=Date.now();saveDel(D);
+  c.invoices=(c.invoices||[]).filter(x=>invKey(x)!==key);recompute(c);
+  saveDB(db);renderCustList();updatePrev();toast(lang==='ur'?'حذف ہو گیا':'Deleted',true);try{syncPushDebounced()}catch(e){}
+}
 function addPayment(id){
-  const amt=parseFloat(prompt(lang==='ur'?'ادائیگی کی رقم:':'Payment amount (Rs):'));if(!amt||amt<=0)return;
+  const raw=prompt(lang==='ur'?'ادائیگی کی رقم:':'Payment amount (Rs):');if(raw==null)return;
+  const amt=parseAmt(raw);
+  if(!(amt>0)){toast(lang==='ur'?'غلط رقم':'Enter a valid amount',false);return}
   const db=loadDB();const c=db.find(x=>x.id===id);if(!c)return;
   c.invoices=c.invoices||[];c.invoices.unshift({invNo:'PAY',date:localDate(new Date()),job:'Payment received',items:[],total:0,advance:amt,remaining:0,ts:Date.now()});
   recompute(c);saveDB(db);renderCustList();updatePrev();toast('Payment saved',true);try{syncPushDebounced()}catch(e){}
@@ -1216,6 +1293,7 @@ function syncCfg(){
   };
 }
 function syncPersistFromForm(){
+  try{const tk=(el('syncToken')||{}).value||'';if(/^ghp_/.test(tk)&&!window._warnedClassic){window._warnedClassic=true;toast('Classic token can reach ALL your repos — prefer a fine-grained token for this one repo',false)}}catch(e){}
   const c=syncCfg();
   syncSet('url',c.url);syncSet('repo',c.repo);syncSet('path',c.path);syncSet('branch',c.branch);
   if(c.token)syncSet('token',c.token);
@@ -1244,6 +1322,7 @@ function syncStatus(msg,ok){
   e.textContent=msg||'';
   e.style.color=ok===false?'#b91c1c':(ok?'#166534':'');
 }
+function parseRemote(text){const d=safeParseJSON(text);return{customers:parseCustomersPayload(d),deleted:(d&&!Array.isArray(d)&&d.deleted)||null}}
 function parseCustomersPayload(data){
   if(Array.isArray(data))return data;
   if(data&&Array.isArray(data.customers))return data.customers;
@@ -1274,6 +1353,7 @@ function safeParseJSON(text){
     }
   }
 }
+function syncForgetToken(){try{localStorage.removeItem(SYNC_KEYS.token)}catch(e){}const e=el('syncToken');if(e)e.value='';toast('Token removed from this phone',true)}
 function syncHasCfg(c){return !!(c.url||(c.repo&&c.path))}
 async function syncFetchRemote(c){
   // Prefer GitHub API when repo+token (works private); else public URL
@@ -1286,13 +1366,13 @@ async function syncFetchRemote(c){
     if(!res.ok)throw new Error('GitHub '+res.status+' '+(await res.text()).slice(0,120));
     const j=await res.json();
     const text=decodeURIComponent(escape(atob((j.content||'').replace(/\n/g,''))));
-    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:j.sha,empty:false};
+    return{...parseRemote(text),sha:j.sha,empty:false};
   }
   if(c.url){
     const res=await fetch(c.url+(c.url.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
     if(!res.ok)throw new Error('HTTP '+res.status);
     const text=await res.text();
-    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:null,empty:false};
+    return{...parseRemote(text),sha:null,empty:false};
   }
   if(c.repo){
     // public raw without token
@@ -1302,7 +1382,7 @@ async function syncFetchRemote(c){
     if(res.status===404)return{customers:[],sha:null,empty:true};
     if(!res.ok)throw new Error('HTTP '+res.status);
     const text=await res.text();
-    return{customers:parseCustomersPayload(safeParseJSON(text)),sha:null,empty:false};
+    return{...parseRemote(text),sha:null,empty:false};
   }
   throw new Error('no config');
 }
@@ -1313,7 +1393,7 @@ async function syncPull(manual){
   try{
     if(manual)syncStatus(lang==='ur'?'کھینچ رہا ہے…':'Pulling…');
     const remote=await syncFetchRemote(c);
-    const before=loadDB().length;
+    mergeDel(remote.deleted);
     const merged=mergeDB(loadDB(),remote.customers||[]);
     saveDB(merged);
     renderCustList();updatePrev();
@@ -1347,11 +1427,18 @@ async function syncPush(manual){
     // get current sha
     let sha=null;
     const get=await fetch(api+'?ref='+encodeURIComponent(c.branch),{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token}});
-    if(get.ok){const j=await get.json();sha=j.sha}
+    if(get.ok){
+      const j=await get.json();sha=j.sha;
+      // merge what is already on GitHub first, so a push never overwrites invoices added from another phone
+      try{
+        const txt=decodeURIComponent(escape(atob((j.content||'').replace(/\n/g,''))));
+        if(txt.trim()){const rr=parseRemote(txt);mergeDel(rr.deleted);saveDB(mergeDB(loadDB(),rr.customers));renderCustList();updatePrev()}
+      }catch(e){console.warn('push: remote merge skipped',e)}
+    }
     else if(get.status!==404)throw new Error('GitHub '+get.status);
     const body={
       message:'Al Ghani sync '+new Date().toISOString(),
-      content:utf8ToB64(JSON.stringify(loadDB(),null,2)),
+      content:utf8ToB64(JSON.stringify({customers:loadDB(),deleted:loadDel()},null,2)),
       branch:c.branch
     };
     if(sha)body.sha=sha;
@@ -1514,16 +1601,14 @@ function crop(big,S,y){
 function ledger(c,exclude,max){
   if(!c)return{rows:[],hidden:0};
   const all=(c.invoices||[]).filter(i=>!(exclude&&i.invNo===exclude&&i.invNo!=='PAY')).slice().sort((a,b)=>(a.ts||0)-(b.ts||0));
-  let bal=0;
+  let sb=0; // signed balance: negative = customer credit, carried into later bills
   const rows=all.map(i=>{
     if(i.invNo==='PAY'){
-      bal=Math.max(0,bal-(i.advance||0));
-      return{date:i.date||'',ref:'PAY',billed:0,paid:i.advance||0,bal,pay:true,items:[]};
+      sb-=(i.advance||0);
+      return{date:i.date||'',ref:'PAY',billed:0,paid:i.advance||0,bal:Math.max(0,sb),pay:true,items:[]};
     }
-    // Full bill then subtract advance (excess advance lowers prior balance)
-    bal+=(i.total||0);
-    bal=Math.max(0,bal-(i.advance||0));
-    return{date:i.date||'',ref:i.invNo,billed:i.total||0,paid:i.advance||0,bal,pay:false,items:(i.items||[]).slice()};
+    sb+=(i.total||0)-(i.advance||0);
+    return{date:i.date||'',ref:i.invNo,billed:i.total||0,paid:i.advance||0,bal:Math.max(0,sb),pay:false,items:(i.items||[]).slice()};
   });
   return{rows:rows.slice(-max),hidden:Math.max(0,rows.length-max)};
 }
@@ -1657,10 +1742,15 @@ function normHistory(ctx,y,W,t,d){
 }
 
 /* ---------- MINI INVOICE (58mm / 384px, big bold text) ---------- */
-function renderMini(){
-  const S=2,W=384,t=T[lang],d=gather();
-  const big=mkCanvas(W*S,6000*S);const ctx=big.getContext('2d');ctx.scale(S,S);
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,6000);
+/* The invoice height is measured first (tiny pass), then drawn on a canvas of exactly that height:
+   no 6000-unit cut-off for long statements, and far less memory than a fixed huge canvas. */
+function fitScale(S,W,H){return Math.max(0.5,Math.min(S,30000/H,Math.sqrt(9e7/(W*H))))}
+function renderMini(){const H=Math.ceil(renderMiniImpl(0.1,40000,true))+40;return renderMiniImpl(fitScale(2,384,H),H,false)}
+function renderNormal(){const H=Math.ceil(renderNormalImpl(0.1,40000,true))+40;return renderNormalImpl(fitScale(3,800,H),H,false)}
+function renderMiniImpl(S,H,MEASURE){
+  const W=384,t=T[lang],d=gather();
+  const big=mkCanvas(Math.ceil(W*S),Math.ceil(H*S));const ctx=big.getContext('2d');ctx.scale(S,S);
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
   const K='#000',B={stroke:.8};
   miniLogoRect=null;
   let y=14;
@@ -1746,20 +1836,20 @@ function renderMini(){
   tx(ctx,t.footer,W/2,y+26,14,{align:'center',stroke:.5});
   tx(ctx,CREDIT,W/2,y+46,12,{align:'center',stroke:.35});
   y+=46+34;
+  if(MEASURE)return y;
   return crop(big,S,y);
 }
 
 /* ---------- NORMAL INVOICE (800px, scale 2) ---------- */
-function renderNormal(){
-  // S=3 → sharper text on phones
-  const S=3,W=800,t=T[lang],d=gather();
-  const big=mkCanvas(W*S,6000*S);const ctx=big.getContext('2d');
+function renderNormalImpl(S,H,MEASURE){
+  const W=800,t=T[lang],d=gather();
+  const big=mkCanvas(Math.ceil(W*S),Math.ceil(H*S));const ctx=big.getContext('2d');
   ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
   ctx.scale(S,S);
   const NAVY='#0b1b2b',GOLD='#c9a227',GOLD2='#e2b93b',INK='#0f172a',MUT='#64748b';
   const ROW_A='#ffffff',ROW_B='#f8fafc',LINE='#e2e8f0',SOFT='#f1f5f9';
   // Clean white paper
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,6000);
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
   const phl=phoneLines();const hdrH=Math.max(156,128+phl.length*22+24);
   ctx.fillStyle=NAVY;ctx.fillRect(0,0,W,hdrH);
   let tx0=36;
@@ -1944,6 +2034,7 @@ function renderNormal(){
   tx(ctx,CREDIT,W/2,y+47,11.5,{align:'center',color:'#e2b93b',weight:'normal'});
   y+=55;
   // Crop content then elevate as 3D card on dark stage
+  if(MEASURE)return y;
   const content=crop(big,S,y);
   return compose3DCard(content,S);
 }
