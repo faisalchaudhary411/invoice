@@ -1721,11 +1721,16 @@ function renderNormal(){
     ty+=50+14;
   }
   }
-  let py=y;
-  const notes=(d.stmt&&(d.c.outstanding||0)<=0)?t.thanksPaid:v('notes');
-  if(notes){const k=para(ctx,notes,36,py+12,15,{color:MUT,weight:'normal',italic:true},W-72,20);py+=k*20+18}
-  y=Math.max(ty,py)+18;
+  y=Math.max(ty,y)+18;
   if(d.hist&&!d.stmt)y=normHistory(ctx,y,W,t,d);
+
+  /* Notes — full width, just above payment + signature footer */
+  const notes=(d.stmt&&(d.c.outstanding||0)<=0)?t.thanksPaid:v('notes');
+  if(notes&&String(notes).trim()){
+    y+=4;
+    const k=para(ctx,String(notes).trim(),36,y+14,14,{color:MUT,weight:'normal',italic:true},W-72,19);
+    y+=k*19+16;
+  }
 
   /* Footer row: Payment (left) + Stamp & Signature (right) on same line */
   const gap=16;
