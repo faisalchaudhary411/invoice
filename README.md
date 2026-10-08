@@ -16,14 +16,13 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 
 ## How it works
 1. **Customer** → type a name (old customers appear), pick the job.
-2. **Items** → tap the item box to search (English or Urdu) or type your own; enter the rate. Sq-ft items auto-calculate Qty from W × L (untick "Qty = W × L" to type a flat quantity).
-   Every item has 3 pricing modes (chips under the item name):
-   - **Qty × Rate** — normal; optional size and gauge.
-   - **📦 Pcs + sq ft** — pieces, total sq ft and rate per sq ft → Amount = sq ft × Rate (pieces are only printed).
-   - **💰 Lump sum** — pieces + total price (e.g. 10 pcs, Rs 200,000). Sq ft, rate and size are optional; if the price is empty, price = sq ft × rate.
-3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
+2. **Items** → tap the item box to search (English or Urdu) or type your own. Every item has 3 simple pricing modes:
+   - **📐 Sq ft** — enter Width and Length; Amount = W × L × Rate.
+   - **📏 Running ft** — enter total running feet; Amount = ft × Rate.
+   - **💰 Lumpsum** — enter the total price only (no calculation; values pasted as-is).
+3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG / 📲 Share WhatsApp**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
 4. Signature and stamp each have their own checkbox (on by default).
-5. **Account statement / receipt:** Customers → **Use in Invoice** starts a fresh invoice for that customer. With no items, Preview / Print gives an **ACCOUNT STATEMENT** (all past bills, payments and running balance, e.g. "Account clear — Rs 0"). Nothing is saved for a statement. Tick **📜 Include account history** to print the last entries under a normal invoice too.
+5. **Account statement / receipt:** Customers → **Use in Invoice** starts a fresh invoice for that customer and loads their last invoice items so you can reuse/edit. Past purchases are written as a complete record on the **digital (Normal PNG) invoice only** (not on mini printer). With no items, Preview / Print gives an **ACCOUNT STATEMENT**. Tick **📜 Include account history** to print the last account entries under a normal invoice too.
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.

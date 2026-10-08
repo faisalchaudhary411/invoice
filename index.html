@@ -102,7 +102,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--gold2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex:none}
 .hc-top h3{font-size:.98rem;color:var(--navy)}.hc-top .meta{font-size:.76rem;color:var(--mut)}
 .nums{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;font-size:.78rem;font-weight:700}
-.nums span{background:#eef2f7;padding:4px 10px;border-radius:20px}.nums .o{background:#fee2e2;color:var(--err)}.nums .z{background:#dcfce7;color:var(--ok)}
+.nums span{background:#eef2f7;padding:4px 10px;border-radius:20px}.nums .o{background:#fee2e2;color:var(--err)}.nums .z{background:#dcfce7;color:var(--ok)}.nums .cr{background:#dbeafe;color:#1d4ed8}
 .hist-list{font-size:.76rem;margin-top:8px;max-height:130px;overflow:auto;color:var(--mut)}
 .hist-list div{padding:4px 0;border-bottom:1px solid #f0f2f6}
 .hc-act{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
@@ -137,7 +137,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--err)}.toast.ok{background:#14532d}
 .pv{position:fixed;inset:0;background:rgba(5,10,18,.92);overflow:auto;z-index:99;padding:14px;text-align:center}
-.pv img{max-width:100%;background:#fff;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.pv img{max-width:100%;background:transparent;border-radius:0;box-shadow:none}
 .pv p{color:#cbd5e1;font-size:.8rem;margin-bottom:10px}
 </style>
 </head>
@@ -244,6 +244,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <button class="btn b-green" onclick="downloadMini()" data-t="btnDlMini">Mini 58mm PNG</button>
       <button class="btn b-blue" onclick="printMini()" data-t="btnPrint">Print Mini</button>
       <button class="btn b-amber" onclick="downloadNormal()" data-t="btnDlNorm">Normal PNG</button>
+      <button class="btn b-green" onclick="shareInvoiceWA()" data-t="btnShareWA">📲 Share WhatsApp</button>
       <button class="btn b-navy" onclick="btConnectClick()" data-t="btnConn">🔌 Connect Printer</button>
       <button class="btn b-green" onclick="printDirect()" data-t="btnPrintDirect">⚡ Print Direct</button>
       <button class="btn b-ghost" onclick="previewInv('mini')" data-t="btnPvMini">👁 Preview Mini</button>
@@ -305,6 +306,27 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
     </div>
     <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
     <p class="hint" data-t="hintBackup" style="margin-top:10px">Customers are saved on this phone. Export a backup regularly.</p>
+    <hr style="border:0;border-top:1px solid var(--line);margin:16px 0 12px">
+    <h2 style="margin:0 0 8px"><i>☁️</i><span data-t="secSync">Cloud Sync (automatic)</span></h2>
+    <p class="hint" data-t="hintSync">Put customers.json on GitHub. Both phones pull/push the same file automatically — no manual export.</p>
+    <label data-t="lblSyncUrl">JSON URL (public raw link) or leave blank if using GitHub below</label>
+    <input id="syncUrl" type="url" placeholder="https://raw.githubusercontent.com/USER/REPO/main/customers.json" style="margin-bottom:8px">
+    <label data-t="lblSyncRepo">GitHub repo (owner/name)</label>
+    <input id="syncRepo" placeholder="username/alghani-data" style="margin-bottom:8px">
+    <div class="grid2">
+      <div><label data-t="lblSyncPath">File path</label><input id="syncPath" placeholder="customers.json" value="customers.json"></div>
+      <div><label data-t="lblSyncBranch">Branch</label><input id="syncBranch" placeholder="main" value="main"></div>
+    </div>
+    <label data-t="lblSyncToken" style="margin-top:8px">GitHub token (for private repo + auto push)</label>
+    <input id="syncToken" type="password" placeholder="ghp_...." autocomplete="off" style="margin-bottom:8px">
+    <p class="hint" data-t="hintToken">Create at github.com/settings/tokens → classic → scope <b>repo</b>. Stored only on this phone.</p>
+    <label class="ck"><input type="checkbox" id="syncAutoPull" checked><span data-t="lblAutoPull">Auto-pull when app opens</span></label>
+    <label class="ck"><input type="checkbox" id="syncAutoPush"><span data-t="lblAutoPush">Auto-push after every save</span></label>
+    <div class="grid2" style="margin-top:10px">
+      <button class="btn b-navy" onclick="syncPull(true)" data-t="btnPull">⬇️ Pull now</button>
+      <button class="btn b-gold" onclick="syncPush(true)" data-t="btnPush">⬆️ Push now</button>
+    </div>
+    <p id="syncStatus" class="hint" style="margin-top:8px;font-weight:600"></p>
   </div>
 </section>
 </main>
@@ -332,25 +354,25 @@ en:{pageTitle:"Al Ghani Steel Arts",pageSub:"Invoice · Customer Records · Mini
 secInvoice:"Invoice",secCustomer:"Customer",secItems:"Items",secPayment:"Payment",secSign:"Notes, Signature & Stamp",secOutput:"Create Invoice",secBiz:"🏢 Business details",
 lblBizName:"Business Name",lblTagline:"Tagline",lblAddress:"Business Address",lblPhone:"Phone numbers (separate with ·)",lblOwner:"Owner",
 lblInvNo:"Invoice No",lblDate:"Date",lblTime:"Time",lblCust:"Customer Name *",lblHouse:"House / Shop No",lblCustPhone:"Customer Phone",lblCustAddr:"Customer Address / Area",
-lblJob:"Job / Reference",selJob:"-- Select job --",selCustom:"Other / Custom...",hintItems:"Tap the item box to search, or type your own item. Enter rates manually.",
+lblJob:"Job / Reference",selJob:"-- Select job --",selCustom:"Other / Custom...",hintItems:"Tap item to search. Choose 📐 Sq ft (W×L×rate), 📏 Running ft (ft×rate), or 💰 Lumpsum (price as-is).",
 btnAddItem:"+ Add Item",lblTax:"Tax %",lblDiscount:"Discount Rs",lblTotal:"This Invoice Total",lblAdvance:"Advance / Paid Now (Rs)",lblRemain:"This Invoice Remaining",
 lblNotes:"Notes",lblSign:"Signature Name",lblUseSig:"Add signature",lblUseStamp:"Add business stamp",lblAutoBk:"Also download a backup file after every save",
 btnGen:"💾 Save Invoice",btnSaveShort:"💾 Save",btnDlMini:"Mini 58mm PNG",btnPrint:"Print Mini",btnDlNorm:"Normal PNG",btnPvMini:"👁 Preview Mini",btnPvNorm:"👁 Preview Normal",btnNew:"➕ New Invoice",
 hintPrint:"Save first (updates customer history), then download or print. The invoice keeps the same number until you tap New Invoice.",
 secCust:"Customer Records",secBackup:"Backup & Tools",btnCopy:"📥 Save App Copy (with data)",btnExport:"Export Backup JSON",btnImport:"Import Backup",btnStamp:"Download Stamp PNG",
-hintBackup:"Customers are saved on this phone. Export a backup regularly. \"Save App Copy\" downloads this app with all customers inside it.",
+hintBackup:"Customers are saved on this phone. Export a backup regularly. \"Save App Copy\" downloads this app with all customers inside it.",secSync:"Cloud Sync (automatic)",hintSync:"Host customers.json on GitHub. Both phones pull/push the same file — no manual export.",lblSyncUrl:"JSON URL (public raw link)",lblSyncRepo:"GitHub repo (owner/name)",lblSyncPath:"File path",lblSyncBranch:"Branch",lblSyncToken:"GitHub token (private + push)",hintToken:"github.com/settings/tokens → classic → scope repo. Stored only on this phone.",lblAutoPull:"Auto-pull when app opens",lblAutoPush:"Auto-push after every save",btnPull:"⬇️ Pull now",btnPush:"⬆️ Push now",syncPullOk:"Pulled & merged",syncPushOk:"Pushed to cloud",syncNoCfg:"Set a JSON URL or GitHub repo first",syncFail:"Sync failed",
 invTabL:"Invoice",custTabL:"Customers",bankTitle:"Payment (Ghulam Yaseen)",prevLabel:"Previous outstanding:",
 phCust:"Type name — existing customers appear",phJob:"Job details (or custom)",phSearchCust:"Search customer...",phItem:"Search or type item...",
 invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax:"Tax",discount:"Discount",total:"TOTAL",advance:"Advance Paid",remain:"Remaining",outstanding:"Outstanding",
 invNoLabel:"No:",dateLabel:"Date:",timeLabel:"Time:",signStamp:"Authorized Signature",footer:"Al Ghani Steel Arts · Welding Workshop",
 payTo:"Pay to: Ghulam Yaseen",payDetails:"Payment Details",colItem:"ITEM",colQty:"QTY",colRate:"RATE",colAmt:"AMT",
-w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeQty:"Qty × Rate",modeBulk:"📦 Pcs + sq ft",modeLump:"💰 Lump sum",lumpPrice:"Total price (Rs)",lumpOpt:"Optional: Total sq ft",lumpRate:"Optional: Rate per sq ft",lumpHint:"Enter pieces and the total price. Sq ft, rate and size are optional — if Total price is empty, price = sq ft × rate.",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",pcsMode:"📦 Bulk: pieces + total sq ft (e.g. 8 grills)",pieces:"Pieces",totalSf:"Total sq ft",pcsHint:"Pieces are only printed as written. Amount = Total sq ft × Rate",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",areaQty:"Qty = W × L (sq ft)",qty:"Qty",rate:"Rate",amt:"Amt",
+w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeSqft:"📐 Sq ft",modeRft:"📏 Running ft",modeLump:"💰 Lumpsum",sqftW:"Width (ft)",sqftL:"Length (ft)",rftTotal:"Total running ft",lumpPrice:"Total price (Rs)",lumpHint:"Total price is used as amount. Width, length and rate are optional notes only — never multiplied.",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnShareWA:"📲 Share WhatsApp",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",qty:"Qty",rate:"Rate",amt:"Amt",pastPurch:"PREVIOUS PURCHASES",credit:"Credit",creditToPrev:"Applied to previous",
 paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment"},
 ur:{pageTitle:"الغنی سٹیل آرٹس",pageSub:"انوائس · گاہک ریکارڈ · منی پرنٹر",
 secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPayment:"ادائیگی",secSign:"نوٹس، دستخط اور مہر",secOutput:"انوائس بنائیں",secBiz:"🏢 کاروباری تفصیل",
 lblBizName:"کاروبار کا نام",lblTagline:"ٹیگ لائن",lblAddress:"کاروباری پتہ",lblPhone:"فون نمبر (· سے الگ کریں)",lblOwner:"مالک",
 lblInvNo:"انوائس نمبر",lblDate:"تاریخ",lblTime:"وقت",lblCust:"گاہک کا نام *",lblHouse:"مکان / دکان نمبر",lblCustPhone:"گاہک کا فون",lblCustAddr:"گاہک کا پتہ / علاقہ",
-lblJob:"جاب / ریفرنس",selJob:"-- جاب منتخب کریں --",selCustom:"دیگر / کسٹم...",hintItems:"آئٹم کے خانے پر ٹیپ کر کے تلاش کریں یا خود لکھیں۔ ریٹ خود درج کریں۔",
+lblJob:"جاب / ریفرنس",selJob:"-- جاب منتخب کریں --",selCustom:"دیگر / کسٹم...",hintItems:"آئٹم تلاش کریں۔ 📐 مربع فٹ (چوڑائی×لمبائی×ریٹ)، 📏 رننگ فٹ (فٹ×ریٹ)، یا 💰 یکمشت (جیسے ہے) منتخب کریں۔",
 btnAddItem:"+ آئٹم شامل",lblTax:"ٹیکس %",lblDiscount:"رعایت",lblTotal:"اس انوائس کا کل",lblAdvance:"ایڈوانس / ابھی ادا",lblRemain:"اس انوائس کی باقی",
 lblNotes:"نوٹس",lblSign:"دستخط",lblUseSig:"دستخط شامل کریں",lblUseStamp:"کاروباری مہر شامل کریں",lblAutoBk:"ہر بار محفوظ کرنے پر بیک اپ فائل بھی ڈاؤن لوڈ کریں",
 btnGen:"💾 انوائس محفوظ کریں",btnSaveShort:"💾 محفوظ",btnDlMini:"منی 58mm PNG",btnPrint:"منی پرنٹ",btnDlNorm:"عام PNG",btnPvMini:"👁 منی پری ویو",btnPvNorm:"👁 عام پری ویو",btnNew:"➕ نئی انوائس",
@@ -362,7 +384,7 @@ phCust:"نام لکھیں — پرانے گاہک نظر آئیں گے",phJob:"�
 invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:",subtotal:"ذیلی کل",tax:"ٹیکس",discount:"رعایت",total:"کل",advance:"ایڈوانس ادا",remain:"باقی",outstanding:"بقایا",
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
-w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeQty:"مقدار × ریٹ",modeBulk:"📦 عدد + مربع فٹ",modeLump:"💰 یکمشت رقم",lumpPrice:"کل قیمت (روپے)",lumpOpt:"اختیاری: کل مربع فٹ",lumpRate:"اختیاری: ریٹ فی مربع فٹ",lumpHint:"عدد اور کل قیمت لکھیں۔ مربع فٹ، ریٹ اور سائز اختیاری ہیں — کل قیمت خالی ہو تو قیمت = مربع فٹ × ریٹ۔",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",pcsMode:"📦 بلک: عدد + کل مربع فٹ (مثلاً 8 گرل)",pieces:"عدد",totalSf:"کل مربع فٹ",pcsHint:"عدد صرف لکھا جاتا ہے۔ رقم = کل مربع فٹ × ریٹ",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",areaQty:"مقدار = چوڑائی × لمبائی",qty:"تعداد",rate:"ریٹ",amt:"رقم",
+w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"کل قیمت (روپے)",lumpHint:"کل قیمت ہی رقم ہے۔ چوڑائی، لمبائی اور ریٹ اختیاری نوٹ ہیں — کبھی ضرب نہیں ہوتے۔",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",
 paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی"}
 };
 
@@ -380,6 +402,85 @@ const num=n=>Math.round(n).toLocaleString('en-PK');
 const fmt=n=>'Rs '+num(n);
 const qtyFmt=q=>String(+(+q).toFixed(2));
 const mkCanvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c};
+function roundRectPath(ctx,x,y,w,h,r){
+  const rr=Math.max(0,Math.min(r,w/2,h/2));
+  ctx.beginPath();
+  ctx.moveTo(x+rr,y);
+  ctx.arcTo(x+w,y,x+w,y+h,rr);
+  ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr);
+  ctx.arcTo(x,y,x+w,y,rr);
+  ctx.closePath();
+}
+function compose3DCard(content,S){
+  // Meta-AI style elevated card: soft ambient occlusion, warm paper, deep stage
+  const padX=Math.round(96*S), padY=Math.round(110*S), r=Math.round(32*S);
+  const cw=content.width, ch=content.height;
+  const outW=cw+padX*2, outH=ch+padY*2;
+  const out=mkCanvas(outW,outH);const ox=out.getContext('2d');
+  // Stage — near-black with soft centre glow
+  const stage=ox.createRadialGradient(outW/2, outH*0.4, 0, outW/2, outH*0.5, Math.max(outW,outH)*0.85);
+  stage.addColorStop(0,'#222a38');
+  stage.addColorStop(0.45,'#0e121a');
+  stage.addColorStop(1,'#05070a');
+  ox.fillStyle=stage;ox.fillRect(0,0,outW,outH);
+  // Soft ambient occlusion shadow — expanding rounded rects (no blur dependency)
+  for(let i=18;i>=1;i--){
+    const t=i/18;
+    const expand=Math.round(t*48*S);
+    const dy=Math.round(t*36*S);
+    const a=0.045*t;
+    ox.fillStyle='rgba(0,0,0,'+a.toFixed(3)+')';
+    roundRectPath(ox, padX-expand, padY-expand*0.3+dy, cw+expand*2, ch+expand*1.6, r+expand*0.5);
+    ox.fill();
+  }
+  // Dense core shadow directly under card
+  for(let i=10;i>=1;i--){
+    const t=i/10;
+    const expand=Math.round(t*14*S);
+    const dy=Math.round(t*10*S);
+    ox.fillStyle='rgba(0,0,0,'+(0.12*t).toFixed(3)+')';
+    roundRectPath(ox, padX-expand, padY+dy, cw+expand*2, ch+expand, r+expand*0.4);
+    ox.fill();
+  }
+  // Ground contact ellipse
+  ox.fillStyle='rgba(0,0,0,0.4)';
+  ox.beginPath();
+  ox.ellipse(padX+cw/2, padY+ch+22*S, cw*0.38, 16*S, 0, 0, Math.PI*2);
+  ox.fill();
+  // Card body
+  ox.save();
+  roundRectPath(ox,padX,padY,cw,ch,r);
+  ox.clip();
+  ox.drawImage(content,padX,padY);
+  // Soft top-left light wash (studio lighting)
+  const light=ox.createRadialGradient(padX+cw*0.25, padY+ch*0.08, 0, padX+cw*0.4, padY+ch*0.25, cw*0.7);
+  light.addColorStop(0,'rgba(255,255,255,0.14)');
+  light.addColorStop(0.5,'rgba(255,255,255,0.04)');
+  light.addColorStop(1,'rgba(255,255,255,0)');
+  ox.fillStyle=light;ox.fillRect(padX,padY,cw,ch);
+  // Soft bottom ambient occlusion inside card
+  const aoi=ox.createLinearGradient(padX, padY+ch-40*S, padX, padY+ch);
+  aoi.addColorStop(0,'rgba(0,0,0,0)');
+  aoi.addColorStop(1,'rgba(0,0,0,0.10)');
+  ox.fillStyle=aoi;ox.fillRect(padX,padY+ch-40*S,cw,40*S);
+  // Left edge subtle dark
+  const leftE=ox.createLinearGradient(padX,padY,padX+10*S,padY);
+  leftE.addColorStop(0,'rgba(0,0,0,0.08)');leftE.addColorStop(1,'rgba(0,0,0,0)');
+  ox.fillStyle=leftE;ox.fillRect(padX,padY,10*S,ch);
+  ox.restore();
+  // Crisp outer edge
+  ox.strokeStyle='rgba(255,255,255,0.12)';
+  ox.lineWidth=Math.max(1.5,S*0.8);
+  roundRectPath(ox,padX+0.5,padY+0.5,cw-1,ch-1,r);
+  ox.stroke();
+  // Soft gold halo
+  ox.strokeStyle='rgba(201,162,39,0.18)';
+  ox.lineWidth=Math.max(2,S);
+  roundRectPath(ox,padX-4,padY-4,cw+8,ch+8,r+4);
+  ox.stroke();
+  return out;
+}
 const localDate=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const localTime=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
 function genInvNo(){const n=new Date();return 'AG-'+String(n.getFullYear()).slice(-2)+String(n.getMonth()+1).padStart(2,'0')+String(n.getDate()).padStart(2,'0')+'-'+(Math.floor(Math.random()*900)+100)}
@@ -427,9 +528,16 @@ function restoreFromIDB(){
   });
 }
 function recompute(c){
-  const inv=c.invoices||[];let billed=0,paid=0,rem=0,pays=0;
-  inv.forEach(i=>{if(i.invNo==='PAY'){pays+=(i.advance||0);paid+=(i.advance||0)}else{billed+=(i.total||0);paid+=(i.advance||0);rem+=(i.remaining||0)}});
-  c.totalBilled=billed;c.totalPaid=paid;c.outstanding=Math.max(0,rem-pays);return c;
+  // Outstanding = max(0, billed − paid); Credit = max(0, paid − billed)
+  const inv=c.invoices||[];let billed=0,paid=0;
+  inv.forEach(i=>{
+    if(i.invNo==='PAY'){paid+=(i.advance||0)}
+    else{billed+=(i.total||0);paid+=(i.advance||0)}
+  });
+  c.totalBilled=billed;c.totalPaid=paid;
+  c.outstanding=Math.max(0,billed-paid);
+  c.credit=Math.max(0,paid-billed);
+  return c;
 }
 function mergeDB(a,b){
   const map=new Map();
@@ -456,9 +564,15 @@ function migrateAndSeed(){
 }
 function findCust(name){const n=(name||'').trim().toLowerCase();if(!n)return null;return loadDB().find(c=>(c.name||'').toLowerCase()===n)||null}
 function prevOutFor(c,invNo){
+  // Outstanding from all OTHER invoices (exclude the one being edited), before current form advance
   if(!c)return 0;
-  const saved=(c.invoices||[]).find(i=>i.invNo===invNo&&i.invNo!=='PAY');
-  return Math.max(0,(c.outstanding||0)-(saved?(saved.remaining||0):0));
+  let billed=0,paid=0;
+  (c.invoices||[]).forEach(i=>{
+    if(invNo&&i.invNo===invNo&&i.invNo!=='PAY')return;
+    if(i.invNo==='PAY')paid+=(i.advance||0);
+    else{billed+=(i.total||0);paid+=(i.advance||0)}
+  });
+  return Math.max(0,billed-paid);
 }
 
 /* ---------- customer input ---------- */
@@ -467,7 +581,7 @@ function suggestCust(){
   if(!q){box.style.display='none';updatePrev();return}
   const list=loadDB().filter(c=>c.name.toLowerCase().includes(q)||(c.phone&&c.phone.includes(q)));
   if(!list.length||(list.length===1&&list[0].name.toLowerCase()===q)){box.style.display='none';updatePrev();return}
-  box.innerHTML=list.slice(0,8).map(c=>'<div onclick="pickCust(\''+c.id+'\')"><span>'+esc(c.name)+(c.phone?' · '+esc(c.phone):'')+'</span><small>Out: Rs '+num(c.outstanding||0)+'</small></div>').join('');
+  box.innerHTML=list.slice(0,8).map(c=>'<div onclick="pickCust(\''+c.id+'\')"><span>'+esc(c.name)+(c.phone?' · '+esc(c.phone):'')+'</span><small>'+((c.credit||0)>0?('Credit: Rs '+num(c.credit)):('Out: Rs '+num(c.outstanding||0)))+'</small></div>').join('');
   box.style.display='block';updatePrev();
 }
 function pickCust(id){
@@ -512,6 +626,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   setLang('en');
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
   loadPrCfg();checkBackupNag();
+  // Cloud sync
+  syncLoadForm();
+  ['syncUrl','syncRepo','syncPath','syncBranch','syncToken'].forEach(id=>{const e=el(id);if(e)e.addEventListener('change',syncPersistFromForm)});
+  if(el('syncAutoPull'))el('syncAutoPull').addEventListener('change',syncPersistFromForm);
+  if(el('syncAutoPush'))el('syncAutoPush').addEventListener('change',syncPersistFromForm);
+  const sc=syncCfg();
+  if(sc.apull&&syncHasCfg(sc))setTimeout(()=>syncPull(false),600);
 });
 
 function setLang(l){
@@ -556,7 +677,7 @@ const GAUGE_OPTS=["","10 gauge","12 gauge","14 gauge","16 gauge","18 gauge","20 
 const optHtml=a=>a.map(s=>'<option value="'+s+'">'+(s||'—')+'</option>').join('');
 const cleanName=s=>s.replace(/\s*\((per|فی)[^)]*\)\s*$/i,'').trim();
 
-function addItem(){
+function addItem(prefill){
   itemCount++;const id=itemCount;const n=document.querySelectorAll('#itemsBody .item-card').length+1;
   const card=document.createElement('div');card.className='item-card';card.id='item-row-'+id;card.dataset.unit='qty';
   card.innerHTML=
@@ -567,40 +688,43 @@ function addItem(){
       '<div><label data-ti="customG">'+esc(tr('customG'))+'</label><input type="text" id="cg-'+id+'" placeholder="e.g. 16" inputmode="decimal" oninput="calc('+id+')"></div>'+
     '</div>'+
     '<div class="seg" id="seg-'+id+'">'+
-      '<button type="button" class="on" data-m="qty" data-ti="modeQty" onclick="setMode('+id+',\'qty\')">'+esc(tr('modeQty'))+'</button>'+
-      '<button type="button" data-m="bulk" data-ti="modeBulk" onclick="setMode('+id+',\'bulk\')">'+esc(tr('modeBulk'))+'</button>'+
+      '<button type="button" class="on" data-m="sqft" data-ti="modeSqft" onclick="setMode('+id+',\'sqft\')">'+esc(tr('modeSqft'))+'</button>'+
+      '<button type="button" data-m="rft" data-ti="modeRft" onclick="setMode('+id+',\'rft\')">'+esc(tr('modeRft'))+'</button>'+
       '<button type="button" data-m="lump" data-ti="modeLump" onclick="setMode('+id+',\'lump\')">'+esc(tr('modeLump'))+'</button>'+
-    '</div><input type="hidden" id="mode-'+id+'" value="qty">'+
-    '<div class="bulk hidden" id="bulkbox-'+id+'"><div class="row">'+
-      '<div><label data-ti="pieces">'+esc(tr('pieces'))+'</label><input type="number" id="np-'+id+'" value="1" min="1" step="1" inputmode="numeric" oninput="calc('+id+')"></div>'+
-      '<div><label data-ti="totalSf">'+esc(tr('totalSf'))+'</label><input type="number" id="sf-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 300" oninput="calc('+id+')"></div>'+
-    '</div><p class="hint" data-ti="pcsHint">'+esc(tr('pcsHint'))+'</p></div>'+
-    '<div class="bulk hidden" id="lumpbox-'+id+'"><div class="row">'+
-      '<div><label data-ti="pieces">'+esc(tr('pieces'))+'</label><input type="number" id="lnp-'+id+'" value="1" min="1" step="1" inputmode="numeric" oninput="calc('+id+')"></div>'+
-      '<div><label data-ti="lumpPrice">'+esc(tr('lumpPrice'))+'</label><input type="number" id="lprice-'+id+'" min="0" inputmode="decimal" placeholder="e.g. 200000" oninput="calc('+id+')"></div>'+
-    '</div><div class="row">'+
-      '<div><label data-ti="lumpOpt">'+esc(tr('lumpOpt'))+'</label><input type="number" id="lsf-'+id+'" min="0" step="0.01" inputmode="decimal" oninput="calc('+id+')"></div>'+
-      '<div><label data-ti="lumpRate">'+esc(tr('lumpRate'))+'</label><input type="number" id="lrate-'+id+'" min="0" inputmode="decimal" oninput="calc('+id+')"></div>'+
-    '</div><p class="hint" data-ti="lumpHint">'+esc(tr('lumpHint'))+'</p></div>'+
+    '</div><input type="hidden" id="mode-'+id+'" value="sqft">'+
+    '<div id="sqftbox-'+id+'"><div class="row">'+
+      '<div><label data-ti="sqftW">'+esc(tr('sqftW'))+'</label><input type="number" id="sw-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 3.5" oninput="calc('+id+')"></div>'+
+      '<div><label data-ti="sqftL">'+esc(tr('sqftL'))+'</label><input type="number" id="sl-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 8" oninput="calc('+id+')"></div>'+
+    '</div></div>'+
+    '<div class="hidden" id="rftbox-'+id+'"><div class="row">'+
+      '<div><label data-ti="rftTotal">'+esc(tr('rftTotal'))+'</label><input type="number" id="rft-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 24" oninput="calc('+id+')"></div>'+
+    '</div></div>'+
+    '<div class="hidden" id="lumpbox-'+id+'">'+
+      '<div class="row"><div><label data-ti="lumpPrice">'+esc(tr('lumpPrice'))+'</label><input type="number" id="lprice-'+id+'" min="0" inputmode="decimal" placeholder="e.g. 200000" oninput="calc('+id+')"></div></div>'+
+      '<div class="row" style="margin-top:6px">'+
+        '<div><label data-ti="sqftW">'+esc(tr('sqftW'))+' <small style="opacity:.6">(opt)</small></label><input type="number" id="lw-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="optional" oninput="calc('+id+')"></div>'+
+        '<div><label data-ti="sqftL">'+esc(tr('sqftL'))+' <small style="opacity:.6">(opt)</small></label><input type="number" id="ll-'+id+'" min="0" step="0.01" inputmode="decimal" placeholder="optional" oninput="calc('+id+')"></div>'+
+      '</div>'+
+      '<div class="row" style="margin-top:6px">'+
+        '<div><label data-ti="rate">'+esc(tr('rate'))+' <small style="opacity:.6">(opt)</small></label><input type="number" id="lrate-'+id+'" min="0" inputmode="decimal" placeholder="optional — not multiplied" oninput="calc('+id+')"></div>'+
+      '</div>'+
+      '<p class="hint" data-ti="lumpHint">'+esc(tr('lumpHint'))+'</p></div>'+
     '<div class="pvline hidden" id="pvl-'+id+'"></div>'+
-    '<details class="dim" id="dim-'+id+'"><summary><span data-ti="sizeLbl">'+esc(tr('sizeLbl'))+'</span><span id="dimsum-'+id+'"></span></summary>'+
-      '<div class="dgrid">'+
-        '<div><label data-ti="w">'+esc(tr('w'))+'</label><select id="w-'+id+'" onchange="calc('+id+')">'+optHtml(WIDTH_OPTS)+'</select></div>'+
-        '<div><label data-ti="l">'+esc(tr('l'))+'</label><select id="l-'+id+'" onchange="calc('+id+')">'+optHtml(LENGTH_OPTS)+'</select></div>'+
-        '<div><label data-ti="d">'+esc(tr('d'))+'</label><select id="d-'+id+'" onchange="calc('+id+')">'+optHtml(DEPTH_OPTS)+'</select></div>'+
-      '</div>'+
-      '<div class="dgrid2">'+
-        '<div><label data-ti="customW">'+esc(tr('customW'))+'</label><input type="text" id="cw-'+id+'" placeholder="e.g. 3.25" inputmode="decimal" oninput="calc('+id+')"></div>'+
-        '<div><label data-ti="customL">'+esc(tr('customL'))+'</label><input type="text" id="cl-'+id+'" placeholder="e.g. 8" inputmode="decimal" oninput="calc('+id+')"></div>'+
-      '</div>'+
-      '<label class="ck" id="arealbl-'+id+'"><input type="checkbox" id="area-'+id+'" onchange="calc('+id+')"><span data-ti="areaQty">'+esc(tr('areaQty'))+'</span></label>'+
-    '</details>'+
     '<div class="row" style="margin-top:8px">'+
-      '<div id="qtyd-'+id+'"><label data-ti="qty">'+esc(tr('qty'))+'</label><input type="number" id="qty-'+id+'" value="1" min="0" step="0.01" inputmode="decimal" oninput="calc('+id+')"></div>'+
       '<div id="rated-'+id+'"><label data-ti="rate">'+esc(tr('rate'))+'</label><input type="number" id="rate-'+id+'" value="" placeholder="0" min="0" inputmode="decimal" oninput="calc('+id+')"></div>'+
       '<div><label data-ti="amt">'+esc(tr('amt'))+'</label><span class="amt" id="amt-'+id+'">0</span></div>'+
     '</div>';
-  el('itemsBody').appendChild(card);calc(id);
+  el('itemsBody').appendChild(card);
+  if(prefill){
+    if(prefill.desc)el('desc-'+id).value=prefill.desc;
+    if(prefill.mode)setMode(id,prefill.mode);
+    if(prefill.w!=null)el('sw-'+id).value=prefill.w;
+    if(prefill.l!=null)el('sl-'+id).value=prefill.l;
+    if(prefill.rft!=null)el('rft-'+id).value=prefill.rft;
+    if(prefill.rate!=null)el('rate-'+id).value=prefill.rate;
+    if(prefill.amount!=null)el('lprice-'+id).value=prefill.amount;
+  }
+  calc(id);
 }
 function itemSuggest(id){
   const q=(v('desc-'+id)||'').trim().toLowerCase().replace(/\s+/g,' ');const box=el('isg-'+id);if(!box)return;
@@ -613,62 +737,63 @@ function pickItem(id,i){
   const p=PRESET[i];if(!p)return;
   el('desc-'+id).value=cleanName(lang==='ur'?p.nameUr:p.name);
   el('item-row-'+id).dataset.unit=p.unit||'qty';
-  el('area-'+id).checked=(p.unit==='sqft');
   el('isg-'+id).style.display='none';
-  if(p.unit==='sqft')el('dim-'+id).open=true;
+  if(p.unit==='sqft')setMode(id,'sqft');
+  else if(/rft|running/i.test(p.name))setMode(id,'rft');
+  else setMode(id,'sqft');
   calc(id);
 }
-function toFt(s){const n=parseFloat(s);if(isNaN(n))return NaN;return /inch|in\b|"/i.test(s)?n/12:n}
-function dimParts(id){
-  const w=(v('cw-'+id)||'').trim()||v('w-'+id),l=(v('cl-'+id)||'').trim()||v('l-'+id),d=v('d-'+id);
+function gaugeText(id){
   let g=(v('cg-'+id)||'').trim()||v('g-'+id);
   if(/^\d+(\.\d+)?$/.test(g))g+=' gauge';
-  const f=x=>/^\d+(\.\d+)?$/.test(x)?x+' ft':x;
-  return{w:w?f(w):'',l:l?f(l):'',d,g};
-}
-function dimText(id){
-  const p=dimParts(id);const wl=[p.w,p.l].filter(Boolean).join(' × ');
-  return [wl,p.d?'D '+p.d:'',p.g].filter(Boolean).join(', ');
+  return g||'';
 }
 function setMode(id,m){
   el('mode-'+id).value=m;
   document.querySelectorAll('#seg-'+id+' button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));
-  el('bulkbox-'+id).classList.toggle('hidden',m!=='bulk');el('lumpbox-'+id).classList.toggle('hidden',m!=='lump');
-  el('qtyd-'+id).classList.toggle('hidden',m!=='qty');el('rated-'+id).classList.toggle('hidden',m==='lump');
-  el('arealbl-'+id).classList.toggle('hidden',m!=='qty');
+  el('sqftbox-'+id).classList.toggle('hidden',m!=='sqft');
+  el('rftbox-'+id).classList.toggle('hidden',m!=='rft');
+  el('lumpbox-'+id).classList.toggle('hidden',m!=='lump');
+  el('rated-'+id).classList.toggle('hidden',m==='lump');
   calc(id);
 }
 function itemCalc(id){
-  const mode=v('mode-'+id)||'qty';
-  const sub=(np,sf)=>[np?np+' pcs':'',sf?qtyFmt(sf)+' sq ft':''].filter(Boolean).join(' · ');
-  if(mode==='bulk'){
-    const np=+v('np-'+id)||0,sf=+v('sf-'+id)||0,rate=+v('rate-'+id)||0;
-    return{mode,qty:sf,rate,amount:sf*rate,sub:sub(np,sf),lump:false};
+  const mode=v('mode-'+id)||'sqft';
+  const rate=+v('rate-'+id)||0;
+  const g=gaugeText(id);
+  if(mode==='sqft'){
+    const w=+v('sw-'+id)||0,l=+v('sl-'+id)||0;
+    const qty=+(w*l).toFixed(2);
+    const sub=[w&&l?w+' × '+l+' ft':'',qty?qtyFmt(qty)+' sq ft':'',g].filter(Boolean).join(' · ');
+    return{mode,qty:qty||0,rate,amount:qty*rate,sub,lump:false,w,l};
   }
-  if(mode==='lump'){
-    const np=+v('lnp-'+id)||0,sf=+v('lsf-'+id)||0,lr=+v('lrate-'+id)||0;let price=+v('lprice-'+id)||0;
-    const auto=!price&&sf>0&&lr>0;if(auto)price=sf*lr;
-    return{mode,qty:np>0?np:1,rate:0,amount:price,sub:sub(np,sf),lump:true,auto};
+  if(mode==='rft'){
+    const ft=+v('rft-'+id)||0;
+    const sub=[ft?qtyFmt(ft)+' rft':'',g].filter(Boolean).join(' · ');
+    return{mode,qty:ft,rate,amount:ft*rate,sub,lump:false};
   }
-  const qty=+v('qty-'+id)||0,rate=+v('rate-'+id)||0;
-  return{mode,qty,rate,amount:qty*rate,sub:'',lump:false};
+  // lumpsum — amount = price as entered; W/L/rate optional display only, never multiplied
+  const price=+v('lprice-'+id)||0;
+  const lw=+v('lw-'+id)||0,ll=+v('ll-'+id)||0,lr=+v('lrate-'+id)||0;
+  const sub=[lw&&ll?lw+' × '+ll+' ft':'',lr?('rate '+num(lr)):'' ,g].filter(Boolean).join(' · ');
+  return{mode,qty:1,rate:0,amount:price,sub,lump:true};
 }
 function calc(id){
   const card=el('item-row-'+id);if(!card)return;
-  const mode=v('mode-'+id)||'qty';const q=el('qty-'+id);
-  if(mode==='qty'){
-    if(el('area-'+id).checked){
-      const p=dimParts(id);const w=toFt(p.w),l=toFt(p.l);
-      if(w>0&&l>0){q.value=+(w*l).toFixed(2);q.readOnly=true}else q.readOnly=false;
-    }else q.readOnly=false;
-  }
+  const mode=v('mode-'+id)||'sqft';
   const c=itemCalc(id);
   el('amt-'+id).textContent=num(c.amount);
-  el('dimsum-'+id).textContent=dimText(id);
   const pv=el('pvl-'+id);
-  if(mode==='bulk'){pv.classList.remove('hidden');pv.textContent=(c.sub?c.sub.split(' · ')[0]+' · ':'')+qtyFmt(c.qty)+' sq ft × '+fmt(c.rate)+' = '+fmt(c.amount)}
-  else if(mode==='lump'){pv.classList.remove('hidden');pv.textContent=(c.sub||'')+(c.sub?' · ':'')+(c.amount>0?fmt(c.amount)+(c.auto?' (sq ft × rate)':' lump sum'):'enter total price')}
-  else pv.classList.add('hidden');
+  if(mode==='sqft'){
+    pv.classList.remove('hidden');
+    pv.textContent=c.qty>0?(qtyFmt(c.qty)+' sq ft × '+fmt(c.rate)+' = '+fmt(c.amount)):(c.w||c.l?'enter width & length':'enter width, length & rate');
+  }else if(mode==='rft'){
+    pv.classList.remove('hidden');
+    pv.textContent=c.qty>0?(qtyFmt(c.qty)+' rft × '+fmt(c.rate)+' = '+fmt(c.amount)):'enter total ft & rate';
+  }else if(mode==='lump'){
+    pv.classList.remove('hidden');
+    pv.textContent=c.amount>0?fmt(c.amount)+' lump sum'+(c.sub?' · '+c.sub:''):'enter total price (W/L/rate optional)';
+  }else pv.classList.add('hidden');
   recalcPay();
 }
 function renumber(){document.querySelectorAll('#itemsBody .item-card .no').forEach((b,i)=>b.textContent='#'+(i+1))}
@@ -677,11 +802,10 @@ function getItems(){
   const items=[];
   document.querySelectorAll('#itemsBody .item-card').forEach(card=>{
     const id=card.id.replace('item-row-','');
-    const base=(v('desc-'+id)||'').trim();const dt=dimText(id).replace(/, /g,' · ');
-    const desc=base;
+    const desc=(v('desc-'+id)||'').trim();
     const c=itemCalc(id);
-    const detail=[c.sub,dt].filter(Boolean).join(' · ');
-    if(desc&&c.qty>0)items.push({desc,sub:detail,qty:c.qty,rate:c.rate,amount:c.amount,lump:c.lump});
+    const detail=c.sub||'';
+    if(desc&&(c.amount>0||(!c.lump&&c.qty>0)))items.push({desc,sub:detail,qty:c.qty,rate:c.rate,amount:c.amount,lump:c.lump,mode:c.mode});
   });
   return items;
 }
@@ -692,11 +816,25 @@ function invoiceTotal(){
 }
 function recalcPay(){
   const{grand}=invoiceTotal();const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);
+  const excess=Math.max(0,adv-grand);
+  const prevRaw=prevOutFor(findCust(v('custName')),v('invNo'));
+  const applied=Math.min(excess,prevRaw);
+  const creditBal=Math.max(0,excess-prevRaw);
+  const prevOut=Math.max(0,prevRaw-excess);
+  const finalOut=prevOut+remain;
   el('dispTotal').textContent=fmt(grand);el('dispRemain').textContent=fmt(remain);
-  el('sbTotal').textContent=fmt(grand);el('sbRemain').textContent=remain>0?'· '+tr('remain')+' '+fmt(remain):'';
-  const prevOut=prevOutFor(findCust(v('custName')),v('invNo'));
-  el('dispGrandOut').textContent=
-    (prevOut>0?tr('prevLabel')+' '+fmt(prevOut)+' + ':'')+tr('remain')+': '+fmt(remain)+(prevOut>0?' → '+tr('outstanding')+': '+fmt(prevOut+remain):'');
+  // Status bar: show remaining due, or true credit (after bill + previous), or nothing
+  if(remain>0)el('sbRemain').textContent='· '+tr('remain')+' '+fmt(remain);
+  else if(creditBal>0)el('sbRemain').textContent='· '+tr('credit')+' '+fmt(creditBal);
+  else if(excess>0)el('sbRemain').textContent='· '+tr('credit')+' '+fmt(0); // fully applied
+  else el('sbRemain').textContent='';
+  el('sbTotal').textContent=fmt(grand);
+  let msg='';
+  if(prevRaw>0)msg+=tr('prevLabel')+' '+fmt(prevRaw)+(applied>0?' − '+fmt(applied):'')+' + ';
+  msg+=tr('remain')+': '+fmt(remain);
+  if(prevRaw>0||excess>0)msg+=' → '+tr('outstanding')+': '+fmt(finalOut);
+  if(creditBal>0)msg+=' · '+tr('credit')+': '+fmt(creditBal);
+  el('dispGrandOut').textContent=msg;
 }
 function custLine(){return[v('custHouse').trim(),v('custPhone').trim(),v('custContact').trim()].filter(Boolean).join(' · ')}
 
@@ -719,8 +857,10 @@ function saveAndGenerate(){
   c.invoices.unshift(inv);recompute(c);
   const stored=saveDB(db);updatePrev();
   if(stored){
-    toast((lang==='ur'?'محفوظ! ':'Saved! ')+name+' · '+tr('outstanding')+' '+fmt(c.outstanding||0),true);
+    const balMsg=(c.credit||0)>0?(tr('credit')+' '+fmt(c.credit)):(tr('outstanding')+' '+fmt(c.outstanding||0));
+    toast((lang==='ur'?'محفوظ! ':'Saved! ')+name+' · '+balMsg,true);
     bumpBackupCounter();if(el('autoBackup').checked)autoBackup();
+    try{syncPushDebounced()}catch(e){}
   }else toast('Saved for this session only — browser storage is blocked. Use Save App Copy.',false);
 }
 function newInvoice(){
@@ -729,44 +869,233 @@ function newInvoice(){
   ['custName','custHouse','custPhone','custContact','jobRef'].forEach(i=>el(i).value='');
   el('jobRefSelect').value='';el('advance').value=0;el('discount').value=0;
   const now=new Date();el('invDate').value=localDate(now);el('invTime').value=localTime(now);el('invNo').value=genInvNo();
+  window._reusePastItems=null;
   updatePrev();window.scrollTo(0,0);
 }
 
 /* ---------- customers tab ---------- */
 function renderTotals(){
   const all=loadDB();let b=0,p=0,o=0,n=0;
-  all.forEach(c=>{b+=c.totalBilled||0;p+=c.totalPaid||0;const x=c.outstanding||0;o+=x;if(x>0)n++});
+  let cr=0,nc=0;
+  all.forEach(c=>{b+=c.totalBilled||0;p+=c.totalPaid||0;const x=c.outstanding||0;o+=x;if(x>0)n++;const k=c.credit||0;cr+=k;if(k>0)nc++});
   el('totBilled').textContent=fmt(b);el('totPaid').textContent=fmt(p);el('totPend').textContent=fmt(o);
-  el('totPendSub').textContent=n?(n+(lang==='ur'?' گاہکوں سے وصولی':' customer'+(n>1?'s':'')+' still to pay')):'';
+  let sub=n?(n+(lang==='ur'?' گاہکوں سے وصولی':' customer'+(n>1?'s':'')+' still to pay')):'';
+  if(cr>0)sub+=(sub?' · ':'')+(lang==='ur'?'کریڈٹ ':'Credit ')+fmt(cr)+(nc?(lang==='ur'?' ('+nc+' گاہک)':' ('+nc+' cust)'):'');
+  el('totPendSub').textContent=sub;
 }
 function renderCustList(){
+  // Ensure credit field is up to date for older saved data
+  let all=loadDB();let dirty=false;
+  all.forEach(c=>{const before=c.credit;recompute(c);if(c.credit!==before)dirty=true});
+  if(dirty)saveDB(all);
   renderTotals();
   const q=(v('custSearch')||'').toLowerCase();
-  let db=loadDB().slice().sort((a,b)=>(b.outstanding||0)-(a.outstanding||0));if(q)db=db.filter(c=>c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));
+  let db=loadDB().slice().sort((a,b)=>{
+    // Outstanding first, then credit
+    const ao=a.outstanding||0,bo=b.outstanding||0;
+    if(bo!==ao)return bo-ao;
+    return (b.credit||0)-(a.credit||0);
+  });if(q)db=db.filter(c=>c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));
   const box=el('custList');
   if(!db.length){box.innerHTML='<p class="hint">'+tr('noCust')+'</p>';return}
-  box.innerHTML=db.map(c=>`<div class="hist-card"><div class="hc-top"><div class="avatar">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div><div><h3>${esc(c.name)}</h3><div class="meta">${esc([c.phone,c.house,c.address].filter(Boolean).join(' · '))}</div></div></div>
-    <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span><span class="${(c.outstanding||0)>0?'o':'z'}">${tr('outstanding')}: ${fmt(c.outstanding||0)}</span></div>
-    <div class="hist-list">${(c.invoices||[]).slice(0,15).map(i=>`<div>${esc(i.date)} · ${esc(i.invNo)} · ${fmt(i.total)} · Adv ${fmt(i.advance||0)} · Rem ${fmt(i.remaining||0)}</div>`).join('')||'<div>—</div>'}</div>
-    <div class="hc-act"><button class="btn b-navy b-sm" onclick="loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="delCust('${c.id}')">${tr('del')}</button></div></div>`).join('');
+  box.innerHTML=db.map(c=>{
+    const cr=c.credit||0, out=c.outstanding||0;
+    const balSpan=cr>0
+      ? `<span class="cr">${tr('credit')}: ${fmt(cr)}</span>`
+      : `<span class="${out>0?'o':'z'}">${tr('outstanding')}: ${fmt(out)}</span>`;
+    const hist=(c.invoices||[]).slice(0,15).map(i=>{
+      const adv=i.advance||0, tot=i.total||0, rem=i.remaining||0;
+      const invCr=Math.max(0,adv-tot);
+      let line=esc(i.date)+' · '+esc(i.invNo)+' · '+fmt(tot)+' · Adv '+fmt(adv);
+      if(rem>0)line+=' · Rem '+fmt(rem);
+      else if(invCr>0)line+=' · '+tr('credit')+' '+fmt(invCr);
+      else line+=' · Rem '+fmt(0);
+      return '<div>'+line+'</div>';
+    }).join('')||'<div>—</div>';
+    return `<div class="hist-card"><div class="hc-top"><div class="avatar">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div><div><h3>${esc(c.name)}</h3><div class="meta">${esc([c.phone,c.house,c.address].filter(Boolean).join(' · '))}</div></div></div>
+    <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}</div>
+    <div class="hist-list">${hist}</div>
+    <div class="hc-act"><button class="btn b-navy b-sm" onclick="loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="delCust('${c.id}')">${tr('del')}</button></div></div>`;
+  }).join('');
+}
+function custPastItems(c,excludeInvNo){
+  if(!c||!c.invoices)return[];
+  const list=[];
+  c.invoices.forEach(inv=>{
+    if(inv.invNo==='PAY'||!inv.items)return;
+    if(excludeInvNo&&inv.invNo===excludeInvNo)return; // never list current invoice as "past"
+    (inv.items||[]).forEach(it=>{
+      if(it&&it.desc)list.push({desc:it.desc,sub:it.sub||'',qty:it.qty,rate:it.rate,amount:it.amount,lump:!!it.lump,date:inv.date||'',invNo:inv.invNo||''});
+    });
+  });
+  return list;
 }
 function loadCustToInv(id){
   if(getItems().length&&!confirm(lang==='ur'?'اس گاہک کے لیے نئی انوائس شروع کریں؟ موجودہ آئٹمز صاف ہو جائیں گے۔':'Start a new invoice for this customer? Current items will be cleared.'))return;
+  // Do NOT load past items into the form — only show them on digital invoice
   el('itemsBody').innerHTML='';addItem();
+  window._reusePastItems=null;
   ['jobRef'].forEach(i=>el(i).value='');el('jobRefSelect').value='';el('advance').value=0;el('discount').value=0;
   const now=new Date();el('invDate').value=localDate(now);el('invTime').value=localTime(now);el('invNo').value=genInvNo();
   pickCust(id);showTab('inv');
+  const c=loadDB().find(x=>x.id===id);
+  const past=custPastItems(c);
+  if(past.length)toast(lang==='ur'?'پرانی خریداریاں صرف ڈیجیٹل انوائس پر دکھائی جائیں گی (آئٹم فیلڈز میں نہیں)':'Past purchases will appear only on digital invoice (not in item fields)',true);
 }
 function delCust(id){if(!confirm(lang==='ur'?'گاہک حذف کریں؟':'Delete customer?'))return;saveDB(loadDB().filter(c=>c.id!==id));renderCustList();updatePrev()}
 function addPayment(id){
   const amt=parseFloat(prompt(lang==='ur'?'ادائیگی کی رقم:':'Payment amount (Rs):'));if(!amt||amt<=0)return;
   const db=loadDB();const c=db.find(x=>x.id===id);if(!c)return;
   c.invoices=c.invoices||[];c.invoices.unshift({invNo:'PAY',date:localDate(new Date()),job:'Payment received',items:[],total:0,advance:amt,remaining:0,ts:Date.now()});
-  recompute(c);saveDB(db);renderCustList();updatePrev();toast('Payment saved',true);
+  recompute(c);saveDB(db);renderCustList();updatePrev();toast('Payment saved',true);try{syncPushDebounced()}catch(e){}
 }
 function download(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.download=name;a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},3000)}
 function bkState(){try{return JSON.parse(localStorage.getItem('alghani_bk')||'{}')}catch(e){return{}}}
 function bkSet(o){try{localStorage.setItem('alghani_bk',JSON.stringify(o))}catch(e){}}
+
+/* ---------- Cloud Sync (GitHub JSON / any HTTPS JSON) ---------- */
+const SYNC_KEYS={url:'alghani_sync_url',repo:'alghani_sync_repo',path:'alghani_sync_path',branch:'alghani_sync_branch',token:'alghani_sync_token',apull:'alghani_sync_apull',apush:'alghani_sync_apush'};
+function syncGet(k){try{return localStorage.getItem(SYNC_KEYS[k])||''}catch(e){return ''}}
+function syncSet(k,v){try{localStorage.setItem(SYNC_KEYS[k],v)}catch(e){}}
+function syncCfg(){
+  return{
+    url:(v('syncUrl')||syncGet('url')||'').trim(),
+    repo:(v('syncRepo')||syncGet('repo')||'').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,''),
+    path:(v('syncPath')||syncGet('path')||'customers.json').trim().replace(/^\//,''),
+    branch:(v('syncBranch')||syncGet('branch')||'main').trim()||'main',
+    token:(v('syncToken')||syncGet('token')||'').trim(),
+    apull:el('syncAutoPull')?el('syncAutoPull').checked:syncGet('apull')!=='0',
+    apush:el('syncAutoPush')?el('syncAutoPush').checked:syncGet('apush')==='1'
+  };
+}
+function syncPersistFromForm(){
+  const c=syncCfg();
+  syncSet('url',c.url);syncSet('repo',c.repo);syncSet('path',c.path);syncSet('branch',c.branch);
+  if(c.token)syncSet('token',c.token);
+  syncSet('apull',c.apull?'1':'0');syncSet('apush',c.apush?'1':'0');
+}
+function syncLoadForm(){
+  try{
+    if(el('syncUrl'))el('syncUrl').value=syncGet('url');
+    if(el('syncRepo'))el('syncRepo').value=syncGet('repo');
+    if(el('syncPath'))el('syncPath').value=syncGet('path')||'customers.json';
+    if(el('syncBranch'))el('syncBranch').value=syncGet('branch')||'main';
+    if(el('syncToken'))el('syncToken').value=syncGet('token');
+    if(el('syncAutoPull'))el('syncAutoPull').checked=syncGet('apull')!=='0';
+    if(el('syncAutoPush'))el('syncAutoPush').checked=syncGet('apush')==='1';
+  }catch(e){}
+}
+function syncStatus(msg,ok){
+  const e=el('syncStatus');if(!e)return;
+  e.textContent=msg||'';
+  e.style.color=ok===false?'#b91c1c':(ok?'#166534':'');
+}
+function parseCustomersPayload(data){
+  if(Array.isArray(data))return data;
+  if(data&&Array.isArray(data.customers))return data.customers;
+  throw new Error('JSON must be an array of customers');
+}
+function syncHasCfg(c){return !!(c.url||(c.repo&&c.path))}
+async function syncFetchRemote(c){
+  // Prefer GitHub API when repo+token (works private); else public URL
+  if(c.repo&&c.token){
+    const [owner,repo]=c.repo.split('/');
+    if(!owner||!repo)throw new Error('Repo must be owner/name');
+    const api='https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(c.branch);
+    const res=await fetch(api,{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token}});
+    if(res.status===404)return{customers:[],sha:null,empty:true};
+    if(!res.ok)throw new Error('GitHub '+res.status+' '+(await res.text()).slice(0,120));
+    const j=await res.json();
+    const text=decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))));
+    return{customers:parseCustomersPayload(JSON.parse(text)),sha:j.sha,empty:false};
+  }
+  if(c.url){
+    const res=await fetch(c.url+(c.url.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return{customers:parseCustomersPayload(await res.json()),sha:null,empty:false};
+  }
+  if(c.repo){
+    // public raw without token
+    const [owner,repo]=c.repo.split('/');
+    const raw='https://raw.githubusercontent.com/'+owner+'/'+repo+'/'+c.branch+'/'+c.path;
+    const res=await fetch(raw+'?_='+Date.now(),{cache:'no-store'});
+    if(res.status===404)return{customers:[],sha:null,empty:true};
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return{customers:parseCustomersPayload(await res.json()),sha:null,empty:false};
+  }
+  throw new Error('no config');
+}
+async function syncPull(manual){
+  syncPersistFromForm();
+  const c=syncCfg();
+  if(!syncHasCfg(c)){if(manual){syncStatus(tr('syncNoCfg')||'Set URL or repo',false);toast(tr('syncNoCfg')||'Set URL or repo',false)}return}
+  try{
+    if(manual)syncStatus(lang==='ur'?'کھینچ رہا ہے…':'Pulling…');
+    const remote=await syncFetchRemote(c);
+    const before=loadDB().length;
+    const merged=mergeDB(loadDB(),remote.customers||[]);
+    saveDB(merged);
+    renderCustList();updatePrev();
+    const msg=(tr('syncPullOk')||'Pulled & merged')+' · '+(remote.customers||[]).length+' remote → '+merged.length+' total';
+    syncStatus(msg,true);
+    if(manual)toast(msg,true);
+    if(remote.sha)try{localStorage.setItem('alghani_sync_sha',remote.sha)}catch(e){}
+  }catch(err){
+    console.error(err);
+    const msg=(tr('syncFail')||'Sync failed')+': '+(err.message||err);
+    syncStatus(msg,false);
+    if(manual)toast(msg,false);
+  }
+}
+function utf8ToB64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+async function syncPush(manual){
+  syncPersistFromForm();
+  const c=syncCfg();
+  if(!c.repo||!c.token){
+    if(manual){syncStatus(lang==='ur'?'پش کے لیے ریپو + ٹوکن درکار':'Repo + token required to push',false);toast(lang==='ur'?'پش کے لیے ریپو + ٹوکن درکار':'Repo + token required to push',false)}
+    return;
+  }
+  try{
+    if(manual)syncStatus(lang==='ur'?'بھیج رہا ہے…':'Pushing…');
+    const [owner,repo]=c.repo.split('/');
+    if(!owner||!repo)throw new Error('Repo must be owner/name');
+    const api='https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/');
+    // get current sha
+    let sha=null;
+    const get=await fetch(api+'?ref='+encodeURIComponent(c.branch),{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token}});
+    if(get.ok){const j=await get.json();sha=j.sha}
+    else if(get.status!==404)throw new Error('GitHub '+get.status);
+    const body={
+      message:'Al Ghani sync '+new Date().toISOString(),
+      content:utf8ToB64(JSON.stringify(loadDB(),null,2)),
+      branch:c.branch
+    };
+    if(sha)body.sha=sha;
+    const put=await fetch(api,{method:'PUT',headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
+    if(!put.ok)throw new Error('GitHub '+put.status+' '+(await put.text()).slice(0,160));
+    const out=await put.json();
+    if(out.content&&out.content.sha)try{localStorage.setItem('alghani_sync_sha',out.content.sha)}catch(e){}
+    const msg=tr('syncPushOk')||'Pushed to cloud';
+    syncStatus(msg+' · '+loadDB().length+' customers',true);
+    if(manual)toast(msg,true);
+  }catch(err){
+    console.error(err);
+    const msg=(tr('syncFail')||'Sync failed')+': '+(err.message||err);
+    syncStatus(msg,false);
+    if(manual)toast(msg,false);
+  }
+}
+let _pushTimer=null;
+function syncPushDebounced(){
+  const c=syncCfg();
+  if(!c.apush||!c.repo||!c.token)return;
+  clearTimeout(_pushTimer);
+  _pushTimer=setTimeout(()=>syncPush(false),1200);
+}
+
+
 function markBackup(){bkSet({t:Date.now(),n:0});checkBackupNag()}
 function bumpBackupCounter(){const b=bkState();b.n=(b.n||0)+1;if(!b.t)b.t=0;bkSet(b);checkBackupNag()}
 function checkBackupNag(){
@@ -876,8 +1205,15 @@ function drawStampPreview(){const c=el('stampPrev');const x=c.getContext('2d');x
 function downloadStamp(){const c=mkCanvas(900,900);drawStamp(c.getContext('2d'),450,450,420,'#1b3a8c',0);c.toBlob(b=>download(b,'AlGhani_Stamp.png'),'image/png')}
 function gather(){
   const t=invoiceTotal();const adv=+v('advance')||0;const remain=Math.max(0,t.grand-adv);
+  const excess=Math.max(0,adv-t.grand);
   const cust=findCust(v('custName'));
-  return Object.assign({adv,remain,c:cust,stmt:!!(cust&&t.items.length===0),hist:el('useHist').checked,prevOut:prevOutFor(cust,v('invNo')),useSig:el('useSig').checked,useStamp:el('useStamp').checked},t);
+  const prevRaw=prevOutFor(cust,v('invNo'));
+  const applied=Math.min(excess,prevRaw); // amount of excess actually applied to previous
+  const creditBal=Math.max(0,excess-prevRaw); // leftover credit after bill + previous outstanding
+  const prevOut=Math.max(0,prevRaw-excess); // excess advance cuts previous outstanding
+  // Past purchases for digital invoice only — exclude the invoice currently being edited
+  const past=cust?custPastItems(cust,v('invNo').trim()):[];
+  return Object.assign({adv,remain,excess,applied,creditBal,prevRaw,c:cust,stmt:!!(cust&&t.items.length===0),hist:el('useHist').checked,prevOut,useSig:el('useSig').checked,useStamp:el('useStamp').checked,pastPurch:past},t);
 }
 function crop(big,S,y){const c=mkCanvas(big.width,Math.ceil(y*S));c.getContext('2d').drawImage(big,0,0);return c}
 
@@ -887,8 +1223,14 @@ function ledger(c,exclude,max){
   const all=(c.invoices||[]).filter(i=>!(exclude&&i.invNo===exclude&&i.invNo!=='PAY')).slice().sort((a,b)=>(a.ts||0)-(b.ts||0));
   let bal=0;
   const rows=all.map(i=>{
-    if(i.invNo==='PAY'){bal=Math.max(0,bal-(i.advance||0));return{date:i.date||'',ref:'PAY',billed:0,paid:i.advance||0,bal,pay:true}}
-    bal+=(i.remaining||0);return{date:i.date||'',ref:i.invNo,billed:i.total||0,paid:i.advance||0,bal,pay:false};
+    if(i.invNo==='PAY'){
+      bal=Math.max(0,bal-(i.advance||0));
+      return{date:i.date||'',ref:'PAY',billed:0,paid:i.advance||0,bal,pay:true,items:[]};
+    }
+    // Full bill then subtract advance (excess advance lowers prior balance)
+    bal+=(i.total||0);
+    bal=Math.max(0,bal-(i.advance||0));
+    return{date:i.date||'',ref:i.invNo,billed:i.total||0,paid:i.advance||0,bal,pay:false,items:(i.items||[]).slice()};
   });
   return{rows:rows.slice(-max),hidden:Math.max(0,rows.length-max)};
 }
@@ -919,8 +1261,8 @@ function miniStmt(ctx,y,W,t,d){
   if(out<=0){tx(ctx,t.clear,W/2,y+14,13.5,{align:'center',stroke:.5});y+=28}
   return y;
 }
-function normLedgerTable(ctx,y,W,t,led){
-  const NAVY='#0b1b2b',INK='#111',MUT='#475569';
+function normLedgerTable(ctx,y,W,t,led,showItems){
+  const NAVY='#0b1b2b',INK='#111',MUT='#475569',GOLD='#c9a227';
   const c={d:46,r:176,b:540,p:640,l:W-46};
   ctx.fillStyle=NAVY;ctx.fillRect(36,y,W-72,34);
   const hd={color:'#fff'};
@@ -930,20 +1272,33 @@ function normLedgerTable(ctx,y,W,t,led){
   if(led.hidden>0){tx(ctx,'… '+led.hidden+' '+t.earlier,46,y+20,13,{color:MUT,weight:'normal',italic:true});y+=28}
   if(!led.rows.length){tx(ctx,'—',46,y+22,15,{color:MUT});y+=32}
   led.rows.forEach((r,i)=>{
-    ctx.fillStyle=i%2?'#fff':'#f5f7fa';ctx.fillRect(36,y,W-72,32);ctx.fillStyle='#e2e8f0';ctx.fillRect(36,y+31,W-72,1);
+    const items=(showItems&&!r.pay&&r.items&&r.items.length)?r.items:[];
+    // Header row for invoice/payment
+    let itemLines=[];
+    if(items.length){
+      items.forEach(it=>{
+        const line=it.desc+(it.sub?' · '+it.sub:'')+(it.lump?'':' · qty '+qtyFmt(it.qty||0))+' · '+fmt(it.amount||0);
+        itemLines=itemLines.concat(wrapLines(ctx,line,12.5,{color:MUT,weight:'normal'},W-72-40));
+      });
+    }
+    const rh=32+(itemLines.length?itemLines.length*17+8:0);
+    ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);ctx.fillStyle='#d9cbb8';ctx.fillRect(36,y+rh-1,W-72,1);
     tx(ctx,r.date,c.d,y+21,15,{color:MUT,weight:'normal'});
     tx(ctx,r.pay?t.payRecv:r.ref,c.r,y+21,15,{color:r.pay?'#166534':INK});
     tx(ctx,r.pay?'—':num(r.billed),c.b,y+21,15,{align:'right',color:INK,weight:'normal'});
     tx(ctx,r.paid?num(r.paid):'—',c.p,y+21,15,{align:'right',color:r.paid?'#166534':MUT,weight:r.paid?'bold':'normal'});
     tx(ctx,num(r.bal),c.l,y+21,15,{align:'right',color:INK});
-    y+=32;
+    if(itemLines.length){
+      itemLines.forEach((l,k)=>tx(ctx,l,56,y+36+k*17,12.5,{color:MUT,weight:'normal'}));
+    }
+    y+=rh;
   });
   return y;
 }
 function normHistory(ctx,y,W,t,d){
   const led=ledger(d.c,v('invNo'),6);if(!led.rows.length)return y;
   tx(ctx,t.histTitle,36,y+14,13,{color:'#c9a227'});ctx.fillStyle='#c9a227';ctx.fillRect(36,y+22,40,3);y+=38;
-  return normLedgerTable(ctx,y,W,t,led)+24;
+  return normLedgerTable(ctx,y,W,t,led,true)+24;
 }
 
 /* ---------- MINI INVOICE (58mm / 384px, big bold text) ---------- */
@@ -998,10 +1353,18 @@ function renderMini(){
   y+=40+24;
   rowKV(t.advance,fmt(d.adv),16,B);
   rowKV(t.remain,fmt(d.remain),17,{stroke:.7});
-  if(d.prevOut>0){
-    rowKV(t.prevLabel.replace(/:$/,''),fmt(d.prevOut),16,B);
+  if((d.applied||0)>0)rowKV(t.creditToPrev||'Applied to previous','− '+fmt(d.applied),15,B);
+  if((d.creditBal||0)>0)rowKV(t.credit,fmt(d.creditBal),16,{stroke:.6});
+  if((d.prevRaw||0)>0||d.prevOut>0||(d.excess||0)>0||(d.creditBal||0)>0){
+    if((d.prevRaw||0)>0)rowKV(t.prevLabel.replace(/:$/,''),fmt(d.prevOut),16,B);
     y+=2;ctx.strokeStyle=K;ctx.lineWidth=2.5;ctx.strokeRect(10,y-2,W-20,34);
-    tx(ctx,t.outstanding,18,y+22,19,{stroke:.6});tx(ctx,fmt(d.prevOut+d.remain),W-18,y+22,19,{align:'right',stroke:.6});y+=34+14;
+    const finalOut=d.prevOut+d.remain;
+    if((d.creditBal||0)>0){
+      tx(ctx,t.credit,18,y+22,19,{stroke:.6});tx(ctx,fmt(d.creditBal),W-18,y+22,19,{align:'right',stroke:.6});
+    }else{
+      tx(ctx,t.outstanding,18,y+22,19,{stroke:.6});tx(ctx,fmt(finalOut),W-18,y+22,19,{align:'right',stroke:.6});
+    }
+    y+=34+14;
   }
   if(d.hist)y=miniHistory(ctx,y,W,t,d);
   }
@@ -1036,8 +1399,9 @@ function renderMini(){
 function renderNormal(){
   const S=2,W=800,t=T[lang],d=gather();
   const big=mkCanvas(W*S,5000*S);const ctx=big.getContext('2d');ctx.scale(S,S);
-  const NAVY='#0b1b2b',GOLD='#c9a227',INK='#111',MUT='#475569';
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,5000);
+  const NAVY='#0b1b2b',GOLD='#c9a227',INK='#1a1a1a',MUT='#5a6577';
+  // Warm cream paper (3D card face)
+  ctx.fillStyle='#ebe0d0';ctx.fillRect(0,0,W,5000);
   const phl=phoneLines();const hdrH=Math.max(156,128+phl.length*22+24);
   ctx.fillStyle=NAVY;ctx.fillRect(0,0,W,hdrH);
   let tx0=36;
@@ -1052,7 +1416,7 @@ function renderNormal(){
   let y=hdrH+50;
   tx(ctx,d.stmt?t.stmtTitle:t.invTitle,36,y,d.stmt?27:30,{color:NAVY});
   const mx=470,mw=W-36-mx,my=hdrH+22;
-  ctx.fillStyle='#f1f5f9';ctx.fillRect(mx,my,mw,84);ctx.fillStyle=GOLD;ctx.fillRect(mx,my,5,84);
+  ctx.fillStyle='#e0d4c4';roundRectPath(ctx,mx,my,mw,84,10);ctx.fill();ctx.fillStyle=GOLD;ctx.fillRect(mx,my,5,84);
   tx(ctx,t.invNoLabel,mx+20,my+25,15,{color:MUT});tx(ctx,v('invNo'),W-52,my+25,16,{align:'right',color:INK});
   tx(ctx,t.dateLabel,mx+20,my+49,15,{color:MUT});tx(ctx,v('invDate'),W-52,my+49,16,{align:'right',color:INK});
   tx(ctx,t.timeLabel,mx+20,my+73,15,{color:MUT});tx(ctx,v('invTime'),W-52,my+73,16,{align:'right',color:INK});
@@ -1065,17 +1429,21 @@ function renderNormal(){
   if(v('jobRef')){const k=para(ctx,t.jobRef+' '+v('jobRef'),36,by+24,16,{color:INK},mx-60,21);by+=24+(k-1)*21}
   y=Math.max(by+22,my+110);
 
-  if(d.stmt){y=normLedgerTable(ctx,y,W,t,ledger(d.c,null,14))+26}else{
+  if(d.stmt){y=normLedgerTable(ctx,y,W,t,ledger(d.c,null,14),true)+26}else{
   const col={n:48,ix:84,iw:360,q:560,r:660,a:W-40};
-  ctx.fillStyle=NAVY;ctx.fillRect(36,y,W-72,38);
+  // Raised table header
+  ctx.fillStyle='rgba(0,0,0,0.12)';
+  roundRectPath(ctx,38,y+3,W-72,38,10);ctx.fill();
+  ctx.fillStyle=NAVY;
+  roundRectPath(ctx,36,y,W-72,38,10);ctx.fill();
   const hd={color:'#fff',stroke:0};
   tx(ctx,'#',col.n,y+25,14,hd);tx(ctx,t.colItem,col.ix,y+25,14,hd);
   tx(ctx,t.colQty,col.q,y+25,14,Object.assign({align:'right'},hd));tx(ctx,t.colRate,col.r,y+25,14,Object.assign({align:'right'},hd));tx(ctx,t.colAmt,col.a,y+25,14,Object.assign({align:'right'},hd));
   y+=38;
   d.items.forEach((it,i)=>{
     const ls=wrapLines(ctx,it.desc,16.5,{color:INK},col.iw);const sl=it.sub?wrapLines(ctx,it.sub,14,{color:MUT,weight:'normal'},W-72-70):[];const rh=ls.length*22+16+sl.length*20;
-    ctx.fillStyle=i%2?'#fff':'#f5f7fa';ctx.fillRect(36,y,W-72,rh);
-    ctx.fillStyle='#e2e8f0';ctx.fillRect(36,y+rh-1,W-72,1);
+    ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);
+    ctx.fillStyle='#d9cbb8';ctx.fillRect(36,y+rh-1,W-72,1);
     tx(ctx,String(i+1),col.n,y+26,16,{color:MUT,weight:'normal'});
     ls.forEach((l,k)=>tx(ctx,l,col.ix,y+26+k*22,16.5,{color:INK}));
     sl.forEach((l,k)=>tx(ctx,l,col.ix,y+26+ls.length*22-2+k*20,14,{color:MUT,weight:'normal'}));
@@ -1085,13 +1453,35 @@ function renderNormal(){
     y+=rh;
   });
   y+=26;
+  // Previous purchases — digital invoice only (complete customer record)
+  if(d.pastPurch&&d.pastPurch.length){
+    y+=10;
+    ctx.fillStyle='#e0d4c4';roundRectPath(ctx,36,y,W-72,32,8);ctx.fill();
+    ctx.fillStyle=GOLD;ctx.fillRect(36,y,5,32);
+    tx(ctx,t.pastPurch||'PREVIOUS PURCHASES',54,y+22,15,{color:NAVY});
+    y+=40;
+    d.pastPurch.slice(0,40).forEach((it,i)=>{
+      const line=(it.date?it.date+' · ':'')+(it.invNo?it.invNo+' · ':'')+it.desc+(it.sub?' · '+it.sub:'');
+      const ls=wrapLines(ctx,line,13.5,{color:MUT,weight:'normal'},W-72-120);
+      const rh=Math.max(22,ls.length*18+6);
+      ctx.fillStyle=i%2?'#f5ebe0':'#ebe0d0';ctx.fillRect(36,y,W-72,rh);
+      ls.forEach((l,k)=>tx(ctx,l,48,y+16+k*18,13.5,{color:MUT,weight:'normal'}));
+      tx(ctx,fmt(it.amount||0),W-48,y+16,13.5,{align:'right',color:INK,weight:'normal'});
+      y+=rh;
+    });
+    if(d.pastPurch.length>40){tx(ctx,'… +'+(d.pastPurch.length-40)+' more',48,y+14,12,{color:MUT,weight:'normal'});y+=22}
+    y+=16;
+  }
   }
 
   const tx1=430,trr=W-40;let ty=y;
   const kv=(k,val,size,o)=>{tx(ctx,k,tx1+14,ty,size,Object.assign({color:MUT,weight:'normal'},o&&o.k));tx(ctx,val,trr-6,ty,size,Object.assign({align:'right',color:INK},o&&o.v));ty+=size+11};
   if(d.stmt){
     const out=d.c.outstanding||0;
-    ctx.fillStyle=out>0?'#fef2f2':'#f0fdf4';ctx.fillRect(tx1,ty-8,trr-tx1,64);ctx.strokeStyle=out>0?'#b91c1c':'#15803d';ctx.lineWidth=2;ctx.strokeRect(tx1,ty-8,trr-tx1,64);
+    ctx.fillStyle=out>0?'#fee2e2':'#dcfce7';
+    roundRectPath(ctx,tx1,ty-8,trr-tx1,64,12);ctx.fill();
+    ctx.strokeStyle=out>0?'#dc2626':'#16a34a';ctx.lineWidth=2;
+    roundRectPath(ctx,tx1,ty-8,trr-tx1,64,12);ctx.stroke();
     tx(ctx,t.outstanding,tx1+16,ty+24,19,{color:out>0?'#991b1b':'#166534'});tx(ctx,fmt(out),trr-14,ty+26,27,{align:'right',color:out>0?'#991b1b':'#166534'});
     if(out<=0)tx(ctx,t.clear,tx1+16,ty+48,13,{color:'#166534',weight:'normal'});
     ty+=64+10;
@@ -1099,19 +1489,52 @@ function renderNormal(){
   kv(t.subtotal,fmt(d.sub),17);
   if(d.taxA>0)kv(t.tax,fmt(d.taxA),17);
   if(d.disc>0)kv(t.discount,'- '+fmt(d.disc),17);
-  ty+=4;ctx.fillStyle=NAVY;ctx.fillRect(tx1,ty-8,trr-tx1,48);ctx.fillStyle=GOLD;ctx.fillRect(tx1,ty-8,5,48);
-  tx(ctx,t.total,tx1+20,ty+25,22,{color:'#e2b93b'});tx(ctx,fmt(d.grand),trr-14,ty+25,24,{align:'right',color:'#fff'});
-  ty+=48+26;
+  ty+=6;
+  // Raised TOTAL bar (shadow + rounded)
+  const tbx=tx1,tby=ty-8,tbw=trr-tx1,tbh=52;
+  ctx.fillStyle='rgba(0,0,0,0.18)';
+  roundRectPath(ctx,tbx+3,tby+5,tbw,tbh,12);ctx.fill();
+  ctx.fillStyle=NAVY;
+  roundRectPath(ctx,tbx,tby,tbw,tbh,12);ctx.fill();
+  ctx.fillStyle=GOLD;
+  roundRectPath(ctx,tbx,tby,6,tbh,3);ctx.fill();
+  // top highlight on total
+  const thl=ctx.createLinearGradient(tbx,tby,tbx,tby+16);
+  thl.addColorStop(0,'rgba(255,255,255,0.12)');thl.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=thl;roundRectPath(ctx,tbx,tby,tbw,16,12);ctx.fill();
+  tx(ctx,t.total,tx1+20,ty+26,22,{color:'#e2b93b'});tx(ctx,fmt(d.grand),trr-14,ty+26,24,{align:'right',color:'#fff'});
+  ty+=52+26;
   kv(t.advance,fmt(d.adv),17);
-  kv(t.remain,fmt(d.remain),19,{k:{color:INK,weight:'bold'},v:{color:'#b91c1c'}});
-  if(d.prevOut>0){
-    kv(t.prevLabel.replace(/:$/,''),fmt(d.prevOut),17);
-    ty+=2;ctx.fillStyle='#fef2f2';ctx.fillRect(tx1,ty-8,trr-tx1,44);ctx.strokeStyle='#b91c1c';ctx.lineWidth=2;ctx.strokeRect(tx1,ty-8,trr-tx1,44);
-    tx(ctx,t.outstanding,tx1+16,ty+21,20,{color:'#991b1b'});tx(ctx,fmt(d.prevOut+d.remain),trr-14,ty+21,22,{align:'right',color:'#991b1b'});ty+=44+10;
+  kv(t.remain,fmt(d.remain),19,{k:{color:INK,weight:'bold'},v:{color:d.remain>0?'#b91c1c':'#166534'}});
+  if((d.applied||0)>0)kv(t.creditToPrev||'Applied to previous','− '+fmt(d.applied),16,{k:{color:'#166534'},v:{color:'#166534'}});
+  if((d.creditBal||0)>0)kv(t.credit,fmt(d.creditBal),17,{k:{color:'#166534',weight:'bold'},v:{color:'#166534'}});
+  if((d.prevRaw||0)>0||d.prevOut>0||(d.excess||0)>0||(d.creditBal||0)>0){
+    if((d.prevRaw||0)>0)kv(t.prevLabel.replace(/:$/,''),fmt(d.prevOut),17);
+    const finalOut=d.prevOut+d.remain;
+    const showCredit=(d.creditBal||0)>0;
+    ty+=4;
+    const bx=tx1,by=ty-8,bw=trr-tx1,bh=50;
+    // Drop shadow under pill
+    ctx.fillStyle='rgba(0,0,0,0.14)';
+    roundRectPath(ctx,bx+2,by+4,bw,bh,14);ctx.fill();
+    ctx.fillStyle=showCredit?'#bbf7d0':(finalOut>0?'#fecaca':'#bbf7d0');
+    roundRectPath(ctx,bx,by,bw,bh,14);ctx.fill();
+    ctx.strokeStyle=showCredit?'#16a34a':(finalOut>0?'#dc2626':'#16a34a');
+    ctx.lineWidth=2.5;roundRectPath(ctx,bx,by,bw,bh,14);ctx.stroke();
+    // top gloss
+    const ghl=ctx.createLinearGradient(bx,by,bx,by+14);
+    ghl.addColorStop(0,'rgba(255,255,255,0.35)');ghl.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=ghl;roundRectPath(ctx,bx,by,bw,14,14);ctx.fill();
+    if(showCredit){
+      tx(ctx,t.credit,tx1+16,ty+24,20,{color:'#14532d'});tx(ctx,fmt(d.creditBal),trr-14,ty+24,22,{align:'right',color:'#14532d'});
+    }else{
+      tx(ctx,t.outstanding,tx1+16,ty+24,20,{color:finalOut>0?'#7f1d1d':'#14532d'});tx(ctx,fmt(finalOut),trr-14,ty+24,22,{align:'right',color:finalOut>0?'#7f1d1d':'#14532d'});
+    }
+    ty+=50+14;
   }
   }
   let py=y;const pbH=26+PAY_LINES.length*24+34;
-  ctx.fillStyle='#f8fafc';ctx.fillRect(36,py-8,tx1-36-24,pbH);ctx.fillStyle=GOLD;ctx.fillRect(36,py-8,5,pbH);
+  ctx.fillStyle='#e0d4c4';roundRectPath(ctx,36,py-8,tx1-36-24,pbH,10);ctx.fill();ctx.fillStyle=GOLD;ctx.fillRect(36,py-8,5,pbH);
   tx(ctx,t.payDetails,54,py+14,15,{color:NAVY});tx(ctx,t.payTo,54,py+38,15,{color:INK});
   PAY_LINES.forEach((l,i)=>tx(ctx,l,54,py+62+i*24,15,{color:INK,weight:'normal'}));
   py+=pbH+10;
@@ -1135,7 +1558,9 @@ function renderNormal(){
   tx(ctx,t.footer,W/2,y+28,14,{align:'center',color:'#fff',weight:'normal'});
   tx(ctx,CREDIT,W/2,y+47,11.5,{align:'center',color:'#e2b93b',weight:'normal'});
   y+=55;
-  return crop(big,S,y);
+  // Crop content then elevate as 3D card on dark stage
+  const content=crop(big,S,y);
+  return compose3DCard(content,S);
 }
 
 
@@ -1379,6 +1804,29 @@ async function testPrint(){
 /* ---------- output actions ---------- */
 async function downloadMini(){await assetsP;const c=renderMini();const name=(v('invNo')||'inv')+'_Mini58mm.png';c.toBlob(b=>{download(b,name);toast('Mini invoice ready',true)},'image/png')}
 async function downloadNormal(){await assetsP;const c=renderNormal();const name=(v('invNo')||'inv')+'_AlGhani.png';c.toBlob(b=>{download(b,name);toast('Invoice ready',true)},'image/png')}
+async function shareInvoiceWA(){
+  await assetsP;
+  const c=renderNormal();
+  const name=(v('invNo')||'inv')+'_AlGhani.png';
+  const cust=(v('custName')||'').trim();
+  const total=fmt(invoiceTotal().grand);
+  const text='Al Ghani Steel Arts Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+total;
+  c.toBlob(async b=>{
+    const file=new File([b],name,{type:'image/png'});
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],title:'Invoice '+v('invNo'),text:text});
+        toast(lang==='ur'?'انوائس شیئر ہو گئی':'Invoice shared',true);return;
+      }
+    }catch(e){if(e&&e.name==='AbortError')return}
+    // Fallback: download + open WhatsApp text share
+    download(b,name);
+    const phone=(v('custPhone')||'').replace(/\D/g,'');
+    const waUrl='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice image downloaded — attach it in WhatsApp)');
+    window.open(waUrl,'_blank');
+    toast(lang==='ur'?'PNG ڈاؤن لوڈ + واٹس ایپ کھلا':'PNG downloaded — attach in WhatsApp',true);
+  },'image/png');
+}
 async function previewInv(kind){
   await assetsP;const c=kind==='mini'?renderMini():renderNormal();
   const img=el('pvImg');img.src=c.toDataURL('image/png');img.style.maxWidth=kind==='mini'?'420px':'100%';el('pv').classList.remove('hidden');
