@@ -97,7 +97,7 @@ details.biz{background:var(--card);border-radius:var(--r);box-shadow:0 2px 12px 
 details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:pointer}
 
 /* customers */
-.hist-card{border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;background:#fff}
+/* hist-card styled below */
 .hc-top{display:flex;align-items:center;gap:10px}
 .avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--navy),var(--navy2));color:var(--gold2);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;flex:none}
 .hc-top h3{font-size:.98rem;color:var(--navy)}.hc-top .meta{font-size:.76rem;color:var(--mut)}
@@ -105,6 +105,29 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .nums span{background:#eef2f7;padding:4px 10px;border-radius:20px}.nums .o{background:#fee2e2;color:var(--err)}.nums .z{background:#dcfce7;color:var(--ok)}.nums .cr{background:#dbeafe;color:#1d4ed8}
 .hist-list{font-size:.76rem;margin-top:8px;max-height:130px;overflow:auto;color:var(--mut)}
 .hist-list div{padding:4px 0;border-bottom:1px solid #f0f2f6}
+/* Slim customer rows — expand on tap */
+.hist-card{border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px;background:#fff;cursor:pointer;transition:box-shadow .15s}
+.hist-card:active{box-shadow:0 0 0 3px rgba(19,48,77,.08)}
+.hist-card .hc-summary{display:flex;align-items:center;gap:10px;width:100%}
+.hist-card .hc-summary .avatar{flex-shrink:0}
+.hist-card .hc-sum-mid{flex:1;min-width:0}
+.hist-card .hc-sum-mid h3{margin:0;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-card .hc-bal{font-size:.78rem;font-weight:800;flex-shrink:0;padding:4px 10px;border-radius:20px;background:#eef2f7}
+.hist-card .hc-bal.o{background:#fee2e2;color:var(--err)}
+.hist-card .hc-bal.z{background:#dcfce7;color:var(--ok)}
+.hist-card .hc-bal.cr{background:#dbeafe;color:#1d4ed8}
+.hist-card .hc-chev{color:var(--mut);font-size:.85rem;flex-shrink:0;transition:transform .2s}
+.hist-card.open .hc-chev{transform:rotate(90deg)}
+.hist-card .hc-detail{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.hist-card.open .hc-detail{display:block}
+.hist-card .hc-detail .meta{font-size:.78rem;color:var(--mut);margin-bottom:6px}
+/* Collapsible tools card */
+.tools-head{display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;user-select:none;margin:0}
+.tools-head h2{margin:0;flex:1}
+.tools-body{margin-top:12px}
+.tools-body.hidden{display:none}
+.tools-chev{color:var(--mut);font-size:1rem;transition:transform .2s;padding:4px 8px}
+.tools-head.open .tools-chev{transform:rotate(90deg)}
 .hc-act{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
 
 /* bars */
@@ -295,8 +318,12 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
     <input id="custSearch" data-ph="phSearchCust" placeholder="Search customer..." oninput="renderCustList()" style="margin-bottom:12px">
     <div id="custList"></div>
   </div>
-  <div class="card">
-    <h2><i>🛡️</i><span data-t="secBackup">Backup &amp; Tools</span></h2>
+  <div class="card" id="toolsCard">
+    <div class="tools-head" id="toolsHead" onclick="toggleTools()">
+      <h2><i>🛡️</i><span data-t="secBackup">Backup &amp; Tools</span></h2>
+      <span class="tools-chev" id="toolsChev">▶</span>
+    </div>
+    <div class="tools-body hidden" id="toolsBody">
     <div class="grid2" style="margin-top:0">
       <button class="btn b-gold" onclick="downloadAppCopy()" data-t="btnCopy">📥 Save App Copy (with data)</button>
       <button class="btn b-ghost" onclick="shareBackup()" data-t="btnShare">📤 Share Backup</button>
@@ -332,6 +359,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <button class="btn b-gold" onclick="syncPush(true)" data-t="btnPush">⬆️ Push now</button>
     </div>
     <p id="syncStatus" class="hint" style="margin-top:8px;font-weight:600"></p>
+    </div><!-- /toolsBody -->
   </div>
 </section>
 </main>
@@ -603,6 +631,31 @@ function updatePrev(){
   if(p>0){box.classList.remove('hidden');el('prevOut').textContent=fmt(p)}else box.classList.add('hidden');
   recalcPay();
 }
+function toggleTools(){
+  const body=el('toolsBody'), head=el('toolsHead');
+  if(!body)return;
+  const open=body.classList.toggle('hidden')===false;
+  if(head)head.classList.toggle('open',open);
+  try{localStorage.setItem('alghani_tools_open',open?'1':'0')}catch(e){}
+}
+function restoreToolsState(){
+  try{
+    if(localStorage.getItem('alghani_tools_open')==='1'){
+      const body=el('toolsBody'), head=el('toolsHead');
+      if(body)body.classList.remove('hidden');
+      if(head)head.classList.add('open');
+    }
+  }catch(e){}
+}
+function toggleCustCard(id,ev){
+  if(ev&&(ev.target.closest('button')||ev.target.closest('a')))return;
+  const card=el('hc-'+id);
+  if(!card)return;
+  const was=card.classList.contains('open');
+  // close others for a compact list
+  document.querySelectorAll('.hist-card.open').forEach(c=>c.classList.remove('open'));
+  if(!was)card.classList.add('open');
+}
 function showTab(t){
   el('panelInv').classList.toggle('hidden',t!=='inv');el('panelCust').classList.toggle('hidden',t!=='cust');
   el('stickyBar').classList.toggle('hidden',t!=='inv');
@@ -633,6 +686,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadPrCfg();checkBackupNag();
   // Cloud sync
   syncLoadForm();
+  restoreToolsState();
   ['syncUrl','syncRepo','syncPath','syncBranch','syncToken'].forEach(id=>{const e=el(id);if(e)e.addEventListener('change',syncPersistFromForm)});
   if(el('syncAutoPull'))el('syncAutoPull').addEventListener('change',syncPersistFromForm);
   if(el('syncAutoPush'))el('syncAutoPush').addEventListener('change',syncPersistFromForm);
@@ -905,6 +959,8 @@ function renderCustList(){
   if(!db.length){box.innerHTML='<p class="hint">'+tr('noCust')+'</p>';return}
   box.innerHTML=db.map(c=>{
     const cr=c.credit||0, out=c.outstanding||0;
+    const balClass=cr>0?'cr':(out>0?'o':'z');
+    const balText=cr>0?(tr('credit')+': '+fmt(cr)):(tr('outstanding')+': '+fmt(out));
     const balSpan=cr>0
       ? `<span class="cr">${tr('credit')}: ${fmt(cr)}</span>`
       : `<span class="${out>0?'o':'z'}">${tr('outstanding')}: ${fmt(out)}</span>`;
@@ -917,10 +973,22 @@ function renderCustList(){
       else line+=' · Rem '+fmt(0);
       return '<div>'+line+'</div>';
     }).join('')||'<div>—</div>';
-    return `<div class="hist-card"><div class="hc-top"><div class="avatar">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div><div><h3>${esc(c.name)}</h3><div class="meta">${esc([c.phone,c.house,c.address].filter(Boolean).join(' · '))}</div></div></div>
-    <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}</div>
-    <div class="hist-list">${hist}</div>
-    <div class="hc-act"><button class="btn b-navy b-sm" onclick="loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="delCust('${c.id}')">${tr('del')}</button></div></div>`;
+    const meta=esc([c.phone,c.house,c.address].filter(Boolean).join(' · '));
+    const invN=(c.invoices||[]).length;
+    return `<div class="hist-card" id="hc-${c.id}" onclick="toggleCustCard('${c.id}',event)">
+      <div class="hc-summary">
+        <div class="avatar">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div>
+        <div class="hc-sum-mid"><h3>${esc(c.name)}</h3></div>
+        <span class="hc-bal ${balClass}">${balText}</span>
+        <span class="hc-chev">▶</span>
+      </div>
+      <div class="hc-detail">
+        ${meta?`<div class="meta">${meta}</div>`:''}
+        <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}${invN?`<span>${invN} inv</span>`:''}</div>
+        <div class="hist-list">${hist}</div>
+        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
+      </div>
+    </div>`;
   }).join('');
 }
 function custPastItems(c,excludeInvNo){
