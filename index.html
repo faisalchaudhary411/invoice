@@ -2111,15 +2111,37 @@ async function testPrint(){
 /* ---------- output actions ---------- */
 async function downloadMini(){await assetsP;const c=renderMini();const name=(v('invNo')||'inv')+'_Mini58mm.png';c.toBlob(b=>{download(b,name);toast('Mini invoice ready',true)},'image/png')}
 async function downloadNormal(){await assetsP;const c=renderNormal();const name=(v('invNo')||'inv')+'_AlGhani.png';c.toBlob(b=>{download(b,name);toast('Invoice ready',true)},'image/png')}
+/* WhatsApp recompresses huge PNGs and often stretches them.
+   Share a capped-width JPEG (aspect locked) so WA keeps proportions sharp. */
+function canvasForWhatsApp(src){
+  const MAX_W=1600,MAX_H=12000;
+  let w=src.width,h=src.height;
+  let scale=1;
+  if(w>MAX_W)scale=Math.min(scale,MAX_W/w);
+  if(h*scale>MAX_H)scale=Math.min(scale,MAX_H/h);
+  if(scale>=0.999){
+    // still convert path uses same size — return as-is for JPEG encode
+    return src;
+  }
+  const nw=Math.round(w*scale),nh=Math.round(h*scale);
+  const c=mkCanvas(nw,nh);
+  const x=c.getContext('2d');
+  x.imageSmoothingEnabled=true;
+  x.imageSmoothingQuality='high';
+  x.drawImage(src,0,0,w,h,0,0,nw,nh);
+  return c;
+}
 async function shareInvoiceWA(){
   await assetsP;
-  const c=renderNormal();
-  const name=(v('invNo')||'inv')+'_AlGhani.png';
+  const full=renderNormal();
+  const c=canvasForWhatsApp(full);
+  const name=(v('invNo')||'inv')+'_AlGhani.jpg';
   const cust=(v('custName')||'').trim();
   const total=fmt(invoiceTotal().grand);
   const text='Al Ghani Steel Arts Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+total;
   c.toBlob(async b=>{
-    const file=new File([b],name,{type:'image/png'});
+    if(!b){toast('Share failed',false);return}
+    const file=new File([b],name,{type:'image/jpeg'});
     try{
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],title:'Invoice '+v('invNo'),text:text});
@@ -2131,8 +2153,8 @@ async function shareInvoiceWA(){
     const phone=(v('custPhone')||'').replace(/\D/g,'');
     const waUrl='https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice image downloaded — attach it in WhatsApp)');
     window.open(waUrl,'_blank');
-    toast(lang==='ur'?'PNG ڈاؤن لوڈ + واٹس ایپ کھلا':'PNG downloaded — attach in WhatsApp',true);
-  },'image/png');
+    toast(lang==='ur'?'تصویر ڈاؤن لوڈ + واٹس ایپ کھلا':'Image downloaded — attach in WhatsApp',true);
+  },'image/jpeg',0.92);
 }
 async function previewInv(kind){
   await assetsP;const c=kind==='mini'?renderMini():renderNormal();
