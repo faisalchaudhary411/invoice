@@ -19,7 +19,9 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 2. **Items** → tap the item box to search (English or Urdu) or type your own. Every item has 3 simple pricing modes:
    - **📐 Sq ft** — enter Width and Length; Amount = W × L × Rate.
    - **📏 Running ft** — enter total running feet; Amount = ft × Rate.
-   - **💰 Lumpsum** — enter the total price only (no calculation; values pasted as-is).
+   - **💰 Lumpsum** — tick one or more items. For **each** ticked item enter qty, gauge, **measurements** and **that item's own amount**. The amount is a lump sum for the whole item, so **no rate is printed** (a dash is shown) and nothing is divided by qty. Each item becomes its own invoice line and all amounts are added into the invoice total.
+     - Normal items: one measurements box, several sizes separated by a space (`3.5x7 4x8` prints as `3.5 ft × 7 ft, 4 ft × 8 ft`). Leave it empty to print only qty and amount.
+     - **Chogath** (and any custom item with *Ask depth* ticked): a list of size rows — measurement, depth (inch), pcs. Tap **➕ Add size** for more. Each row prints on its own line, e.g. `3.5 ft × 7 ft = 5 inch = 2 pcs`, and the item's qty becomes the total pcs of the rows. To add depth to another item, use **Add custom item** and tick *Ask depth for this item*.
 3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG / 📲 Share WhatsApp (PDF) / 🖼 Share as Images**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding). Invoice numbers are checked so two invoices never get the same number.
    - **WhatsApp:** WhatsApp stretches very tall images, so *Share WhatsApp* sends a sharp PDF. *Share as Images* splits a tall invoice into page-shaped pictures instead.
 4. Signature and stamp each have their own checkbox (on by default).

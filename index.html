@@ -228,6 +228,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <input id="customNameEn" placeholder="e.g. Iron Gate Frame">
       <label data-t="customNameUr" style="margin-top:6px;display:block">Name (Urdu) — optional</label>
       <input id="customNameUr" placeholder="مثلاً آئرن گیٹ فریم" dir="rtl">
+      <label class="ck" style="margin-top:8px"><input type="checkbox" id="customDepth"><span data-t="customDepthLbl">Ask depth for this item (e.g. Chogath)</span></label>
       <div class="grid2" style="margin-top:10px">
         <button class="btn b-navy" onclick="saveCustomItem()" data-t="btnSaveCustom">Save &amp; Add</button>
         <button class="btn b-ghost" onclick="closeCustomItem()" data-t="btnCancel">Cancel</button>
@@ -412,7 +413,7 @@ phCust:"Type name — existing customers appear",phJob:"Job details (or custom)"
 invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax:"Tax",discount:"Discount",total:"TOTAL",advance:"Advance Paid",remain:"Remaining",outstanding:"Outstanding",
 invNoLabel:"No:",dateLabel:"Date:",timeLabel:"Time:",signStamp:"Authorized Signature",footer:"Al Ghani Steel Arts · Welding Workshop",
 payTo:"Pay to: Ghulam Yaseen",payDetails:"Payment Details",colItem:"ITEM",colQty:"QTY",colRate:"RATE",colAmt:"AMT",
-w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeSqft:"📐 Sq ft",modeRft:"📏 Running ft",modeLump:"💰 Lumpsum",sqftW:"Width (ft)",sqftL:"Length (ft)",rftTotal:"Total running ft",lumpPrice:"Total price for all (Rs)",lumpHint:"Tick items below. Set qty & gauge for each. Enter ONE total price for all selected items.",lumpPickTitle:"Select items",lumpPickHint:"Tick one or more items above",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnShareWA:"📲 Share WhatsApp",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",qty:"Qty",rate:"Rate",amt:"Amt",pastPurch:"PREVIOUS PURCHASES",credit:"Credit",creditToPrev:"Applied to previous",
+w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeSqft:"📐 Sq ft",modeRft:"📏 Running ft",modeLump:"💰 Lumpsum",sqftW:"Width (ft)",sqftL:"Length (ft)",rftTotal:"Total running ft",lumpPrice:"Total price for all (Rs)",lumpHint:"Tick items below. For each item enter qty, measurements, gauge and its own lump-sum amount. All item amounts are added into the invoice total.",lumpItemAmt:"Amount for this item (Rs)",lumpMeasure:"Measurements (ft) — several sizes with a space, e.g. 3.5x7 4x8",lumpDepth:"Depth (inch) — several with a space, e.g. 5.5 10",customDepthLbl:"Ask depth for this item (e.g. Chogath)",lumpSizes:"Sizes: measurement · depth (inch) · pcs",btnAddSize:"➕ Add size",lumpPickTitle:"Select items",lumpPickHint:"Tick one or more items above",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnShareWA:"📲 Share WhatsApp",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",qty:"Qty",rate:"Rate",amt:"Amt",pastPurch:"PREVIOUS PURCHASES",credit:"Credit",creditToPrev:"Applied to previous",
 paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment"},
 ur:{pageTitle:"الغنی سٹیل آرٹس",pageSub:"انوائس · گاہک ریکارڈ · منی پرنٹر",
 secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPayment:"ادائیگی",secSign:"نوٹس، دستخط اور مہر",secOutput:"انوائس بنائیں",secBiz:"🏢 کاروباری تفصیل",
@@ -430,7 +431,7 @@ phCust:"نام لکھیں — پرانے گاہک نظر آئیں گے",phJob:"�
 invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:",subtotal:"ذیلی کل",tax:"ٹیکس",discount:"رعایت",total:"کل",advance:"ایڈوانس ادا",remain:"باقی",outstanding:"بقایا",
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
-w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"سب کی کل قیمت (روپے)",lumpHint:"آئٹمز چیک کریں۔ ہر ایک کی تعداد اور گیج لکھیں۔ سب کے لیے صرف ایک کل قیمت۔",lumpPickTitle:"آئٹمز منتخب کریں",lumpPickHint:"اوپر ایک یا زیادہ آئٹمز چیک کریں",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",btnSyncSettings:"⚙️ سیٹنگز",btnSyncHide:"سیٹنگز چھپائیں",syncReady:"کلاؤڈ سنک تیار",
+w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"سب کی کل قیمت (روپے)",lumpHint:"آئٹمز چیک کریں۔ ہر آئٹم کی تعداد، پیمائش، گیج اور اس کی اپنی رقم درج کریں۔ سب کی رقم کل میں جمع ہو جائے گی۔",lumpItemAmt:"اس آئٹم کی رقم (روپے)",lumpMeasure:"پیمائش (فٹ) — کئی سائز اسپیس کے ساتھ، مثلاً 3.5x7 4x8",lumpDepth:"موٹائی (انچ) — کئی اسپیس کے ساتھ، مثلاً 5.5 10",customDepthLbl:"اس آئٹم میں موٹائی پوچھیں (مثلاً چوکھٹ)",lumpSizes:"سائز · موٹائی (انچ) · عدد",btnAddSize:"➕ سائز شامل کریں",lumpPickTitle:"آئٹمز منتخب کریں",lumpPickHint:"اوپر ایک یا زیادہ آئٹمز چیک کریں",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",btnSyncSettings:"⚙️ سیٹنگز",btnSyncHide:"سیٹنگز چھپائیں",syncReady:"کلاؤڈ سنک تیار",
 paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی"}
 };
 
@@ -804,7 +805,7 @@ const cleanName=s=>s.replace(/\s*\((per|فی)[^)]*\)\s*$/i,'').trim();
 
 function openCustomItem(){
   el('customItemPanel').classList.remove('hidden');
-  el('customNameEn').value='';el('customNameUr').value='';
+  el('customNameEn').value='';el('customNameUr').value='';el('customDepth').checked=false;
   el('customNameEn').focus();
 }
 function closeCustomItem(){el('customItemPanel').classList.add('hidden')}
@@ -812,11 +813,13 @@ function saveCustomItem(){
   const name=(el('customNameEn').value||'').trim();
   const nameUr=(el('customNameUr').value||'').trim()||name;
   if(!name){alert(tr('customNeedName'));return}
+  const depth=!!el('customDepth').checked;
   const arr=loadCustomItems();
-  if(arr.some(x=>x.name.toLowerCase()===name.toLowerCase())||PRESET.some(x=>x.name.toLowerCase()===name.toLowerCase())){
-    /* already exists — still add to invoice */
-  }else{
-    arr.push({name,nameUr,unit:'qty',custom:true});
+  const exists=arr.find(x=>x.name.toLowerCase()===name.toLowerCase());
+  if(exists){ if(depth&&!exists.depth){exists.depth=true;saveCustomItems(arr)} } /* already exists — still add to invoice */
+  else if(PRESET.some(x=>x.name.toLowerCase()===name.toLowerCase())){ /* built-in item — still add to invoice */ }
+  else{
+    arr.push({name,nameUr,unit:'qty',custom:true,depth});
     saveCustomItems(arr);
   }
   closeCustomItem();
@@ -851,26 +854,74 @@ function editLumpPick(id){
   if(locked)locked.classList.add('hidden');
   fillLumpChecks(id);
 }
+/* Only items flagged for depth (Chogath by default, or custom items ticked "Ask depth") show a depth box */
+function needsDepth(p){return !!(p&&(p.depth||/chogath|chowkhat|چوکھٹ/i.test((p.name||'')+' '+(p.nameUr||''))))}
+/* "3.5x7" -> "3.5 ft × 7 ft" ; "3.5x7 4x8" -> "3.5 ft × 7 ft, 4 ft × 8 ft" ; text with letters (e.g. "3ft") is kept as typed */
+function fmtOneSize(t){
+  t=String(t||'').trim();if(!t)return'';
+  if(/^\d*\.?\d+([x×*X]\d*\.?\d+)*$/.test(t))return t.split(/[x×*X]/).map(n=>n+' ft').join(' × ');
+  return t;
+}
+function fmtMeasures(txt){return String(txt||'').split(/[\s,;]+/).filter(Boolean).map(fmtOneSize).join(', ')}
+/* Depth items (Chogath): every size row prints as "3.5 ft × 7 ft = 5 inch = 2 pcs" */
+function fmtSizeLine(z){
+  const parts=[];const m=fmtOneSize(z.m);if(m)parts.push(m);
+  const d=String(z.d||'').trim();if(d)parts.push(/[a-z]/i.test(d)?d:d+' inch');
+  const q=+z.q;if(q>0)parts.push(qtyFmt(q)+(q===1?' pc':' pcs'));
+  return parts.join(' = ');
+}
+function readSizes(id,k){
+  const out=[];
+  document.querySelectorAll('#lumpRows-'+id+' [data-lr="'+k+'"] [data-sz]').forEach(r=>{
+    const f=n=>{const e=r.querySelector('[data-f="'+n+'"]');return e?e.value:''};
+    out.push({m:f('m'),d:f('d'),q:f('q')});
+  });
+  return out;
+}
+function sizeRowHtml(id,k,z){
+  const st='style="min-width:0"';
+  return '<div data-sz style="display:grid;grid-template-columns:1.7fr 1fr .9fr auto;gap:5px;margin-bottom:5px;align-items:center">'+
+    '<input type="text" data-f="m" '+st+' placeholder="3.5x7" autocomplete="off" value="'+esc(z.m||'')+'" oninput="calc('+id+')">'+
+    '<input type="number" data-f="d" '+st+' placeholder="inch" min="0" step="any" inputmode="decimal" value="'+esc(z.d||'')+'" oninput="calc('+id+')">'+
+    '<input type="number" data-f="q" '+st+' placeholder="pcs" min="0" step="1" inputmode="decimal" value="'+esc(z.q||'')+'" oninput="calc('+id+')">'+
+    '<button type="button" class="btn b-red b-sm" onclick="this.parentNode.remove();calc('+id+')">✕</button></div>';
+}
+function addSizeRow(id,k){
+  const box=document.querySelector('#lumpRows-'+id+' [data-lr="'+k+'"] [data-szbox]');if(!box)return;
+  box.insertAdjacentHTML('beforeend',sizeRowHtml(id,k,{}));
+  const last=box.lastElementChild;if(last)last.querySelector('input').focus();
+}
 function onLumpPick(id){
   const list=getAllPresets();
   const box=el('lumpChecks-'+id);const rows=el('lumpRows-'+id);if(!box||!rows)return;
+  const FIELDS=['q','m','d','cg','a'];
   const old={};
   rows.querySelectorAll('[data-lr]').forEach(r=>{
-    old[r.dataset.lr]={qty:v('lq-'+id+'-'+r.dataset.lr)||'1',g:v('lg-'+id+'-'+r.dataset.lr)||'',cg:v('lcg-'+id+'-'+r.dataset.lr)||''};
+    const k=r.dataset.lr,o={g:v('lg-'+id+'-'+k)||''};
+    FIELDS.forEach(f=>{o[f]=v('l'+f+'-'+id+'-'+k)||''});
+    if(!o.q)o.q='1';o.sizes=readSizes(id,k);old[k]=o;
   });
   const checked=[...box.querySelectorAll('input[type=checkbox]:checked')];
+  const pw=el('lpwrap-'+id);if(pw)pw.classList.toggle('hidden',checked.length>0); // single total price only when no items are ticked
   if(!checked.length){rows.innerHTML='<p class="hint" style="margin:6px 0" data-ti="lumpPickHint">'+esc(tr('lumpPickHint'))+'</p>';calc(id);return}
+  const inp=(f,label,k,o,extra)=>'<div><label>'+label+'</label><input type="number" id="l'+f+'-'+id+'-'+k+'" min="0" '+(extra||'step="any"')+' inputmode="decimal" value="'+esc(o[f]||'')+'" oninput="calc('+id+')"></div>';
+  const txt=(f,labelHtml,k,o,ph)=>'<div style="margin-top:4px">'+labelHtml+'<input type="text" id="l'+f+'-'+id+'-'+k+'" placeholder="'+esc(ph)+'" autocomplete="off" value="'+esc(o[f]||'')+'" oninput="calc('+id+')"></div>';
   rows.innerHTML=checked.map(cb=>{
     const i=cb.dataset.mi;const p=list[+i];if(!p)return'';
     const name=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
-    const o=old[i]||{qty:'1',g:'',cg:''};
+    const o=old[i]||{q:'1',m:'',d:'',cg:'',a:'',g:'',sizes:[]};
     return '<div data-lr="'+i+'" style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:6px">'+
       '<div style="font-weight:800;color:var(--navy);font-size:.88rem;margin-bottom:6px">'+esc(name)+'</div>'+
-      '<div class="dgrid2">'+
-        '<div><label data-ti="qty">'+esc(tr('qty'))+'</label><input type="number" id="lq-'+id+'-'+i+'" min="0" step="1" inputmode="decimal" value="'+esc(o.qty)+'" oninput="calc('+id+')"></div>'+
+      '<div class="dgrid2">'+inp('q',esc(tr('qty')),i,o,'step="1"')+
         '<div><label data-ti="g">'+esc(tr('g'))+'</label><select id="lg-'+id+'-'+i+'" onchange="calc('+id+')">'+optHtml(GAUGE_OPTS)+'</select></div>'+
       '</div>'+
-      '<div style="margin-top:4px"><label data-ti="customG">'+esc(tr('customG'))+'</label><input type="text" id="lcg-'+id+'-'+i+'" placeholder="e.g. 16" inputmode="decimal" value="'+esc(o.cg)+'" oninput="calc('+id+')"></div>'+
+      (needsDepth(p)?
+        '<div style="margin-top:6px"><label data-ti="lumpSizes">'+esc(tr('lumpSizes'))+'</label>'+
+        '<div data-szbox>'+((o.sizes&&o.sizes.length?o.sizes:[{}]).map(z=>sizeRowHtml(id,i,z)).join(''))+'</div>'+
+        '<button type="button" class="btn b-ghost b-sm" onclick="addSizeRow('+id+','+i+')" data-ti="btnAddSize">'+esc(tr('btnAddSize'))+'</button></div>'
+       :txt('m','<label data-ti="lumpMeasure">'+esc(tr('lumpMeasure'))+'</label>',i,o,'3.5x7  4x8  2.5x7'))+
+      '<div style="margin-top:4px"><label data-ti="customG">'+esc(tr('customG'))+'</label><input type="text" id="lcg-'+id+'-'+i+'" placeholder="e.g. 16" inputmode="decimal" value="'+esc(o.cg||'')+'" oninput="calc('+id+')"></div>'+
+      '<div style="margin-top:6px"><label data-ti="lumpItemAmt" style="font-weight:800">'+esc(tr('lumpItemAmt'))+'</label><input type="number" id="la-'+id+'-'+i+'" min="0" step="any" inputmode="decimal" placeholder="e.g. 25000" value="'+esc(o.a||'')+'" oninput="calc('+id+')" style="font-weight:800"></div>'+
       '</div>';
   }).join('');
   checked.forEach(cb=>{
@@ -886,10 +937,22 @@ function getLumpRows(id){
   box.querySelectorAll('input[type=checkbox]:checked').forEach(cb=>{
     const i=cb.dataset.mi;const p=list[+i];if(!p)return;
     const name=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
-    const qty=+v('lq-'+id+'-'+i)||1;
+    let qty=+v('lq-'+id+'-'+i)||1;
+    const amount=Math.max(0,Math.round((+v('la-'+id+'-'+i)||0)*100)/100);
     let g=(v('lcg-'+id+'-'+i)||'').trim()||v('lg-'+id+'-'+i)||'';
     if(/^\d+(\.\d+)?$/.test(g))g+=' gauge';
-    rows.push({name,qty,gauge:g||''});
+    let lines=[];
+    if(needsDepth(p)){
+      const sz=readSizes(id,i).filter(z=>String(z.m||'').trim()||String(z.d||'').trim()||+z.q>0);
+      lines=sz.map(fmtSizeLine).filter(Boolean);
+      const pcs=sz.reduce((s,z)=>s+(+z.q||0),0);
+      if(pcs>0){qty=pcs;const qe=el('lq-'+id+'-'+i);if(qe&&qe.value!=String(pcs))qe.value=pcs} // total pcs follows the size rows
+    }else{
+      const m=fmtMeasures(v('lm-'+id+'-'+i));if(m)lines.push(m);
+    }
+    if(g)lines.push(g);
+    // nothing typed in measurements -> sub is empty and only qty + amount are printed
+    rows.push({name,qty,gauge:g||'',amount,sub:lines.join('\n')});
   });
   return rows;
 }
@@ -929,7 +992,7 @@ function addItem(prefill){
         '<button type="button" class="btn b-ghost b-sm" onclick="editLumpPick('+id+')" data-ti="btnChangeItems">'+esc(tr('btnChangeItems'))+'</button>'+
       '</div>'+
       '<div id="lumpRows-'+id+'"><p class="hint" style="margin:6px 0" data-ti="lumpPickHint">'+esc(tr('lumpPickHint'))+'</p></div>'+
-      '<div style="margin-top:8px"><label data-ti="lumpPrice">'+esc(tr('lumpPrice'))+'</label><input type="number" id="lprice-'+id+'" min="0" inputmode="decimal" placeholder="e.g. 200000" oninput="calc('+id+')"></div>'+
+      '<div id="lpwrap-'+id+'" style="margin-top:8px"><label data-ti="lumpPrice">'+esc(tr('lumpPrice'))+'</label><input type="number" id="lprice-'+id+'" min="0" inputmode="decimal" placeholder="e.g. 200000" oninput="calc('+id+')"></div>'+
     '</div>'+
     '<div class="pvline hidden" id="pvl-'+id+'"></div>'+
     '<div class="row" style="margin-top:8px">'+
@@ -1006,9 +1069,10 @@ function itemCalc(id){
   const price=+v('lprice-'+id)||0;
   const rows=getLumpRows(id);
   if(rows.length){
-    const sub=rows.map(r=>[r.name,r.qty>1?('× '+qtyFmt(r.qty)):null,r.gauge].filter(Boolean).join(' ')).join(' · ');
+    const sub=rows.map(r=>[r.name,r.qty>1?('× '+qtyFmt(r.qty)):null,(r.sub||'').replace(/\n/g,' · ')].filter(Boolean).join(' ')).join(' · ');
     const qty=rows.reduce((s,r)=>s+(r.qty||1),0);
-    return{mode,qty:qty||1,rate:0,amount:price,sub,lump:true,rows};
+    const total=Math.round(rows.reduce((s,r)=>s+(r.amount||0),0)*100)/100; // every item has its own amount; invoice adds them up
+    return{mode,qty:qty||1,rate:0,amount:total,sub,lump:true,rows,perItem:true};
   }
   // fallback single typed name
   const sub=g||'';
@@ -1029,7 +1093,7 @@ function calc(id){
   }else if(mode==='lump'){
     pv.classList.remove('hidden');
     const n=(c.rows&&c.rows.length)||0;
-    pv.textContent=c.amount>0?(fmt(c.amount)+' lump sum'+(n?' · '+n+' item'+(n>1?'s':''):'')+(c.sub?' · '+c.sub:'')):(n?'enter total price for selected items':'select items & enter total price');
+    pv.textContent=c.perItem?(c.amount>0?('Total '+fmt(c.amount)+' · '+n+' item'+(n>1?'s':'')):'enter amount for each selected item'):(c.amount>0?(fmt(c.amount)+' lump sum'+(c.sub?' · '+c.sub:'')):'select items & enter amount');
   }else pv.classList.add('hidden');
   recalcPay();
 }
@@ -1043,10 +1107,12 @@ function getItems(){
     if(c.lump){
       const rows=c.rows||[];
       const price=c.amount||0;
-      if(rows.length&&price>0){
-        // one invoice line per selected item; full amount only on last line
-        rows.forEach((r,i)=>{
-          items.push({desc:r.name,sub:r.gauge||'',qty:r.qty||1,rate:0,amount:i===rows.length-1?price:0,lump:true,mode:'lump'});
+      if(rows.length){
+        // one invoice line per selected item, each with its own measurements and lump-sum amount
+        rows.forEach(r=>{
+          if(!(r.amount>0))return;
+          const q=r.qty||1;
+          items.push({desc:r.name,sub:r.sub||'',qty:q,rate:0,amount:r.amount,lump:false,noRate:true,mode:'lump'}); // amount is a lump sum for the item: never print a per-piece rate
         });
       }else{
         const desc=(v('desc-'+id)||'').trim();
@@ -1512,9 +1578,13 @@ function tx(ctx,str,x,y,size,o){
   if(o.stroke){ctx.strokeStyle=o.color||'#000';ctx.lineWidth=o.stroke;ctx.lineJoin='round';ctx.strokeText(str,x,y)}
 }
 function wrapLines(ctx,str,size,o,maxW){
-  setF(ctx,size,o);const words=String(str).split(/\s+/).filter(Boolean);const out=[];let line='';
-  words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t});
-  if(line)out.push(line);return out.length?out:[''];
+  setF(ctx,size,o);const out=[];
+  String(str).split('\n').forEach(par=>{ // an explicit line break starts a new line
+    const words=par.split(/\s+/).filter(Boolean);let line='';
+    words.forEach(w=>{const t=line?line+' '+w:w;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=w}else line=t});
+    if(line)out.push(line);
+  });
+  return out.length?out:[''];
 }
 function para(ctx,str,x,y,size,o,maxW,lh){const ls=wrapLines(ctx,str,size,o,maxW);ls.forEach((l,i)=>tx(ctx,l,x,y+i*lh,size,o));return ls.length}
 function phoneLines(){
@@ -1631,7 +1701,8 @@ function miniHistoryRows(ctx,y,W,t,led,showItems){
         if(amt)tx(ctx,amt,W-12,y+14,13.5,{align:'right',stroke:.5});
         y+=nameLines.length*16;
         let det=(it.sub||'');
-        if(!it.lump&&it.qty){const sq=it.mode==='sqft'||/sq ft/.test(det);const q=sq?(it.rate?'@ '+num(it.rate)+' / sq ft':''):('qty '+qtyFmt(it.qty)+(it.rate?' @ '+num(it.rate):''));if(q)det=det?det+' · '+q:q}
+        if(!it.lump&&it.qty&&!it.noRate){const sq=it.mode==='sqft'||/sq ft/.test(det);const q=sq?(it.rate?'@ '+num(it.rate)+' / sq ft':''):('qty '+qtyFmt(it.qty)+(it.rate?' @ '+num(it.rate):''));if(q)det=det?det+' · '+q:q}
+        if(it.noRate&&it.qty>1){const q='qty '+qtyFmt(it.qty);det=det?det+' · '+q:q}
         if(det){
           const dl=wrapLines(ctx,det,12,{weight:'normal',stroke:.3},W-24-32);
           dl.forEach((l,k)=>tx(ctx,l,36,y+13+k*14,12,{weight:'normal',stroke:.3}));
@@ -1730,7 +1801,7 @@ function normLedgerTable(ctx,y,W,t,led,showItems){
         ls.forEach((l,k)=>tx(ctx,l,ic.ix,y+18+k*18,14,{color:INK}));
         sl.forEach((l,k)=>tx(ctx,l,ic.ix,y+18+ls.length*18+k*16,12.5,{color:MUT,weight:'normal'}));
         tx(ctx,qtyFmt(it.qty||0),ic.q,y+18,13.5,{align:'right',color:INK,weight:'normal'});
-        tx(ctx,(it.lump?'—':num(it.rate||0)),ic.r,y+18,13.5,{align:'right',color:INK,weight:'normal'});
+        tx(ctx,(it.lump||it.noRate?'—':num(it.rate||0)),ic.r,y+18,13.5,{align:'right',color:INK,weight:'normal'});
         tx(ctx,(it.lump&&!(it.amount>0)?'—':num(it.amount||0)),ic.a,y+18,13.5,{align:'right',color:INK});
         y+=irh;
       });
@@ -1795,7 +1866,7 @@ function renderMiniImpl(S,H,MEASURE){
     let extra=0;
     if(it.sub){const sl=wrapLines(ctx,it.sub,13.5,B,W-30);sl.forEach((l,k)=>tx(ctx,l,C.ix,y+14+(ls.length+k)*18,13.5,B));extra=sl.length*18}
     const nb=Object.assign({align:'right'},B);
-    tx(ctx,qtyFmt(it.qty),C.q,y+14,14.5,nb);tx(ctx,(it.lump?'—':num(it.rate)),C.r,y+14,14.5,nb);tx(ctx,(it.lump?'—':num(it.amount)),C.a,y+14,14.5,nb);
+    tx(ctx,qtyFmt(it.qty),C.q,y+14,14.5,nb);tx(ctx,(it.lump||it.noRate?'—':num(it.rate)),C.r,y+14,14.5,nb);tx(ctx,(it.lump?'—':num(it.amount)),C.a,y+14,14.5,nb);
     y+=ls.length*18+extra+6;ctx.fillStyle=K;ctx.fillRect(10,y,W-20,2.5);y+=7;
   });
   y+=2;ctx.fillStyle=K;ctx.fillRect(8,y,W-16,4);y+=22;
@@ -1910,7 +1981,7 @@ function renderNormalImpl(S,H,MEASURE){
     ls.forEach((l,k)=>tx(ctx,l,col.ix,y+26+k*22,16.5,{color:INK}));
     sl.forEach((l,k)=>tx(ctx,l,col.ix,y+26+ls.length*22-2+k*20,14,{color:MUT,weight:'normal'}));
     tx(ctx,qtyFmt(it.qty),col.q,y+26,16.5,{align:'right',color:INK,weight:'normal'});
-    tx(ctx,(it.lump?'—':num(it.rate)),col.r,y+26,16.5,{align:'right',color:INK,weight:'normal'});
+    tx(ctx,(it.lump||it.noRate?'—':num(it.rate)),col.r,y+26,16.5,{align:'right',color:INK,weight:'normal'});
     tx(ctx,(it.lump?'—':num(it.amount)),col.a,y+26,16.5,{align:'right',color:INK});
     y+=rh;
   });
