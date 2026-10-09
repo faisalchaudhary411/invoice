@@ -20,9 +20,24 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
    - **📐 Sq ft** — enter Width and Length; Amount = W × L × Rate.
    - **📏 Running ft** — enter total running feet; Amount = ft × Rate.
    - **💰 Lumpsum** — enter the total price only (no calculation; values pasted as-is).
-3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG / 📲 Share WhatsApp**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding).
+3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG / 📲 Share WhatsApp (PDF) / 🖼 Share as Images**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding). Invoice numbers are checked so two invoices never get the same number.
+   - **WhatsApp:** WhatsApp stretches very tall images, so *Share WhatsApp* sends a sharp PDF. *Share as Images* splits a tall invoice into page-shaped pictures instead.
 4. Signature and stamp each have their own checkbox (on by default).
 5. **Account statement / receipt:** Customers → **Use in Invoice** starts a fresh invoice for that customer and loads their last invoice items so you can reuse/edit. Past purchases are written as a complete record on the **digital (Normal PNG) invoice only** (not on mini printer). With no items, Preview / Print gives an **ACCOUNT STATEMENT**. Tick **📜 Include account history** to print the last account entries under a normal invoice too.
+
+## Customers, payments and history
+- **Add Payment** accepts amounts like `5,000` or Urdu digits. Any overpayment is kept as customer credit and offsets later bills.
+- In each customer's history, **✎** corrects the paid amount of an invoice or payment, and **🗑** deletes it (balance recalculates). To change the *items* of an old invoice, delete it and create a new one.
+- Deleting a customer or an entry is remembered, so it does not come back when you sync or import a backup.
+- Same name + different phone number = two different customers. Same name with no phone (or the same phone) = the same customer.
+- The mini invoice lists each history item on two lines (name + amount, then size and rate) with a dotted line between items.
+- Long statements are never cut off: the invoice image is sized to its content.
+
+## Cloud sync (optional, GitHub)
+- Customers tab → sync settings: repo, file path (`customers.json`), branch and token. Pull merges cloud data into the phone; push merges the cloud copy first, so one phone never overwrites another phone's invoices.
+- The cloud file is `{ "customers": [...], "deleted": {...} }`. The old plain-list format is still read.
+- Use a **fine-grained token limited to that one repo** (Contents: Read and write). It is stored on the phone only; **🔒 Forget token** removes it.
+- Backups and imports accept files with a trailing comma, and a plain list or `{customers: [...]}`.
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.
@@ -37,4 +52,4 @@ Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorwa
 - **Import Backup** merges a backup into what is already on the phone.
 - Clearing Chrome's site data deletes customers unless you have a backup.
 
-Developed by Faisal Tech Solutions · 0334 1771875
+Developed by Easy Tech Solutions · 0334 1771875
