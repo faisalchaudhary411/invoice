@@ -1620,13 +1620,25 @@ function miniHistoryRows(ctx,y,W,t,led,showItems){
     tx(ctx,(r.date||'').slice(2)+'  '+(r.pay?t.payRecv:r.ref),12,y+14,14.5,B);
     tx(ctx,r.pay?'- '+num(r.paid):num(r.billed),W-12,y+14,14.5,Object.assign({align:'right'},B));y+=20;
     tx(ctx,r.pay?(t.balance+' '+num(r.bal)):(t.paid+' '+num(r.paid)+' · '+t.balance+' '+num(r.bal)),12,y+12,12.5,{weight:'normal',stroke:.35});y+=18;
-    // Item lines under each invoice (same data as digital statement)
+    // Item lines: numbered, name + amount on the first line, size/qty detail on a lighter second line
     if(showItems&&!r.pay&&r.items&&r.items.length){
-      r.items.forEach(it=>{
-        const line='· '+it.desc+(it.sub?' '+it.sub:'')+(it.lump?'':' qty '+qtyFmt(it.qty||0))+(it.amount?' '+num(it.amount):'');
-        const ls=wrapLines(ctx,line,12.5,{stroke:.3},W-24);
-        ls.forEach((l,k)=>tx(ctx,l,16,y+13+k*15,12.5,{stroke:.3}));
-        y+=ls.length*15+2;
+      y+=3;
+      r.items.forEach((it,n)=>{
+        const amt=it.amount?num(it.amount):'';
+        const nameLines=wrapLines(ctx,it.desc||'',13.5,{stroke:.5},W-24-32-(amt?64:0));
+        tx(ctx,(n+1)+'.',12,y+14,12.5,{weight:'normal',stroke:.35});
+        nameLines.forEach((l,k)=>tx(ctx,l,36,y+14+k*16,13.5,{stroke:.5}));
+        if(amt)tx(ctx,amt,W-12,y+14,13.5,{align:'right',stroke:.5});
+        y+=nameLines.length*16;
+        let det=(it.sub||'');
+        if(!it.lump&&it.qty){const sq=it.mode==='sqft'||/sq ft/.test(det);const q=sq?(it.rate?'@ '+num(it.rate)+' / sq ft':''):('qty '+qtyFmt(it.qty)+(it.rate?' @ '+num(it.rate):''));if(q)det=det?det+' · '+q:q}
+        if(det){
+          const dl=wrapLines(ctx,det,12,{weight:'normal',stroke:.3},W-24-32);
+          dl.forEach((l,k)=>tx(ctx,l,36,y+13+k*14,12,{weight:'normal',stroke:.3}));
+          y+=dl.length*14+1;
+        }
+        y+=5;
+        if(n<r.items.length-1){ctx.save();ctx.strokeStyle='#000';ctx.lineWidth=0.8;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(36,y);ctx.lineTo(W-12,y);ctx.stroke();ctx.restore();y+=5}
       });
       y+=4;
     }
