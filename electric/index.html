@@ -2089,17 +2089,14 @@ function renderMiniImpl(S,H,MEASURE){
   }
   y+=8;ctx.fillStyle=K;ctx.fillRect(8,y,W-16,3);y+=14;
   /* Payment box: text left + QR right, thin border */
-  const qrTxt=payQRText(d),qrSz=qrSide(qrTxt,4);
-  const payPad=8;
+  const payPad=0;
   const textH=18+PAY_LINES.length*18+8;
-  const payBoxH=textH+qrSz+payPad*2;
+  const payBoxH=textH+4;
   const payBoxX=10, payBoxW=W-20;
   ctx.strokeStyle=K;ctx.lineWidth=1.5;ctx.strokeRect(payBoxX,y,payBoxW,payBoxH);
   let ty=y+16;
   tx(ctx,t.payTo,payBoxX+10,ty,14,{stroke:.55});ty+=18;
   PAY_LINES.forEach(l=>{tx(ctx,l,payBoxX+10,ty,12.5,B);ty+=17});
-  /* QR: short text, big whole-pixel dots, centred under the numbers, no logo on top */
-  drawQR(ctx, qrTxt, payBoxX+Math.floor((payBoxW-qrSz)/2), y+textH+payPad, qrSz, '#000');
   y+=payBoxH+12;
   const notes=(d.stmt&&(d.c.outstanding||0)<=0)?t.thanksPaid:v('notes');
   if(notes){const k=para(ctx,notes,14,y+10,13.5,B,W-28,17);y+=k*17+12}
