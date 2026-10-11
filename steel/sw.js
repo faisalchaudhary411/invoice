@@ -1,5 +1,5 @@
-/* Al Ghani Electric & Hardware invoice service worker 20261011a */
-const CACHE = 'alghani-eh-inv-20261011a';
+/* Al Ghani Invoice service worker 20261009c */
+const CACHE = 'alghani-inv-20261009k-qr-logo-full';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {
@@ -13,7 +13,7 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('alghani-eh-') === 0).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k.indexOf('alghani-inv-') === 0).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
