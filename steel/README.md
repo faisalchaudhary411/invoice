@@ -1,31 +1,27 @@
-# Al Ghani Steel Arts — Invoice Generator
+# Al Ghani Electric & Hardware — Invoice Generator
 
-Invoice / bill app for **Al Ghani Steel Arts** (welding workshop, Lahore Motorway City).
+Invoice / bill app for **Al Ghani Electric & Hardware** (T Prime Block, Lahore Motorway City).
 58mm mini-printer PNG + normal PNG invoices, customer records, English / اردو, installable and works offline.
 
 ## What's inside
 - `index.html` — the whole app (logo, signature and stamp are built in)
-- `sw.js` — offline cache (network-first, so new deploys show immediately)
-- `manifest.webmanifest` + `icon-*.png`, `apple-touch-icon.png` — installable app + home-screen icon
+- `sw.js`, `manifest.webmanifest`, icons — offline cache + installable app
 
 ## Deploy on GitHub Pages
-1. Create a repo (e.g. `alghani-invoice`), upload **all files in this folder** to the repo root, commit.
+1. Create a repo (e.g. `alghani-eh-invoice`), upload **all files in this folder** to the repo root, commit.
 2. Repo → **Settings → Pages** → Deploy from branch → `main` / `(root)` → Save.
-3. Open `https://YOUR_USERNAME.github.io/alghani-invoice/` in Chrome → ⋮ → **Install app**.
+3. Open `https://YOUR_USERNAME.github.io/alghani-eh-invoice/` in Chrome → ⋮ → **Install app**.
 4. Always open it from the home-screen icon — customers are then stored in one place on the phone.
 
 ## How it works
-1. **Customer** → type a name (old customers appear), pick the job.
-2. **Items** → tap the item box to search (English or Urdu) or type your own. Every item has 3 simple pricing modes:
-   - **📐 Sq ft** — enter Width and Length; Amount = W × L × Rate.
-   - **📏 Running ft** — enter total running feet; Amount = ft × Rate.
-   - **💰 Lumpsum** — tick one or more items. For **each** ticked item enter qty, gauge, **measurements** and **that item's own amount**. The amount is a lump sum for the whole item, so **no rate is printed** (a dash is shown) and nothing is divided by qty. Each item becomes its own invoice line and all amounts are added into the invoice total.
-     - Normal items: one measurements box, several sizes separated by a space (`3.5x7 4x8` prints as `3.5 ft × 7 ft, 4 ft × 8 ft`). Leave it empty to print only qty and amount.
-     - **Chogath** (and any custom item with *Ask depth* ticked): a list of size rows — measurement, depth (inch), pcs. Tap **➕ Add size** for more. Each row prints on its own line, e.g. `3.5 ft × 7 ft = 5 inch = 2 pcs`, and the item's qty becomes the total pcs of the rows. To add depth to another item, use **Add custom item** and tick *Ask depth for this item*.
-3. **Save Invoice** → then **Mini 58mm PNG / Print Mini / Normal PNG / 📲 Share WhatsApp (PDF) / 🖼 Share as Images**. The invoice keeps its number until you tap **New Invoice**; saving the same number again updates it (no double-counting of outstanding). Invoice numbers are checked so two invoices never get the same number.
-   - **WhatsApp:** WhatsApp stretches very tall images, so *Share WhatsApp* sends a sharp PDF. *Share as Images* splits a tall invoice into page-shaped pictures instead.
-4. Signature and stamp each have their own checkbox (on by default).
-5. **Account statement / receipt:** Customers → **Use in Invoice** starts a fresh invoice for that customer and loads their last invoice items so you can reuse/edit. Past purchases are written as a complete record on the **digital (Normal PNG) invoice only** (not on mini printer). With no items, Preview / Print gives an **ACCOUNT STATEMENT**. Tick **📜 Include account history** to print the last account entries under a normal invoice too.
+1. **Customer** → type a name (old customers appear).
+2. **Items** → tap the item box to search ~130 electric & hardware items (the price fills in), or type any item yourself.
+   - **🔢 Qty × Price** — Amount = Qty × Price. Change the price any time; tap **Save as default price** to remember it for that item.
+   - **💰 Lumpsum** — only Qty and Amount boxes. Nothing is multiplied; the amount is used as typed and no rate is printed.
+   - **+ Custom Item** — name, price and qty; it is also saved in the search list under "★ My items".
+3. **Save Invoice** → Mini 58mm PNG / Print Mini / Normal PNG / WhatsApp PDF / Share as Images / direct Bluetooth printing.
+4. The **QR code** holds only shop name, invoice no, total, due and the Easypaisa number, so the dots are big and it scans from a thermal printout.
+5. Prices in the built-in list are starting estimates — edit them as needed.
 
 ## Customers, payments and history
 - **Add Payment** accepts amounts like `5,000` or Urdu digits. Any overpayment is kept as customer credit and offsets later bills.

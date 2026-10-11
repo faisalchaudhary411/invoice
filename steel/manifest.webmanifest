@@ -1,13 +1,13 @@
 {
-  "name": "Al Ghani Steel Arts Invoice",
-  "short_name": "Al Ghani Invoice",
-  "description": "Invoice generator for Al Ghani Steel Arts welding workshop \u2014 works offline",
+  "name": "Al Ghani Electric & Hardware Invoice",
+  "short_name": "Al Ghani E&H",
+  "description": "Invoice generator for Al Ghani Electric & Hardware — works offline",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
-  "background_color": "#0b1b2b",
-  "theme_color": "#0b1b2b",
+  "background_color": "#0a2f6b",
+  "theme_color": "#0a2f6b",
   "icons": [
     {
       "src": "icon-192.png",
