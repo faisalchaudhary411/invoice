@@ -223,6 +223,12 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <button class="btn b-ghost" style="width:100%" onclick="addItem()" data-t="btnAddItem">+ Add Item</button>
       <button class="btn b-ghost" style="width:100%" onclick="openCustomItem()" data-t="btnCustomItem">+ Custom Item</button>
     </div>
+    <button class="btn b-ghost" style="width:100%;margin-top:8px" onclick="openPriceMgr()" data-t="btnPrices">💲 Manage Item Prices</button>
+    <div id="pricePanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
+      <p class="hint" style="margin:0 0 8px" data-t="hintPrices">Change any price below — it is saved automatically and used the next time you pick that item. ↺ restores the original price, ✕ removes your own items.</p>
+      <input id="priceSearch" placeholder="Search item..." oninput="renderPriceMgr()" autocomplete="off">
+      <div id="priceList" style="max-height:340px;overflow:auto;margin-top:8px"></div>
+    </div>
     <div id="customItemPanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
       <div style="font-weight:800;color:var(--navy);margin-bottom:8px" data-t="customItemTitle">Add custom item to list</div>
       <label data-t="customNameEn">Name (English)</label>
@@ -736,7 +742,7 @@ invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax
 invNoLabel:"No:",dateLabel:"Date:",timeLabel:"Time:",signStamp:"Authorized Signature",footer:"Al Ghani Steel Arts · Welding Workshop",
 payTo:"Pay to: Ghulam Yaseen",payDetails:"Payment Details",colItem:"ITEM",colQty:"QTY",colRate:"RATE",colAmt:"AMT",
 w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeSqft:"📐 Sq ft",modeRft:"📏 Running ft",modeLump:"💰 Lumpsum",sqftW:"Width (ft)",sqftL:"Length (ft)",rftTotal:"Total running ft",lumpPrice:"Total price for all (Rs)",lumpHint:"Tick items below. For each item enter qty, measurements, gauge and its own lump-sum amount. All item amounts are added into the invoice total.",lumpItemAmt:"Amount for this item (Rs)",lumpMeasure:"Measurements (ft) — several sizes with a space, e.g. 3.5x7 4x8",lumpDepth:"Depth (inch) — several with a space, e.g. 5.5 10",customDepthLbl:"Ask depth for this item (e.g. Chogath)",lumpSizes:"Sizes: measurement · depth (inch) · pcs",btnAddSize:"➕ Add size",lumpPickTitle:"Select items",lumpPickHint:"Tick one or more items above",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnShareWA:"📲 Share WhatsApp",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",qty:"Qty",rate:"Rate",amt:"Amt",pastPurch:"PREVIOUS PURCHASES",credit:"Credit",creditToPrev:"Applied to previous",
-paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment",pageTitle:"Al Ghani Electric & Hardware",footer:"Al Ghani Electric & Hardware · Electrical & Hardware Store",thanksPaid:"Thank you for your payment. — Al Ghani Electric & Hardware",hintItems:"Tap the item box to pick an item (price fills in) or type your own. 🔢 Qty × Price is multiplied for you; 💰 Lumpsum = just an amount, nothing is multiplied.",modeQP:"🔢 Qty × Price",modeLump:"💰 Lumpsum",priceL:"Price each (Rs)",lumpAmtL:"Amount (Rs)",detL:"Detail (optional)",detPh:"e.g. brand / size / colour",savePriceBtn:"💾 Save as default price",priceSaved:"Price saved for this item",lumpNote:"Lumpsum",lumpEnter:"enter the amount",qpEnter:"enter qty & price"},
+paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment",pageTitle:"Al Ghani Electric & Hardware",footer:"Al Ghani Electric & Hardware · Electrical & Hardware Store",thanksPaid:"Thank you for your payment. — Al Ghani Electric & Hardware",hintItems:"Tap the item box to pick an item (price fills in) or type your own. 🔢 Qty × Price is multiplied for you; 💰 Lumpsum = just an amount, nothing is multiplied.",modeQP:"🔢 Qty × Price",modeLump:"💰 Lumpsum",priceL:"Price each (Rs)",lumpAmtL:"Amount (Rs)",detL:"Detail (optional)",detPh:"e.g. brand / size / colour",savePriceBtn:"💾 Save as default price",priceSaved:"Price saved for this item",lumpNote:"Lumpsum",lumpEnter:"enter the amount",qpEnter:"enter qty & price",btnPrices:"💲 Manage Item Prices",hintPrices:"Change any price below — it is saved automatically and used the next time you pick that item. ↺ restores the original price, ✕ removes your own items."},
 ur:{pageTitle:"الغنی سٹیل آرٹس",pageSub:"انوائس · گاہک ریکارڈ · منی پرنٹر",
 secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPayment:"ادائیگی",secSign:"نوٹس، دستخط اور مہر",secOutput:"انوائس بنائیں",secBiz:"🏢 کاروباری تفصیل",
 lblBizName:"کاروبار کا نام",lblTagline:"ٹیگ لائن",lblAddress:"کاروباری پتہ",lblPhone:"فون نمبر (· سے الگ کریں)",lblOwner:"مالک",
@@ -754,7 +760,7 @@ invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
 w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"سب کی کل قیمت (روپے)",lumpHint:"آئٹمز چیک کریں۔ ہر آئٹم کی تعداد، پیمائش، گیج اور اس کی اپنی رقم درج کریں۔ سب کی رقم کل میں جمع ہو جائے گی۔",lumpItemAmt:"اس آئٹم کی رقم (روپے)",lumpMeasure:"پیمائش (فٹ) — کئی سائز اسپیس کے ساتھ، مثلاً 3.5x7 4x8",lumpDepth:"موٹائی (انچ) — کئی اسپیس کے ساتھ، مثلاً 5.5 10",customDepthLbl:"اس آئٹم میں موٹائی پوچھیں (مثلاً چوکھٹ)",lumpSizes:"سائز · موٹائی (انچ) · عدد",btnAddSize:"➕ سائز شامل کریں",lumpPickTitle:"آئٹمز منتخب کریں",lumpPickHint:"اوپر ایک یا زیادہ آئٹمز چیک کریں",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",btnSyncSettings:"⚙️ سیٹنگز",btnSyncHide:"سیٹنگز چھپائیں",syncReady:"کلاؤڈ سنک تیار",
-paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی",pageTitle:"الغنی الیکٹرک اینڈ ہارڈویئر",footer:"الغنی الیکٹرک اینڈ ہارڈویئر · الیکٹرک و ہارڈویئر اسٹور",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی الیکٹرک اینڈ ہارڈویئر",hintItems:"آئٹم کے خانے پر ٹیپ کر کے آئٹم چنیں (قیمت خود آ جائے گی) یا خود لکھیں۔ 🔢 تعداد × قیمت خود ضرب ہو گی؛ 💰 یکمشت میں صرف رقم لکھیں، کچھ ضرب نہیں ہو گا۔",modeQP:"🔢 تعداد × قیمت",modeLump:"💰 یکمشت",priceL:"قیمت فی عدد (روپے)",lumpAmtL:"رقم (روپے)",detL:"تفصیل (اختیاری)",detPh:"مثلاً برانڈ / سائز / رنگ",savePriceBtn:"💾 ڈیفالٹ قیمت محفوظ کریں",priceSaved:"اس آئٹم کی قیمت محفوظ ہو گئی",lumpNote:"یکمشت",lumpEnter:"رقم لکھیں",qpEnter:"تعداد اور قیمت لکھیں"}
+paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی",pageTitle:"الغنی الیکٹرک اینڈ ہارڈویئر",footer:"الغنی الیکٹرک اینڈ ہارڈویئر · الیکٹرک و ہارڈویئر اسٹور",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی الیکٹرک اینڈ ہارڈویئر",hintItems:"آئٹم کے خانے پر ٹیپ کر کے آئٹم چنیں (قیمت خود آ جائے گی) یا خود لکھیں۔ 🔢 تعداد × قیمت خود ضرب ہو گی؛ 💰 یکمشت میں صرف رقم لکھیں، کچھ ضرب نہیں ہو گا۔",modeQP:"🔢 تعداد × قیمت",modeLump:"💰 یکمشت",priceL:"قیمت فی عدد (روپے)",lumpAmtL:"رقم (روپے)",detL:"تفصیل (اختیاری)",detPh:"مثلاً برانڈ / سائز / رنگ",savePriceBtn:"💾 ڈیفالٹ قیمت محفوظ کریں",priceSaved:"اس آئٹم کی قیمت محفوظ ہو گئی",lumpNote:"یکمشت",lumpEnter:"رقم لکھیں",qpEnter:"تعداد اور قیمت لکھیں",btnPrices:"💲 آئٹمز کی قیمتیں بدلیں",hintPrices:"نیچے کوئی بھی قیمت بدلیں — خود محفوظ ہو جاتی ہے اور اگلی بار وہی آئٹم چننے پر استعمال ہو گی۔ ↺ اصل قیمت واپس، ✕ اپنے آئٹم حذف۔"}
 };
 
 let lang='en',itemCount=0,deferredInstall=null;
@@ -1169,6 +1175,30 @@ function storeItemPrice(name,price,nameUr){
   saveCustomItems(arr);
 }
 
+
+/* ---- Manage Item Prices ---- */
+function openPriceMgr(){const p=el('pricePanel');p.classList.toggle('hidden');if(!p.classList.contains('hidden')){el('priceSearch').value='';renderPriceMgr()}}
+function renderPriceMgr(){
+  const q=keyName(v('priceSearch')),box=el('priceList'),ov=loadPrices();
+  const rows=getAllPresets().map((p,i)=>({p,i})).filter(({p})=>!q||keyName(p.name).includes(q)||(p.nameUr||'').includes(q)||keyName(p.cat).includes(q));
+  box.innerHTML=rows.map(({p,i})=>{
+    const isC=!!p.custom,isO=!isC&&ov[p.name]!=null;
+    return '<div style="display:flex;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid #e3e8f0"><div style="flex:1;min-width:0;font-size:.84rem;font-weight:700">'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small style="display:block;color:var(--mut);font-weight:400">'+esc(p.cat||'')+(isO?' · edited':'')+'</small></div>'+
+      '<input type="number" inputmode="decimal" min="0" step="any" value="'+(p.price>0?p.price:'')+'" placeholder="0" onfocus="this.select()" style="width:96px;padding:8px" onchange="setItemPrice('+i+',this.value)">'+
+      (isC?'<button class="btn b-red b-sm" onclick="delCustomItem('+i+')">✕</button>':(isO?'<button class="btn b-ghost b-sm" onclick="resetItemPrice('+i+')">↺</button>':''))+'</div>';
+  }).join('')||'<p class="hint">—</p>';
+}
+function setItemPrice(i,val){
+  const p=getAllPresets()[i];if(!p)return;
+  storeItemPrice(p.name,Math.max(0,+val||0),p.nameUr);
+  try{toast(tr('priceSaved'),true)}catch(e){}
+}
+function resetItemPrice(i){const p=getAllPresets()[i];if(!p)return;const ov=loadPrices();delete ov[p.name];savePrices(ov);renderPriceMgr()}
+function delCustomItem(i){
+  const p=getAllPresets()[i];if(!p||!p.custom)return;
+  if(!confirm(lang==='ur'?'یہ آئٹم حذف کریں؟':'Remove this item from your list?'))return;
+  saveCustomItems(loadCustomItems().filter(x=>keyName(x.name)!==keyName(p.name)));renderPriceMgr();
+}
 function openCustomItem(){
   el('customItemPanel').classList.remove('hidden');
   el('customNameEn').value='';el('customNameUr').value='';el('customPrice').value='';el('customQty').value='1';
@@ -1198,9 +1228,9 @@ function addItem(prefill){
       '<button type="button" data-m="lump" data-ti="modeLump" onclick="setMode('+id+',\'lump\')">'+esc(tr('modeLump'))+'</button>'+
     '</div><input type="hidden" id="mode-'+id+'" value="qp">'+
     '<div class="row" style="margin-top:8px">'+
-      '<div><label data-ti="qty">'+esc(tr('qty'))+'</label><input type="number" id="qty-'+id+'" value="1" min="0" step="any" inputmode="decimal" oninput="calc('+id+')"></div>'+
-      '<div id="pricebox-'+id+'"><label data-ti="priceL">'+esc(tr('priceL'))+'</label><input type="number" id="price-'+id+'" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
-      '<div id="lumpbox-'+id+'" class="hidden"><label data-ti="lumpAmtL">'+esc(tr('lumpAmtL'))+'</label><input type="number" id="lamt-'+id+'" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
+      '<div><label data-ti="qty">'+esc(tr('qty'))+'</label><input type="number" id="qty-'+id+'" onfocus="this.select()" value="1" min="0" step="any" inputmode="decimal" oninput="calc('+id+')"></div>'+
+      '<div id="pricebox-'+id+'"><label data-ti="priceL">'+esc(tr('priceL'))+'</label><input type="number" id="price-'+id+'" onfocus="this.select()" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
+      '<div id="lumpbox-'+id+'" class="hidden"><label data-ti="lumpAmtL">'+esc(tr('lumpAmtL'))+'</label><input type="number" id="lamt-'+id+'" onfocus="this.select()" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
     '</div>'+
     '<div class="pvline hidden" id="pvl-'+id+'"></div>'+
     '<div style="margin-top:6px"><label data-ti="detL">'+esc(tr('detL'))+'</label><input type="text" id="det-'+id+'" placeholder="'+esc(tr('detPh'))+'" autocomplete="off" oninput="calc('+id+')"></div>'+
