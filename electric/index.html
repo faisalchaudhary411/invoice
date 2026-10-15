@@ -768,17 +768,8 @@ const DB_KEY='alghanieh_customers_v2',OLD_KEY='alghanieh_customers_v1',SEED_KEY=
 const PAY_LINES=['Nayapay/Easypaisa: 0333 7681305','JazzCash: 0312 7080109','UBL: 0411332662464'];
 const CREDIT='Developed by Easy Tech Solutions · 0334 1771875';
 function payQRText(d){
-  /* Short on purpose: a small code has big dots and scans easily, even from a thermal printout */
-  if(!d){try{d=gather()}catch(e){d=null}}
-  const lines=['Al Ghani Electric & Hardware'];
-  const invNo=(v('invNo')||'').trim();
-  if(invNo) lines.push('Inv: '+invNo);
-  if(d&&d.grand>0){
-    lines.push('Total: Rs '+num(d.grand));
-    if(d.remain>0) lines.push('Due: Rs '+num(d.remain));
-  }
-  lines.push('Pay: 0333 7681305 (Easypaisa)');
-  return lines.join('\n');
+  /* UBL Digital QR for Ghulam Yaseen - 2464 (PK28UNIL0109000332662464) */
+  return '0002020102110202000424PK28UNIL01090003326624641004DFA7';
 }
 /* QR drawn with whole-pixel modules, plain black on a white quiet zone, and NO logo on top,
    so every dot stays sharp when the invoice is printed on 58mm paper or shared on WhatsApp. */
