@@ -1,5 +1,5 @@
-/* Al Ghani Electric & Hardware invoice service worker 20261011a */
-const CACHE = 'alghani-eh-inv-20261011a';
+/* Al Ghani Electric & Hardware invoice service worker 20261020a */
+const CACHE = 'alghani-eh-inv-20261020a';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

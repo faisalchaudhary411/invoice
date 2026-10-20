@@ -72,6 +72,27 @@ body.urdu .search-w::before{left:auto;right:11px}
 .sg div{padding:11px 12px;cursor:pointer;font-size:.9rem;border-bottom:1px solid #f0f2f6;display:flex;justify-content:space-between;gap:8px}
 .sg div small{color:var(--mut);font-size:.78rem}
 .sg div:active,.sg div:hover{background:#eaf2ff}
+.search-w input.hasscan{padding-right:48px}
+body.urdu .search-w input.hasscan{padding-right:36px;padding-left:48px}
+.scanbtn{position:absolute;right:5px;top:5px;width:38px;height:38px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:1.05rem;cursor:pointer;z-index:3;padding:0}
+body.urdu .scanbtn{right:auto;left:5px}
+.scanbtn:active{transform:scale(.93)}
+#scanOv{position:fixed;inset:0;background:#000;z-index:9999;display:flex;flex-direction:column}
+#scanVid{flex:1;min-height:0;width:100%;object-fit:cover;background:#000}
+#scanBox{position:absolute;left:8%;right:8%;top:30%;height:26%;border:3px solid #ffc233;border-radius:14px;box-shadow:0 0 0 9999px rgba(0,0,0,.38);pointer-events:none}
+#scanMsg{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;color:#fff;font-weight:800;font-size:.95rem;padding:0 16px;text-shadow:0 1px 4px #000}
+#scanBar{padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));background:#000;display:flex;gap:10px}
+#scanBar button{flex:1}
+.lbl-row{padding:8px 0;border-bottom:1px solid #e3e8f0}
+.lbl-top{display:flex;justify-content:space-between;gap:8px;font-size:.86rem;font-weight:700}
+.lbl-top span{white-space:nowrap;color:var(--navy)}
+.lbl-top small{display:block;color:var(--mut);font-weight:400}
+.lbl-ctl{display:flex;gap:6px;align-items:center;margin-top:6px}
+.lbl-ctl input{padding:8px;font-size:.85rem}
+.lbl-ctl .lbl-bc{flex:1;min-width:0;font-family:ui-monospace,Menlo,monospace}
+.lbl-ctl .lbl-n{width:62px;flex:none;text-align:center}
+.lbl-ctl button{flex:none}
+#lblPrev{max-width:100%;border:1px dashed #94a3b8;background:#fff;border-radius:6px;margin-top:8px}
 details.dim{margin-top:8px;background:#f1f5f9;border-radius:11px;padding:8px 10px}
 details.dim summary{font-size:.8rem;font-weight:700;color:var(--navy);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
 details.dim summary::-webkit-details-marker{display:none}
@@ -224,6 +245,52 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <button class="btn b-ghost" style="width:100%" onclick="openCustomItem()" data-t="btnCustomItem">+ Custom Item</button>
     </div>
     <button class="btn b-ghost" style="width:100%;margin-top:8px" onclick="openPriceMgr()" data-t="btnPrices">💲 Manage Item Prices</button>
+    <button class="btn b-ghost" style="width:100%;margin-top:8px" onclick="openLblPanel()" id="btnLbl">🏷️ Barcode Labels — Generate &amp; Print</button>
+    <div id="lblPanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
+      <p class="hint" style="margin:0 0 8px" id="lblHint"></p>
+      <div class="row">
+        <div><label id="lblSizeL">Label size</label>
+          <select id="lblSize" onchange="lblOptChanged()">
+            <option value="50x30">50 × 30 mm</option>
+            <option value="40x30">40 × 30 mm</option>
+            <option value="38x25">38 × 25 mm</option>
+            <option value="58x40">58 × 40 mm</option>
+            <option value="30x20">30 × 20 mm</option>
+          </select></div>
+        <div><label id="lblLayoutL">Layout</label>
+          <select id="lblLayout" onchange="lblOptChanged()">
+            <option value="a" id="lblLayoutA">Barcode → Name → Price</option>
+            <option value="b" id="lblLayoutB">Name → Barcode → Price</option>
+          </select></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <div><label id="lblNameL">Name on label</label>
+          <select id="lblNameLang" onchange="lblOptChanged()">
+            <option value="en">English</option>
+            <option value="ur">اردو</option>
+          </select></div>
+        <div><label id="lblPaperL">Paper</label>
+          <select id="lblPaper" onchange="lblOptChanged()">
+            <option value="roll" id="lblPaperRoll">Label / roll (1 per page)</option>
+            <option value="a4" id="lblPaperA4">A4 sheet (many per page)</option>
+          </select></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:700"><input type="checkbox" id="lblPc" onchange="lblOptChanged()" style="width:auto"><span id="lblPcL">Show “/pc” after price</span></label>
+      <input id="lblSearch" placeholder="Search item..." oninput="renderLblList()" autocomplete="off" style="margin-top:10px">
+      <div class="grid2" style="margin-top:8px">
+        <button class="btn b-ghost b-sm" onclick="lblSetAll(1)" id="lblAll1">All shown: 1 label</button>
+        <button class="btn b-ghost b-sm" onclick="lblSetAll(0)" id="lblAll0">Clear counts</button>
+      </div>
+      <div id="lblList" style="max-height:360px;overflow:auto;margin-top:6px"></div>
+      <div id="lblTotal" style="font-weight:800;margin:8px 0;color:var(--navy)"></div>
+      <img id="lblPrev" class="hidden" alt="">
+      <div class="grid2" style="margin-top:10px">
+        <button class="btn b-ghost" onclick="lblPreview()" id="lblBtnPrev">👁 Preview</button>
+        <button class="btn b-blue" onclick="lblPrintBrowser()" id="lblBtnPrint">🖨 Print Labels</button>
+        <button class="btn b-green" onclick="lblPrintDirect()" id="lblBtnDirect">⚡ Direct Print</button>
+        <button class="btn b-amber" onclick="lblDownload()" id="lblBtnDl">⬇ Download PNG</button>
+      </div>
+    </div>
     <div id="pricePanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
       <p class="hint" style="margin:0 0 8px" data-t="hintPrices">Change any price below — it is saved automatically and used the next time you pick that item. ↺ restores the original price, ✕ removes your own items.</p>
       <input id="priceSearch" placeholder="Search item..." oninput="renderPriceMgr()" autocomplete="off">
@@ -236,6 +303,8 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <label data-t="customNameUr" style="margin-top:6px;display:block">Name (Urdu) — optional</label>
       <input id="customNameUr" placeholder="مثلاً ایل ای ڈی بلب 12 واٹ" dir="rtl">
       <div class="row" style="margin-top:8px"><div><label data-t="priceL">Price each (Rs)</label><input type="number" id="customPrice" min="0" step="any" inputmode="decimal" placeholder="0"></div><div><label data-t="qty">Qty</label><input type="number" id="customQty" value="1" min="0" step="any" inputmode="decimal"></div></div>
+      <label style="margin-top:8px;display:block" id="customBcL">Barcode (optional — scan or type)</label>
+      <div style="position:relative"><input id="customBarcode" placeholder="" autocomplete="off" style="padding-right:48px"><button type="button" class="scanbtn" onclick="scanInto('customBarcode')">📷</button></div>
       <div class="grid2" style="margin-top:10px">
         <button class="btn b-navy" onclick="saveCustomItem()" data-t="btnSaveCustom">Save &amp; Add</button>
         <button class="btn b-ghost" onclick="closeCustomItem()" data-t="btnCancel">Cancel</button>
@@ -402,6 +471,12 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 <div class="toast" id="toast"></div>
 <div class="pv hidden" id="pv" onclick="this.classList.add('hidden')"><p>Tap anywhere to close</p><img id="pvImg" alt="preview"></div>
 
+<div id="scanOv" class="hidden">
+  <video id="scanVid" playsinline muted autoplay></video>
+  <div id="scanBox"></div>
+  <div id="scanMsg"></div>
+  <div id="scanBar"><button type="button" class="btn b-red" onclick="scanStop()" id="scanClose">✕ Close</button></div>
+</div>
 <script id="seedData" type="application/json">{"savedAt":0,"customers":[]}</script>
 <script>
 /* qr-min: pure JS QR generator */
@@ -742,7 +817,7 @@ invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax
 invNoLabel:"No:",dateLabel:"Date:",timeLabel:"Time:",signStamp:"Authorized Signature",footer:"Al Ghani Steel Arts · Welding Workshop",
 payTo:"Pay to: Ghulam Yaseen",payDetails:"Payment Details",colItem:"ITEM",colQty:"QTY",colRate:"RATE",colAmt:"AMT",
 w:"Width",l:"Length",d:"Depth",customW:"Custom W",customL:"Custom L",sizeLbl:"📐 Size (optional)",g:"Gauge",customG:"Custom gauge",secTotals:"All Customers — Summary",totBilledL:"TOTAL BILLED",totPaidL:"TOTAL PAID",totPendL:"TOTAL PENDING — TO RECEIVE",modeSqft:"📐 Sq ft",modeRft:"📏 Running ft",modeLump:"💰 Lumpsum",sqftW:"Width (ft)",sqftL:"Length (ft)",rftTotal:"Total running ft",lumpPrice:"Total price for all (Rs)",lumpHint:"Tick items below. For each item enter qty, measurements, gauge and its own lump-sum amount. All item amounts are added into the invoice total.",lumpItemAmt:"Amount for this item (Rs)",lumpMeasure:"Measurements (ft) — several sizes with a space, e.g. 3.5x7 4x8",lumpDepth:"Depth (inch) — several with a space, e.g. 5.5 10",customDepthLbl:"Ask depth for this item (e.g. Chogath)",lumpSizes:"Sizes: measurement · depth (inch) · pcs",btnAddSize:"➕ Add size",lumpPickTitle:"Select items",lumpPickHint:"Tick one or more items above",stmtTitle:"ACCOUNT STATEMENT",histTitle:"ACCOUNT HISTORY",lblUseHist:"📜 Include account history on invoice",colDate:"DATE",colRef:"REFERENCE",colBilled:"BILLED",colPaid:"PAID",colBal:"BALANCE",stmtReady:"Statement ready (no items, nothing to save). Use Preview / Print.",earlier:"earlier entries not shown",payRecv:"Payment received",thanksPaid:"Thank you for your payment. — Al Ghani Steel Arts",balance:"Bal",clear:"ACCOUNT CLEAR — NOTHING DUE",prSet:"⚙️ Printer settings / troubleshooting",prIntL:"Darkness (Fun Print / MXW01)",prChunkL:"Data chunk size (Fun Print / MXW01)",prFlipL:"Rotate 180° (untick if print comes out upside down)",prModeL:"Print mode",prSpeedL:"Speed",prChanL:"Bluetooth channel",btnTest:"🧪 Test Print (text)",btnShare:"📤 Share Backup",btnShareWA:"📲 Share WhatsApp",btnConn:"🔌 Connect Printer",btnPrintDirect:"⚡ Print Direct",qty:"Qty",rate:"Rate",amt:"Amt",pastPurch:"PREVIOUS PURCHASES",credit:"Credit",creditToPrev:"Applied to previous",
-paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment",pageTitle:"Al Ghani Electric & Hardware",footer:"Al Ghani Electric & Hardware · Electrical & Hardware Store",thanksPaid:"Thank you for your payment. — Al Ghani Electric & Hardware",hintItems:"Tap the item box to pick an item (price fills in) or type your own. 🔢 Qty × Price is multiplied for you; 💰 Lumpsum = just an amount, nothing is multiplied.",modeQP:"🔢 Qty × Price",modeLump:"💰 Lumpsum",priceL:"Price each (Rs)",lumpAmtL:"Amount (Rs)",detL:"Detail (optional)",detPh:"e.g. brand / size / colour",savePriceBtn:"💾 Save as default price",priceSaved:"Price saved for this item",lumpNote:"Lumpsum",lumpEnter:"enter the amount",qpEnter:"enter qty & price",btnPrices:"💲 Manage Item Prices",hintPrices:"Change any price below — it is saved automatically and used the next time you pick that item. ↺ restores the original price, ✕ removes your own items."},
+paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInInv:"Use in Invoice",addPay:"+ Payment",pageTitle:"Al Ghani Electric & Hardware",footer:"Al Ghani Electric & Hardware · Electrical & Hardware Store",thanksPaid:"Thank you for your payment. — Al Ghani Electric & Hardware",hintItems:"Search an item here, or SCAN its barcode (📷 button, or a USB/Bluetooth scanner) — the item is added automatically. Scan again to add +1 qty. 🔢 Qty × Price is multiplied for you; 💰 Lumpsum = just an amount.",modeQP:"🔢 Qty × Price",modeLump:"💰 Lumpsum",priceL:"Price each (Rs)",lumpAmtL:"Amount (Rs)",detL:"Detail (optional)",detPh:"e.g. brand / size / colour",savePriceBtn:"💾 Save as default price",priceSaved:"Price saved for this item",lumpNote:"Lumpsum",lumpEnter:"enter the amount",qpEnter:"enter qty & price",btnPrices:"💲 Manage Item Prices",hintPrices:"Change any price below — it is saved automatically and used the next time you pick that item. ↺ restores the original price, ✕ removes your own items."},
 ur:{pageTitle:"الغنی سٹیل آرٹس",pageSub:"انوائس · گاہک ریکارڈ · منی پرنٹر",
 secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPayment:"ادائیگی",secSign:"نوٹس، دستخط اور مہر",secOutput:"انوائس بنائیں",secBiz:"🏢 کاروباری تفصیل",
 lblBizName:"کاروبار کا نام",lblTagline:"ٹیگ لائن",lblAddress:"کاروباری پتہ",lblPhone:"فون نمبر (· سے الگ کریں)",lblOwner:"مالک",
@@ -760,7 +835,7 @@ invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
 w:"چوڑائی",l:"لمبائی",d:"موٹائی",customW:"اپنی چوڑائی",customL:"اپنی لمبائی",sizeLbl:"📐 سائز (اختیاری)",g:"گیج",customG:"اپنا گیج",secTotals:"تمام گاہک — خلاصہ",totBilledL:"کل بل",totPaidL:"کل وصول شدہ",totPendL:"کل بقایا — وصول کرنا ہے",modeSqft:"📐 مربع فٹ",modeRft:"📏 رننگ فٹ",modeLump:"💰 یکمشت",sqftW:"چوڑائی (فٹ)",sqftL:"لمبائی (فٹ)",rftTotal:"کل رننگ فٹ",lumpPrice:"سب کی کل قیمت (روپے)",lumpHint:"آئٹمز چیک کریں۔ ہر آئٹم کی تعداد، پیمائش، گیج اور اس کی اپنی رقم درج کریں۔ سب کی رقم کل میں جمع ہو جائے گی۔",lumpItemAmt:"اس آئٹم کی رقم (روپے)",lumpMeasure:"پیمائش (فٹ) — کئی سائز اسپیس کے ساتھ، مثلاً 3.5x7 4x8",lumpDepth:"موٹائی (انچ) — کئی اسپیس کے ساتھ، مثلاً 5.5 10",customDepthLbl:"اس آئٹم میں موٹائی پوچھیں (مثلاً چوکھٹ)",lumpSizes:"سائز · موٹائی (انچ) · عدد",btnAddSize:"➕ سائز شامل کریں",lumpPickTitle:"آئٹمز منتخب کریں",lumpPickHint:"اوپر ایک یا زیادہ آئٹمز چیک کریں",stmtTitle:"اکاؤنٹ اسٹیٹمنٹ",histTitle:"اکاؤنٹ ہسٹری",lblUseHist:"📜 انوائس پر اکاؤنٹ ہسٹری شامل کریں",colDate:"تاریخ",colRef:"حوالہ",colBilled:"بل",colPaid:"ادا",colBal:"بقایا",stmtReady:"اسٹیٹمنٹ تیار (کوئی آئٹم نہیں، محفوظ کرنے کو کچھ نہیں)۔ پری ویو / پرنٹ استعمال کریں۔",earlier:"پرانی اندراجات نہیں دکھائی گئیں",payRecv:"ادائیگی وصول",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی سٹیل آرٹس",balance:"بقایا",clear:"اکاؤنٹ کلیئر — کچھ باقی نہیں",prSet:"⚙️ پرنٹر سیٹنگ / مسئلے کا حل",prIntL:"گہرائی (Fun Print / MXW01)",prChunkL:"ڈیٹا چنک سائز (Fun Print / MXW01)",prFlipL:"180° گھمائیں (الٹا پرنٹ ہو تو ہٹا دیں)",prModeL:"پرنٹ موڈ",prSpeedL:"رفتار",prChanL:"بلوٹوتھ چینل",btnTest:"🧪 ٹیسٹ پرنٹ (ٹیکسٹ)",btnShare:"📤 بیک اپ شیئر",btnShareWA:"📲 واٹس ایپ شیئر",btnConn:"🔌 پرنٹر کنیکٹ",btnPrintDirect:"⚡ سیدھا پرنٹ",qty:"تعداد",rate:"ریٹ",amt:"رقم",pastPurch:"پرانی خریداریاں",credit:"کریڈٹ",creditToPrev:"پرانی بقایا میں لگایا",secSync:"کلاؤڈ سنک (خودکار)",hintSync:"customers.json کو GitHub پر رکھیں۔ دونوں فون خود بخود کھینچیں/بھیجیں — دستی ایکسپورٹ نہیں۔",lblSyncUrl:"JSON لنک (عوامی)",lblSyncRepo:"GitHub ریپو (owner/name)",lblSyncPath:"فائل پاتھ",lblSyncBranch:"برانچ",lblSyncToken:"GitHub ٹوکن (پرائیویٹ + پش)",hintToken:"github.com/settings/tokens → classic → repo۔ صرف اس فون پر محفوظ۔",lblAutoPull:"ایپ کھلتے ہی خود کھینچیں",lblAutoPush:"ہر سیو کے بعد خود پش کریں",btnPull:"⬇️ ابھی کھینچیں",btnPush:"⬆️ ابھی بھیجیں",syncPullOk:"کھینچ کر ملا دیا",syncPushOk:"کلاؤڈ پر بھیج دیا",syncNoCfg:"پہلے JSON لنک یا GitHub ریپو لکھیں",syncFail:"سنک ناکام",btnSyncSettings:"⚙️ سیٹنگز",btnSyncHide:"سیٹنگز چھپائیں",syncReady:"کلاؤڈ سنک تیار",
-paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی",pageTitle:"الغنی الیکٹرک اینڈ ہارڈویئر",footer:"الغنی الیکٹرک اینڈ ہارڈویئر · الیکٹرک و ہارڈویئر اسٹور",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی الیکٹرک اینڈ ہارڈویئر",hintItems:"آئٹم کے خانے پر ٹیپ کر کے آئٹم چنیں (قیمت خود آ جائے گی) یا خود لکھیں۔ 🔢 تعداد × قیمت خود ضرب ہو گی؛ 💰 یکمشت میں صرف رقم لکھیں، کچھ ضرب نہیں ہو گا۔",modeQP:"🔢 تعداد × قیمت",modeLump:"💰 یکمشت",priceL:"قیمت فی عدد (روپے)",lumpAmtL:"رقم (روپے)",detL:"تفصیل (اختیاری)",detPh:"مثلاً برانڈ / سائز / رنگ",savePriceBtn:"💾 ڈیفالٹ قیمت محفوظ کریں",priceSaved:"اس آئٹم کی قیمت محفوظ ہو گئی",lumpNote:"یکمشت",lumpEnter:"رقم لکھیں",qpEnter:"تعداد اور قیمت لکھیں",btnPrices:"💲 آئٹمز کی قیمتیں بدلیں",hintPrices:"نیچے کوئی بھی قیمت بدلیں — خود محفوظ ہو جاتی ہے اور اگلی بار وہی آئٹم چننے پر استعمال ہو گی۔ ↺ اصل قیمت واپس، ✕ اپنے آئٹم حذف۔"}
+paid:"ادا شدہ",billed:"کل بل",noCust:"ابھی کوئی گاہک نہیں۔",del:"حذف",useInInv:"انوائس میں استعمال",addPay:"+ ادائیگی",pageTitle:"الغنی الیکٹرک اینڈ ہارڈویئر",footer:"الغنی الیکٹرک اینڈ ہارڈویئر · الیکٹرک و ہارڈویئر اسٹور",thanksPaid:"ادائیگی کا شکریہ۔ — الغنی الیکٹرک اینڈ ہارڈویئر",hintItems:"یہاں آئٹم تلاش کریں یا اس کا بار کوڈ اسکین کریں (📷 بٹن یا USB/بلوٹوتھ اسکینر) — آئٹم خود شامل ہو جائے گا۔ دوبارہ اسکین پر تعداد +1۔ 🔢 تعداد × قیمت خود ضرب ہو گی؛ 💰 یکمشت میں صرف رقم لکھیں۔",modeQP:"🔢 تعداد × قیمت",modeLump:"💰 یکمشت",priceL:"قیمت فی عدد (روپے)",lumpAmtL:"رقم (روپے)",detL:"تفصیل (اختیاری)",detPh:"مثلاً برانڈ / سائز / رنگ",savePriceBtn:"💾 ڈیفالٹ قیمت محفوظ کریں",priceSaved:"اس آئٹم کی قیمت محفوظ ہو گئی",lumpNote:"یکمشت",lumpEnter:"رقم لکھیں",qpEnter:"تعداد اور قیمت لکھیں",btnPrices:"💲 آئٹمز کی قیمتیں بدلیں",hintPrices:"نیچے کوئی بھی قیمت بدلیں — خود محفوظ ہو جاتی ہے اور اگلی بار وہی آئٹم چننے پر استعمال ہو گی۔ ↺ اصل قیمت واپس، ✕ اپنے آئٹم حذف۔"}
 };
 
 let lang='en',itemCount=0,deferredInstall=null;
@@ -1133,6 +1208,7 @@ function setLang(l){
   document.querySelectorAll('#itemsBody [data-ti]').forEach(e=>{const s=T[l][e.getAttribute('data-ti')];if(s!=null)e.textContent=s});
   document.querySelectorAll('#itemsBody input[id^="desc-"]').forEach(i=>{i.placeholder=T[l].phItem});
   renderCustList();recalcPay();
+  try{lblTexts();if(!el('lblPanel').classList.contains('hidden'))renderLblList()}catch(e){}
 }
 
 /* ---------- items (Electric & Hardware) ---------- */
@@ -1188,11 +1264,11 @@ function resetItemPrice(i){const p=getAllPresets()[i];if(!p)return;const ov=load
 function delCustomItem(i){
   const p=getAllPresets()[i];if(!p||!p.custom)return;
   if(!confirm(lang==='ur'?'یہ آئٹم حذف کریں؟':'Remove this item from your list?'))return;
-  saveCustomItems(loadCustomItems().filter(x=>keyName(x.name)!==keyName(p.name)));renderPriceMgr();
+  saveCustomItems(loadCustomItems().filter(x=>keyName(x.name)!==keyName(p.name)));setBC(p.name,'');delete LBL_COPIES[keyName(p.name)];renderPriceMgr();
 }
 function openCustomItem(){
   el('customItemPanel').classList.remove('hidden');
-  el('customNameEn').value='';el('customNameUr').value='';el('customPrice').value='';el('customQty').value='1';
+  el('customNameEn').value='';el('customNameUr').value='';el('customPrice').value='';el('customQty').value='1';el('customBarcode').value='';lblTexts();
   el('customNameEn').focus();
 }
 function closeCustomItem(){el('customItemPanel').classList.add('hidden')}
@@ -1202,7 +1278,10 @@ function saveCustomItem(){
   if(!name){alert(tr('customNeedName'));return}
   const price=Math.max(0,+el('customPrice').value||0);
   const qty=Math.max(0,+el('customQty').value||1);
+  const bcode=(el('customBarcode').value||'').trim();
+  if(bcode){const own=bcOwner(bcode,name);if(own&&!confirm(L('This barcode is already on another item. Move it to this item?','یہ بار کوڈ کسی اور آئٹم پر ہے۔ کیا اسے اس آئٹم پر منتقل کریں؟')))return;if(own){const o=loadBC();delete o[own];saveBC(o)}}
   storeItemPrice(name,price,nameUr);
+  if(bcode)setBC(name,bcode);
   closeCustomItem();
   addItem({desc:name,mode:'qp',qty:qty,price:price});
   try{toast(tr('customSaved'))}catch(e){}
@@ -1213,7 +1292,7 @@ function addItem(prefill){
   const card=document.createElement('div');card.className='item-card';card.id='item-row-'+id;
   card.innerHTML=
     '<div class="item-head"><b class="no">#'+n+'</b><button class="btn b-red b-sm" onclick="removeItem('+id+')">✕</button></div>'+
-    '<div class="search-w"><input id="desc-'+id+'" placeholder="'+esc(tr('phItem'))+'" oninput="itemSuggest('+id+');calc('+id+')" onfocus="itemSuggest('+id+')" autocomplete="off"><div class="sg" id="isg-'+id+'"></div></div>'+
+    '<div class="search-w"><input id="desc-'+id+'" class="hasscan" placeholder="'+esc(tr('phItem'))+'" oninput="itemInput('+id+')" onkeydown="itemKey(event,'+id+')" onfocus="itemSuggest('+id+')" autocomplete="off" enterkeyhint="search"><button type="button" class="scanbtn" onclick="scanItem('+id+')" title="Scan barcode">📷</button><div class="sg" id="isg-'+id+'"></div></div>'+
     '<div class="seg" id="seg-'+id+'">'+
       '<button type="button" class="on" data-m="qp" data-ti="modeQP" onclick="setMode('+id+',\'qp\')">'+esc(tr('modeQP'))+'</button>'+
       '<button type="button" data-m="lump" data-ti="modeLump" onclick="setMode('+id+',\'lump\')">'+esc(tr('modeLump'))+'</button>'+
@@ -1242,20 +1321,393 @@ function addItem(prefill){
 function itemSuggest(id){
   const q=keyName(v('desc-'+id));const box=el('isg-'+id);if(!box)return;
   const qs=q.replace(/\s+/g,'');
-  const all=getAllPresets();
-  const list=all.map((p,i)=>({p,i})).filter(({p})=>!q||keyName(p.name).includes(q)||keyName(p.name).replace(/\s+/g,'').includes(qs)||(p.nameUr||'').includes(q)||keyName(p.cat).includes(q));
-  if(!list.length){box.style.display='none';return}
-  box.innerHTML=list.map(({p,i})=>'<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small style="display:block">'+esc(p.cat||'')+'</small></span><b style="white-space:nowrap;color:var(--navy)">'+(p.price>0?'Rs '+num(p.price):'—')+'</b></div>').join('');
+  const all=getAllPresets();const bm=loadBC();
+  const list=all.map((p,i)=>({p,i})).filter(({p})=>!q||keyName(p.name).includes(q)||keyName(p.name).replace(/\s+/g,'').includes(qs)||(p.nameUr||'').includes(q)||keyName(p.cat).includes(q)||(q.length>=3&&String(bm[keyName(p.name)]||'').includes(q)));
+  const pend=(pendingBC&&pendingBC.id===id&&Date.now()-pendingBC.t<120000)?pendingBC:null;
+  const head=pend?'<div style="background:#fff7d6;color:#7a5200;font-weight:800;display:block" onclick="event.stopPropagation()">'+esc(L('🔗 New barcode '+pend.code+' — pick the item to link it','🔗 نیا بار کوڈ '+pend.code+' — لنک کرنے کے لیے آئٹم چنیں'))+' <button type="button" class="btn b-red b-sm" style="margin-inline-start:8px" onclick="pendingBC=null;itemSuggest('+id+')">✕</button></div>':'';
+  if(!list.length&&!head){box.style.display='none';return}
+  box.innerHTML=head+list.map(({p,i})=>{const bc=bm[keyName(p.name)];return '<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small style="display:block">'+esc(p.cat||'')+(bc?' · ▮ '+esc(bc):'')+'</small></span><b style="white-space:nowrap;color:var(--navy)">'+(p.price>0?'Rs '+num(p.price):'—')+'</b></div>'}).join('');
   box.style.display='block';
 }
-function pickItem(id,i){
-  const p=getAllPresets()[i];if(!p)return;
+function fillRow(id,p){
   el('desc-'+id).value=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
   el('isg-'+id).style.display='none';
   if(v('mode-'+id)!=='qp')setMode(id,'qp');
   el('price-'+id).value=p.price>0?p.price:'';
   if(!(+v('qty-'+id)>0))el('qty-'+id).value=1;
   calc(id);
+}
+function pickItem(id,i){
+  const p=getAllPresets()[i];if(!p)return;
+  fillRow(id,p);
+  if(pendingBC&&pendingBC.id===id&&Date.now()-pendingBC.t<120000){
+    const own=bcOwner(pendingBC.code,p.name);
+    if(own&&!confirm(L('This barcode is already on another item. Move it to this item?','یہ بار کوڈ کسی اور آئٹم پر ہے۔ کیا اسے اس آئٹم پر منتقل کریں؟')))return void(pendingBC=null);
+    setBC(p.name,pendingBC.code);
+    toast(L('Barcode linked: ','بار کوڈ لنک ہو گیا: ')+pendingBC.code,true);
+    pendingBC=null;
+  }
+}
+
+/* ---------- BARCODE: store, scan (USB / Bluetooth scanner + camera), Code 128 ---------- */
+const L=(en,ur)=>lang==='ur'?ur:en;
+const BC_KEY='alghanieh_barcodes',BCSEQ_KEY='alghanieh_bcseq';
+let pendingBC=null;
+function loadBC(){try{const o=JSON.parse(localStorage.getItem(BC_KEY)||'{}');return o&&typeof o==='object'&&!Array.isArray(o)?o:{}}catch(e){return{}}}
+function saveBC(o){try{localStorage.setItem(BC_KEY,JSON.stringify(o))}catch(e){}}
+function bcOf(name){return loadBC()[keyName(name)]||''}
+function setBC(name,code){const o=loadBC();code=String(code||'').trim();if(code)o[keyName(name)]=code;else delete o[keyName(name)];saveBC(o)}
+function bcOwner(code,exceptName){const o=loadBC(),ex=keyName(exceptName);for(const k in o)if(o[k]===code&&k!==ex)return k;return null}
+function itemByCode(code){const o=loadBC();return getAllPresets().find(p=>o[keyName(p.name)]===code)||null}
+function genBC(){
+  const used=new Set(Object.values(loadBC()));let n=0;
+  try{n=+localStorage.getItem(BCSEQ_KEY)||0}catch(e){}
+  let code;do{n++;code='2'+String(n).padStart(7,'0')}while(used.has(code));
+  try{localStorage.setItem(BCSEQ_KEY,String(n))}catch(e){}
+  return code;
+}
+/* typing/scanning in the item search box */
+function itemInput(id){
+  const raw=(v('desc-'+id)||'').trim();
+  /* a hardware scanner "types" the digits very fast; act at once if the code is known and unambiguous, otherwise wait for Enter */
+  if(raw.length>=6&&/^[0-9A-Za-z\-._]+$/.test(raw)){
+    const bm=loadBC();const codes=Object.values(bm);
+    if(codes.indexOf(raw)>=0&&!codes.some(c=>c!==raw&&c.indexOf(raw)===0)){scanHandle(id,raw);return}
+  }
+  itemSuggest(id);calc(id);
+}
+function itemKey(e,id){
+  if(e.key!=='Enter')return;
+  const raw=(v('desc-'+id)||'').trim();if(!raw)return;
+  e.preventDefault();
+  if(itemByCode(raw)){scanHandle(id,raw);return}
+  if(/^[0-9]{6,}$/.test(raw))scanHandle(id,raw);   /* looks like a barcode but unknown */
+}
+function scanHandle(id,code){
+  const p=itemByCode(code);const inp=el('desc-'+id);
+  if(!p){
+    if(inp)inp.value='';
+    pendingBC={id:id,code:code,t:Date.now()};
+    toast(L('Barcode '+code+' not linked yet — pick the item to link it','بار کوڈ '+code+' ابھی لنک نہیں — لنک کرنے کے لیے آئٹم چنیں'),false);
+    if(inp){inp.focus();itemSuggest(id)}
+    return false;
+  }
+  const nm=cleanName(lang==='ur'?(p.nameUr||p.name):p.name);
+  let found=null;
+  document.querySelectorAll('#itemsBody .item-card').forEach(card=>{
+    const rid=card.id.replace('item-row-','');
+    if(rid!==String(id)&&findPreset(v('desc-'+rid))===p&&(v('mode-'+rid)||'qp')==='qp')found=rid;
+  });
+  if(found){
+    el('qty-'+found).value=(+v('qty-'+found)||0)+1;calc(found);
+    if(inp)inp.value='';
+    if(el('isg-'+id))el('isg-'+id).style.display='none';
+    calc(id);
+    toast('+1 '+nm+' ('+qtyFmt(+v('qty-'+found))+')',true);
+  }else{
+    fillRow(id,p);
+    toast('✓ '+nm,true);
+    const rows=document.querySelectorAll('#itemsBody .item-card');
+    if(rows.length&&rows[rows.length-1].id==='item-row-'+id){addItem();}
+  }
+  /* keep the cursor ready for the next scan */
+  const rows2=document.querySelectorAll('#itemsBody .item-card');
+  const last=rows2[rows2.length-1];
+  if(last){const li=last.id.replace('item-row-','');const f=el('desc-'+li);if(f&&!f.value)try{f.focus({preventScroll:true})}catch(e){}}
+  return true;
+}
+/* camera scanner (Chrome on Android: BarcodeDetector) */
+let scanStream=null,scanTimer=null,scanBusy=false,scanLast={c:'',t:0},scanCb=null,scanDet=null,scanAudio=null;
+function beep(){
+  try{
+    scanAudio=scanAudio||new (window.AudioContext||window.webkitAudioContext)();
+    const o=scanAudio.createOscillator(),g=scanAudio.createGain();o.type='square';o.frequency.value=1500;g.gain.value=.08;
+    o.connect(g);g.connect(scanAudio.destination);o.start();o.stop(scanAudio.currentTime+.09);
+  }catch(e){}
+  try{if(navigator.vibrate)navigator.vibrate(40)}catch(e){}
+}
+async function scanStart(cb,msg){
+  if(!('BarcodeDetector' in window)){alert(L('Camera barcode scan needs Chrome on Android (opened from your https link). You can still use a USB / Bluetooth barcode scanner in the search box.','کیمرا بار کوڈ اسکین کے لیے اینڈرائیڈ پر کروم (https لنک سے) چاہیے۔ سرچ باکس میں USB / بلوٹوتھ اسکینر پھر بھی کام کرے گا۔'));return}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){alert(L('Camera not available here. Open the app from its https link.','یہاں کیمرا دستیاب نہیں۔ ایپ کو https لنک سے کھولیں۔'));return}
+  scanStop();
+  try{
+    let fm=null;try{fm=await BarcodeDetector.getSupportedFormats()}catch(e){}
+    scanDet=fm&&fm.length?new BarcodeDetector({formats:fm}):new BarcodeDetector();
+    scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
+  }catch(e){scanStop();toast(L('Camera permission denied or not available','کیمرے کی اجازت نہیں ملی یا کیمرا دستیاب نہیں'),false);return}
+  scanCb=cb;scanLast={c:'',t:0};
+  const vid=el('scanVid');vid.srcObject=scanStream;
+  el('scanMsg').textContent=msg||L('Point the camera at the barcode','کیمرا بار کوڈ کی طرف کریں');
+  el('scanClose').textContent=L('✕ Close','✕ بند کریں');
+  el('scanOv').classList.remove('hidden');
+  try{await vid.play()}catch(e){}
+  scanTimer=setInterval(async()=>{
+    if(scanBusy||!scanStream)return;scanBusy=true;
+    try{
+      const r=await scanDet.detect(vid);
+      if(r&&r.length&&r[0].rawValue){
+        const c=String(r[0].rawValue).trim(),now=Date.now();
+        if(c&&!(c===scanLast.c&&now-scanLast.t<1800)){scanLast={c:c,t:now};beep();if(scanCb)scanCb(c)}
+      }
+    }catch(e){}
+    scanBusy=false;
+  },160);
+}
+function scanStop(){
+  clearInterval(scanTimer);scanTimer=null;scanCb=null;
+  if(scanStream){try{scanStream.getTracks().forEach(t=>t.stop())}catch(e){}scanStream=null}
+  const vid=el('scanVid');if(vid)try{vid.srcObject=null}catch(e){}
+  const ov=el('scanOv');if(ov)ov.classList.add('hidden');
+}
+/* invoice: keep scanning one item after another until Close */
+function scanItem(id){
+  scanStart(code=>{
+    const rows=document.querySelectorAll('#itemsBody .item-card');
+    let tid=el('desc-'+id)?id:null;
+    if(!tid&&rows.length)tid=rows[rows.length-1].id.replace('item-row-','');
+    /* use the last row if it is empty, else add a row */
+    const lastId=rows.length?rows[rows.length-1].id.replace('item-row-',''):null;
+    if(lastId&&!cleanName(v('desc-'+lastId)))tid=lastId;
+    else if(!el('desc-'+tid)||cleanName(v('desc-'+tid))){addItem();const r2=document.querySelectorAll('#itemsBody .item-card');tid=r2[r2.length-1].id.replace('item-row-','')}
+    const ok=scanHandle(tid,code);
+    if(ok===false){scanStop()}
+  },L('Scanning… each scan adds the item. Close when done.','اسکین ہو رہا ہے… ہر اسکین آئٹم شامل کرتا ہے۔ ختم ہونے پر بند کریں۔'));
+}
+/* fill any input from a camera scan (barcode fields) */
+function scanInto(inputId,after){
+  scanStart(code=>{scanStop();const i=el(inputId);if(i){i.value=code;i.dispatchEvent(new Event('change',{bubbles:true}))}if(after)after(code)});
+}
+
+/* ---- Code 128 encoder (Code C for digit pairs, Code B otherwise) ---- */
+const C128=['212222','222122','222221','121223','121322','131222','122213','122312','132212','221213','221312','231212','112232','122132','122231','113222','123122','123221','223211','221132','221231','213212','223112','312131','311222','321122','321221','312212','322112','322211','212123','212321','232121','111323','131123','131321','112313','132113','132311','211313','231113','231311','112133','112331','132131','113123','113321','133121','313121','211331','231131','213113','213311','213131','311123','311321','331121','312113','312311','332111','314111','221411','431111','111224','111422','121124','121421','141122','141221','112214','112412','122114','122411','142112','142211','241211','221114','413111','241112','134111','111242','121142','121241','114212','124112','124211','411212','421112','421211','212141','214121','412121','111143','111341','131141','114113','114311','411113','411311','113141','114131','311141','411131','211412','211214','211232','2331112'];
+function code128(text){
+  let t=String(text).replace(/[^\x20-\x7e]/g,'?');if(!t)t=' ';
+  const vals=[];
+  if(/^[0-9]{4,}$/.test(t)){
+    vals.push(105);const n=t.length-(t.length%2);
+    for(let i=0;i<n;i+=2)vals.push(+t.substr(i,2));
+    if(t.length%2){vals.push(100);vals.push(t.charCodeAt(t.length-1)-32)}
+  }else{vals.push(104);for(let i=0;i<t.length;i++)vals.push(t.charCodeAt(i)-32)}
+  let sum=vals[0];for(let i=1;i<vals.length;i++)sum+=vals[i]*i;
+  vals.push(sum%103);vals.push(106);
+  const mods=[];vals.forEach(x=>{C128[x].split('').forEach(d=>mods.push(+d))});
+  return mods;   /* alternating bar, space, bar … widths in modules; starts with a bar */
+}
+
+/* ---- label rendering ---- */
+const LBL_FONT='Arial,"Noto Sans","Noto Nastaliq Urdu","Segoe UI",sans-serif';
+function priceTxt(p){const n=+p||0;return n>0?(n%1?n.toFixed(2):String(Math.round(n))):''}
+function lblFit(ctx,text,maxW,maxPx,minPx,weight){
+  /* biggest font (<=maxPx) that fits on one line; if even minPx is too wide, wrap to two lines at a font that fits */
+  let px=maxPx;
+  const w=s=>{ctx.font=weight+' '+px+'px '+LBL_FONT;return ctx.measureText(s).width};
+  while(px>minPx&&w(text)>maxW)px-=1;
+  if(w(text)<=maxW)return{px,lines:[text]};
+  const words=text.split(/\s+/);
+  if(words.length>1){
+    px=Math.max(minPx,Math.min(maxPx,Math.round(maxPx*.9)));
+    for(;px>=Math.max(6,minPx*.6);px--){
+      let best=null;
+      for(let k=1;k<words.length;k++){
+        const a=words.slice(0,k).join(' '),b=words.slice(k).join(' ');
+        const m=Math.max(w(a),w(b));if(!best||m<best.m)best={m,a,b};
+      }
+      if(best&&best.m<=maxW)return{px,lines:[best.a,best.b]};
+    }
+  }
+  px=minPx;while(px>6&&w(text)>maxW)px--;
+  return{px,lines:[text]};
+}
+function renderLabel(p,o){
+  const ppm=o.ppm,W=Math.round(o.w*ppm),H=Math.round(o.h*ppm);
+  const c=mkCanvas(W,H),x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#000';x.textAlign='center';x.textBaseline='alphabetic';
+  const pad=Math.round(Math.min(W,H)*.06);const maxW=W-2*pad;
+  const name=cleanName(o.lang==='ur'?(p.nameUr||p.name):p.name);
+  const code=o.code||bcOf(p.name)||'';
+  /* vertical plan (fractions of H): layout a = barcode, name, price · layout b = name, barcode, price */
+  const priceH=H*.24,bcH=H*.34;
+  let bcY,nameTop,nameBot;
+  const priceTop=H-pad-priceH;
+  if(o.layout==='b'){nameTop=pad;nameBot=pad+H*.27;bcY=nameBot+H*.03}
+  else{bcY=pad;nameTop=pad+bcH+H*.04;nameBot=priceTop-H*.01}
+  /* barcode */
+  const mods=code128(code||'0');let total=0;mods.forEach(m=>total+=m);
+  const mod=Math.max(1,Math.floor(maxW/(total+20)));   /* 10 modules quiet zone each side */
+  const bw=total*mod;let bx=Math.round((W-bw)/2);
+  let ci=0;
+  for(let i=0;i<mods.length;i++){const w=mods[i]*mod;if(i%2===0)x.fillRect(bx,Math.round(bcY),w,Math.round(bcH));bx+=w}
+  /* name (1-2 lines) */
+  const nf=lblFit(x,name,maxW,H*.15,H*.075,'bold');
+  const lh=nf.px*1.12,blockH=lh*nf.lines.length;
+  let ty=nameTop+Math.max(0,((nameBot-nameTop)-blockH)/2)+nf.px*.86;
+  x.font='bold '+nf.px+'px '+LBL_FONT;
+  nf.lines.forEach((ln,i)=>x.fillText(ln,W/2,Math.round(ty+i*lh)));
+  /* price */
+  const pt=priceTxt(p.price);
+  if(pt){
+    const main='Rs '+pt,suf=o.pc?' /pc':'';
+    let px=Math.round(H*.22);
+    const meas=s=>{x.font='bold '+px+'px '+LBL_FONT;const a=x.measureText(main).width;x.font='bold '+Math.round(px*.5)+'px '+LBL_FONT;return a+(suf?x.measureText(suf).width:0)};
+    while(px>8&&meas()>maxW)px--;
+    const mw=(()=>{x.font='bold '+px+'px '+LBL_FONT;return x.measureText(main).width})();
+    x.font='bold '+Math.round(px*.5)+'px '+LBL_FONT;const sw=suf?x.measureText(suf).width:0;
+    const sx=(W-(mw+sw))/2,by=Math.round(H-pad-px*.08);
+    x.textAlign='left';
+    x.font='bold '+px+'px '+LBL_FONT;x.fillText(main,Math.round(sx),by);
+    if(suf){x.font='bold '+Math.round(px*.5)+'px '+LBL_FONT;x.fillText(suf,Math.round(sx+mw),by)}
+    x.textAlign='center';
+  }
+  if(o.cut){x.save();x.strokeStyle='#000';x.lineWidth=1;x.setLineDash([6,5]);x.beginPath();x.moveTo(0,H-1);x.lineTo(W,H-1);x.stroke();x.restore()}
+  return c;
+}
+
+/* ---- Label panel ---- */
+const LBL_CFG='alghanieh_lblcfg';let LBL_COPIES={};
+function lblLoadCfg(){try{const c=JSON.parse(localStorage.getItem(LBL_CFG)||'{}');if(c.size)el('lblSize').value=c.size;if(c.layout)el('lblLayout').value=c.layout;if(c.nl)el('lblNameLang').value=c.nl;if(c.paper)el('lblPaper').value=c.paper;el('lblPc').checked=c.pc!==false}catch(e){el('lblPc').checked=true}}
+function lblOptChanged(){try{localStorage.setItem(LBL_CFG,JSON.stringify({size:v('lblSize'),layout:v('lblLayout'),nl:v('lblNameLang'),paper:v('lblPaper'),pc:el('lblPc').checked}))}catch(e){}if(!el('lblPrev').classList.contains('hidden'))lblPreview(true)}
+function lblTexts(){
+  el('btnLbl').textContent=L('🏷️ Barcode Labels — Generate & Print','🏷️ بار کوڈ لیبل — بنائیں اور پرنٹ کریں');
+  el('lblHint').textContent=L('Type how many labels you want next to each item (0 = skip). Items without a barcode get one automatically when you print — or scan / type the manufacturer barcode yourself (📷). The label shows the barcode, the item name and the price — the price is NOT inside the barcode, so changing a price later never breaks old labels.','ہر آئٹم کے آگے لیبل کی تعداد لکھیں (0 = چھوڑ دیں)۔ جس آئٹم کا بار کوڈ نہ ہو اسے پرنٹ پر خود بنا دیا جاتا ہے — یا کمپنی کا بار کوڈ خود اسکین/ٹائپ کریں (📷)۔ لیبل پر بار کوڈ، نام اور قیمت آتی ہے — قیمت بار کوڈ کے اندر نہیں ہوتی، اس لیے بعد میں قیمت بدلنے سے پرانے لیبل خراب نہیں ہوتے۔');
+  el('lblSizeL').textContent=L('Label size','لیبل سائز');el('lblLayoutL').textContent=L('Layout','ترتیب');
+  el('lblLayoutA').textContent=L('Barcode → Name → Price','بار کوڈ ← نام ← قیمت');el('lblLayoutB').textContent=L('Name → Barcode → Price','نام ← بار کوڈ ← قیمت');
+  el('lblNameL').textContent=L('Name on label','لیبل پر نام');el('lblPaperL').textContent=L('Paper','کاغذ');
+  el('lblPaperRoll').textContent=L('Label / roll (1 per page)','لیبل / رول (ایک فی صفحہ)');el('lblPaperA4').textContent=L('A4 sheet (many per page)','A4 شیٹ (کئی فی صفحہ)');
+  el('lblPcL').textContent=L('Show “/pc” after price','قیمت کے بعد “/pc” دکھائیں');
+  el('lblSearch').placeholder=L('Search item...','آئٹم تلاش کریں...');
+  el('lblAll1').textContent=L('All shown: 1 label','سب کے 1 لیبل');el('lblAll0').textContent=L('Clear counts','تعداد صاف کریں');
+  el('lblBtnPrev').textContent=L('👁 Preview','👁 پیش منظر');el('lblBtnPrint').textContent=L('🖨 Print Labels','🖨 لیبل پرنٹ');
+  el('lblBtnDirect').textContent=L('⚡ Direct Print','⚡ ڈائریکٹ پرنٹ');el('lblBtnDl').textContent=L('⬇ Download PNG','⬇ PNG ڈاؤنلوڈ');
+  const cb=el('customBcL');if(cb)cb.textContent=L('Barcode (optional — scan or type)','بار کوڈ (اختیاری — اسکین یا ٹائپ کریں)');
+}
+function openLblPanel(){
+  const p=el('lblPanel');p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden')){lblTexts();lblLoadCfg();el('lblSearch').value='';renderLblList();p.scrollIntoView({block:'nearest'})}
+}
+function lblKey(p){return keyName(p.name)}
+function renderLblList(){
+  const q=keyName(v('lblSearch')),bm=loadBC();
+  const rows=getAllPresets().map((p,i)=>({p,i})).filter(({p})=>!q||keyName(p.name).includes(q)||(p.nameUr||'').includes(q)||keyName(p.cat).includes(q)||String(bm[keyName(p.name)]||'').includes(q));
+  el('lblList').innerHTML=rows.map(({p,i})=>{
+    const bc=bm[lblKey(p)]||'',n=LBL_COPIES[lblKey(p)]||'';
+    return '<div class="lbl-row"><div class="lbl-top"><div>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small>'+esc(p.cat||'')+'</small></div><span>'+(p.price>0?'Rs '+num(p.price):'—')+'</span></div>'+
+      '<div class="lbl-ctl"><input class="lbl-bc" id="lbc-'+i+'" value="'+esc(bc)+'" placeholder="'+esc(L('no barcode','بار کوڈ نہیں'))+'" onchange="lblSetBC('+i+',this.value)" autocomplete="off">'+
+      '<button type="button" class="btn b-ghost b-sm" onclick="lblGen('+i+')" title="Generate">🎲</button>'+
+      '<button type="button" class="btn b-ghost b-sm" onclick="scanInto(\'lbc-'+i+'\')" title="Scan">📷</button>'+
+      '<input type="number" class="lbl-n" id="lbn-'+i+'" value="'+n+'" min="0" step="1" inputmode="numeric" placeholder="0" onfocus="this.select()" oninput="lblN('+i+',this.value)"></div></div>';
+  }).join('')||'<p class="hint">—</p>';
+  lblUpdTotal();
+}
+function lblSetBC(i,val){
+  const p=getAllPresets()[i];if(!p)return;
+  val=String(val||'').trim();
+  if(val){
+    const own=bcOwner(val,p.name);
+    if(own&&!confirm(L('This barcode is already on another item. Move it to this item?','یہ بار کوڈ کسی اور آئٹم پر ہے۔ کیا اسے اس آئٹم پر منتقل کریں؟'))){el('lbc-'+i).value=bcOf(p.name);return}
+    if(own){const o=loadBC();delete o[own];saveBC(o);renderLblList()}
+  }
+  setBC(p.name,val);
+}
+function lblGen(i){
+  const p=getAllPresets()[i];if(!p)return;
+  const cur=bcOf(p.name);
+  if(cur&&!confirm(L('This item already has a barcode ('+cur+'). Replace it with a new one? Old printed labels will stop scanning.','اس آئٹم کا بار کوڈ ('+cur+') پہلے سے ہے۔ نیا بنائیں؟ پرانے پرنٹ شدہ لیبل اسکین نہیں ہوں گے۔')))return;
+  const code=genBC();setBC(p.name,code);el('lbc-'+i).value=code;
+}
+function lblN(i,val){
+  const p=getAllPresets()[i];if(!p)return;
+  const n=Math.max(0,Math.min(500,Math.floor(+val||0)));
+  if(n)LBL_COPIES[lblKey(p)]=n;else delete LBL_COPIES[lblKey(p)];
+  lblUpdTotal();
+}
+function lblSetAll(n){
+  const q=keyName(v('lblSearch')),bm=loadBC();
+  getAllPresets().forEach(p=>{
+    if(!(!q||keyName(p.name).includes(q)||(p.nameUr||'').includes(q)||keyName(p.cat).includes(q)||String(bm[keyName(p.name)]||'').includes(q)))return;
+    if(n)LBL_COPIES[lblKey(p)]=n;else delete LBL_COPIES[lblKey(p)];
+  });
+  renderLblList();
+}
+function lblUpdTotal(){
+  let t=0,k=0;for(const key in LBL_COPIES){t+=LBL_COPIES[key];k++}
+  el('lblTotal').textContent=t?L('Labels to print: '+t+' ('+k+' item'+(k>1?'s':'')+')','پرنٹ ہونے والے لیبل: '+t+' ('+k+' آئٹم)'):L('No labels selected yet','ابھی کوئی لیبل منتخب نہیں');
+}
+function lblOpts(ppm,extra){
+  const [w,h]=v('lblSize').split('x').map(Number);
+  return Object.assign({w,h,ppm,layout:v('lblLayout'),lang:v('lblNameLang'),pc:el('lblPc').checked},extra||{});
+}
+/* items with a count; creates missing barcodes */
+function lblSelection(){
+  const out=[];let made=0;
+  getAllPresets().forEach(p=>{
+    const n=LBL_COPIES[lblKey(p)]||0;if(!n)return;
+    let code=bcOf(p.name);if(!code){code=genBC();setBC(p.name,code);made++}
+    out.push({p,n,code});
+  });
+  if(made){renderLblList();toast(L(made+' new barcode(s) generated','نئے بار کوڈ بنائے گئے: '+made),true)}
+  return out;
+}
+function lblPreview(quiet){
+  const first=getAllPresets().find(p=>LBL_COPIES[lblKey(p)])||getAllPresets().find(p=>p.price>0)||getAllPresets()[0];
+  if(!first)return;
+  const code=bcOf(first.name)||'20000001';
+  const c=renderLabel(first,lblOpts(8,{code}));   /* 8 px/mm */
+  const img=el('lblPrev');img.src=c.toDataURL('image/png');img.classList.remove('hidden');
+  const [w]=v('lblSize').split('x').map(Number);img.style.width=Math.min(360,Math.round(w*7))+'px';
+  if(!quiet&&!bcOf(first.name))toast(L('Preview uses a sample barcode (item has none yet)','پیش منظر میں نمونہ بار کوڈ ہے (آئٹم کا ابھی نہیں)'),true);
+}
+function lblPrintBrowser(){
+  const win=window.open('','_blank');if(!win){alert(L('Allow pop-ups to print','پرنٹ کے لیے پاپ اپ کی اجازت دیں'));return}
+  const sel=lblSelection();
+  if(!sel.length){win.close();toast(L('Enter how many labels for at least one item','کم از کم ایک آئٹم کے لیبل کی تعداد لکھیں'),false);return}
+  const o=lblOpts(12);   /* ~300 dpi */
+  const data=sel.map(s=>[renderLabel(s.p,Object.assign({},o,{code:s.code})).toDataURL('image/png'),s.n]);
+  const a4=v('lblPaper')==='a4';
+  const css=a4?'@page{size:A4;margin:8mm}body{margin:0}.wrap{display:flex;flex-wrap:wrap;gap:1.5mm}.l{width:'+o.w+'mm;height:'+o.h+'mm;outline:.2mm dotted #999;overflow:hidden;break-inside:avoid}.l img{width:100%;height:100%;display:block}'
+    :'@page{size:'+o.w+'mm '+o.h+'mm;margin:0}body{margin:0}.l{width:'+o.w+'mm;height:'+o.h+'mm;overflow:hidden;page-break-after:always;break-after:page}.l:last-child{page-break-after:auto;break-after:auto}.l img{width:100%;height:100%;display:block}';
+  win.document.write('<html><head><meta charset="utf-8"><title>Labels</title><style>'+css+'</style></head><body><div class="wrap" id="w"></div><script>var D='+JSON.stringify(data)+';var w=document.getElementById("w");D.forEach(function(d){for(var i=0;i<d[1];i++){var s=document.createElement("div");s.className="l";var m=document.createElement("img");m.src=d[0];s.appendChild(m);w.appendChild(s)}});window.onload=function(){setTimeout(function(){window.print()},400)};<\/script></body></html>');
+  win.document.close();
+}
+async function lblDownload(){
+  const sel=lblSelection();
+  if(!sel.length){toast(L('Enter how many labels for at least one item','کم از کم ایک آئٹم کے لیبل کی تعداد لکھیں'),false);return}
+  const o=lblOpts(12);let list=[];
+  sel.forEach(s=>{const c=renderLabel(s.p,Object.assign({},o,{code:s.code,cut:true}));for(let i=0;i<s.n;i++)list.push(c)});
+  list=list.slice(0,60);
+  const lw=list[0].width,lh=list[0].height;const cols=a4cols(lw);
+  const rows=Math.ceil(list.length/cols);
+  const sheet=mkCanvas(lw*cols,lh*rows);const sx=sheet.getContext('2d');sx.fillStyle='#fff';sx.fillRect(0,0,sheet.width,sheet.height);
+  list.forEach((c,i)=>sx.drawImage(c,(i%cols)*lw,Math.floor(i/cols)*lh));
+  sheet.toBlob(b=>{download(b,'barcode_labels.png');toast(L('Labels PNG ready'+(sel.reduce((a,s)=>a+s.n,0)>60?' (first 60 labels)':''),'لیبل PNG تیار'),true)},'image/png');
+}
+function a4cols(lw){return Math.max(1,Math.min(3,Math.floor(1800/lw)))}
+async function btSendCanvas(c){
+  const mode=v('prMode');
+  if(mode==='mxw01'){if(!mx)throw new Error('This printer was not detected as Fun Print / MXW01 — pick another Print mode');await mxPrint(c,()=>{})}
+  else{if(!btChar)throw new Error('Printer disconnected');await btWrite((mode==='escstar')?buildRasterEscStar(c):buildRaster(c))}
+}
+async function lblPrintDirect(){
+  const sel=lblSelection();
+  if(!sel.length){toast(L('Enter how many labels for at least one item','کم از کم ایک آئٹم کے لیبل کی تعداد لکھیں'),false);return}
+  const ok=await btEnsure(false);if(!ok)return;
+  try{
+    miniLogoRect=null;   /* labels have no logo: make sure no invoice-logo dithering area is applied */
+    const o=lblOpts(0);const ppm=384/o.w;   /* label fills the 384-dot printable width (48 mm) */
+    const lh=Math.round(o.h*ppm);
+    const all=[];
+    sel.forEach(s=>{const c=renderLabel(s.p,Object.assign({},o,{ppm,code:s.code,cut:true}));for(let i=0;i<s.n;i++)all.push(c)});
+    const CH=10;let done=0;
+    for(let i=0;i<all.length;i+=CH){
+      const part=all.slice(i,i+CH);
+      const sheet=mkCanvas(384,lh*part.length);const sx=sheet.getContext('2d');sx.fillStyle='#fff';sx.fillRect(0,0,384,sheet.height);
+      part.forEach((c,k)=>sx.drawImage(c,0,k*lh));
+      setPrStatus(L('Printing labels… ','لیبل پرنٹ ہو رہے ہیں… ')+done+'/'+all.length);
+      await btSendCanvas(sheet);done+=part.length;
+      if(i+CH<all.length)await sleep(900);
+    }
+    setPrStatus('✅ '+L('Labels sent: ','لیبل بھیج دیے: ')+all.length);
+    toast(L('Labels sent to printer','لیبل پرنٹر کو بھیج دیے'),true);
+  }catch(e){btChar=null;setPrStatus('❌ Print failed: '+(e&&e.message?e.message:e));toast(L('Print failed','پرنٹ ناکام'),false)}
 }
 function saveDefaultPrice(id){
   const name=cleanName(v('desc-'+id));const price=+v('price-'+id)||0;

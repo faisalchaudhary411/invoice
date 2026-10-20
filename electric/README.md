@@ -51,3 +51,9 @@ Invoice / bill app for **Al Ghani Electric & Hardware** (T Prime Block, Lahore M
 - Clearing Chrome's site data deletes customers unless you have a backup.
 
 Developed by Easy Tech Solutions · 0334 1771875
+
+## Barcode scan & labels (new)
+- **Scan in the item search box**: a USB / Bluetooth scanner just types into the box; or tap the 📷 button to use the phone camera (Chrome on Android, continuous scanning). Scanning an item adds it with its price; scanning again adds +1 qty.
+- An unknown barcode (e.g. a manufacturer sticker) asks you to pick the item once — it is then linked forever.
+- **🏷️ Barcode Labels** (under Items): set how many labels per item, pick size/layout (Barcode→Name→Price or Name→Barcode→Price), then Print / Direct Print (Bluetooth) / Download PNG. Missing barcodes are generated automatically (8 digits, Code 128). Price is printed as text, not inside the barcode.
+- Barcodes are stored on the device (like item prices).
