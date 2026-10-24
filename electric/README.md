@@ -14,7 +14,7 @@ Invoice / bill app for **Al Ghani Electric & Hardware** (T Prime Block, Lahore M
 4. Always open it from the home-screen icon — customers are then stored in one place on the phone.
 
 ## How it works
-1. **Customer** → type a name (old customers appear).
+1. **Customer** → type a name (old customers appear). **Name is optional**: leave it blank for a **Walk-in Customer** — a cash sale, always paid in full, stored under one shared “Walk-in Customer” record (no balance, no past-purchase list on the invoice). For credit / part payment, type the customer's name.
 2. **Items** → tap the item box to search ~130 electric & hardware items (the price fills in), or type any item yourself.
    - **🔢 Qty × Price** — Amount = Qty × Price. Change the price any time; tap **Save as default price** to remember it for that item.
    - **💰 Lumpsum** — only Qty and Amount boxes. Nothing is multiplied; the amount is used as typed and no rate is printed.
@@ -36,6 +36,14 @@ Invoice / bill app for **Al Ghani Electric & Hardware** (T Prime Block, Lahore M
 - The cloud file is `{ "customers": [...], "deleted": {...} }`. The old plain-list format is still read.
 - Use a **fine-grained token limited to that one repo** (Contents: Read and write). It is stored on the phone only; **🔒 Forget token** removes it.
 - Backups and imports accept files with a trailing comma, and a plain list or `{customers: [...]}`.
+
+## Product sync between phones
+- **My items** (custom items), **default prices** and **barcodes** now travel in the same cloud file as customers (`products` section). Save a product on one phone → it appears on the other after the next pull (on app open, when you return to the app, or **Pull now**). Changes are pushed automatically if *Auto-push* is ticked.
+- Newest change wins per item. Deleting an item or resetting a price also syncs.
+- Update the app on **both** phones, otherwise an old copy will overwrite the products section when it pushes.
+
+## If sync says “GitHub 401”
+GitHub is rejecting the token stored on *that* phone (mistyped, cut-off, expired, or deleted). Tap **🔎 Test token & repo** — it says exactly what is wrong. **👁 Show / hide token** lets you check the paste (classic token = 40 characters starting `ghp_`). Create a new token and paste it on that phone.
 
 ## Direct printing to a Bluetooth mini printer
 - Invoice tab → **🔌 Connect Printer** (printer on, close to the phone) → **⚡ Print Direct**.

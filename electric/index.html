@@ -445,7 +445,11 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       </div>
       <label data-t="lblSyncToken" style="margin-top:8px">GitHub token (for private repo + auto push)</label>
       <input id="syncToken" type="password" placeholder="github_pat_...." autocomplete="off" style="margin-bottom:8px">
-      <button type="button" class="btn b-ghost b-sm" onclick="syncForgetToken()" style="margin-bottom:6px">🔒 Forget token on this phone</button>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <button type="button" class="btn b-ghost b-sm" onclick="el('syncToken').type=el('syncToken').type==='password'?'text':'password'">👁 Show / hide token</button>
+        <button type="button" class="btn b-ghost b-sm" onclick="syncTest()">🔎 Test token &amp; repo</button>
+        <button type="button" class="btn b-ghost b-sm" onclick="syncForgetToken()">🔒 Forget token on this phone</button>
+      </div>
       <p class="hint" data-t="hintToken">Safest: github.com/settings/personal-access-tokens → <b>Fine-grained</b> → only this data repo → Contents: <b>Read and write</b>. Stored only on this phone — never use a token that can reach your other repos.</p>
       <label class="ck"><input type="checkbox" id="syncAutoPull" checked><span data-t="lblAutoPull">Auto-pull when app opens</span></label>
       <label class="ck"><input type="checkbox" id="syncAutoPush"><span data-t="lblAutoPush">Auto-push after every save</span></label>
@@ -803,7 +807,7 @@ const T={
 en:{pageTitle:"Al Ghani Steel Arts",pageSub:"Invoice · Customer Records · Mini Printer",
 secInvoice:"Invoice",secCustomer:"Customer",secItems:"Items",secPayment:"Payment",secSign:"Notes, Signature & Stamp",secOutput:"Create Invoice",secBiz:"🏢 Business details",
 lblBizName:"Business Name",lblTagline:"Tagline",lblAddress:"Business Address",lblPhone:"Phone numbers (separate with ·)",lblOwner:"Owner",
-lblInvNo:"Invoice No",lblDate:"Date",lblTime:"Time",lblCust:"Customer Name *",lblHouse:"House / Shop No",lblCustPhone:"Customer Phone",lblCustAddr:"Customer Address / Area",
+lblInvNo:"Invoice No",lblDate:"Date",lblTime:"Time",lblCust:"Customer Name (optional — blank = Walk-in)",lblHouse:"House / Shop No",lblCustPhone:"Customer Phone",lblCustAddr:"Customer Address / Area",
 lblJob:"Job / Reference",selJob:"-- Select job --",selCustom:"Other / Custom...",hintItems:"Tap item to search. Choose 📐 Sq ft (W×L×rate), 📏 Running ft (ft×rate), or 💰 Lumpsum (price as-is).",
 btnAddItem:"+ Add Item",btnCustomItem:"+ Custom Item",btnMultiLump:"💰 Add Multiple (Lumpsum)",customItemTitle:"Add custom item to list",customNameEn:"Name (English)",customNameUr:"Name (Urdu) — optional",btnSaveCustom:"Save & Add",btnCancel:"Cancel",multiLumpTitle:"Select items (lumpsum)",multiLumpHint:"Tick multiple items, then add them all as lumpsum lines at once.",btnAddSelected:"Add Selected",btnChangeItems:"Change items",btnSelectAll:"Select All",customSaved:"Custom item saved",customNeedName:"Enter an English name",lblTax:"Tax %",lblDiscount:"Discount Rs",lblTotal:"This Invoice Total",lblAdvance:"Advance / Paid Now (Rs)",lblRemain:"This Invoice Remaining",
 lblNotes:"Notes",lblSign:"Signature Name",lblUseSig:"Add signature",lblUseStamp:"Add business stamp",lblAutoBk:"Auto-backup after every save (recommended)",btnSaveBiz:"💾 Save business details",btnSavePr:"💾 Save printer settings",bizSaved:"Business details saved",bizSaveFail:"Could not save business details",prSaved:"Printer settings saved",prSaveFail:"Could not save printer settings",
@@ -812,7 +816,7 @@ hintPrint:"Save first (updates customer history), then download or print. The in
 secCust:"Customer Records",secBackup:"Backup & Tools",btnCopy:"📥 Save App Copy (with data)",btnExport:"Export Backup JSON",btnImport:"Import Backup",btnStamp:"Download Stamp PNG",btnQR:"Download QR PNG",
 hintBackup:"Auto-backup runs after every invoice save. Use Import only to restore an old backup file.",secSync:"Cloud Sync (automatic)",hintSync:"Host customers.json on GitHub. Both phones pull/push the same file — no manual export.",lblSyncUrl:"JSON URL (public raw link)",lblSyncRepo:"GitHub repo (owner/name)",lblSyncPath:"File path",lblSyncBranch:"Branch",lblSyncToken:"GitHub token (private + push)",hintToken:"github.com/settings/tokens → classic → scope repo. Stored only on this phone.",lblAutoPull:"Auto-pull when app opens",lblAutoPush:"Auto-push after every save",btnPull:"⬇️ Pull now",btnPush:"⬆️ Push now",syncPullOk:"Pulled & merged",syncPushOk:"Pushed to cloud",syncNoCfg:"Set a JSON URL or GitHub repo first",syncFail:"Sync failed",btnSyncSettings:"⚙️ Settings",btnSyncHide:"Hide settings",syncReady:"Cloud sync ready",
 invTabL:"Invoice",custTabL:"Customers",bankTitle:"Payment (Ghulam Yaseen)",prevLabel:"Previous outstanding:",
-phCust:"Type name — existing customers appear",phJob:"Job details (or custom)",phSearchCust:"Search customer...",phItem:"Search or type item...",
+phCust:"Leave blank for walk-in · or type a name",phJob:"Job details (or custom)",phSearchCust:"Search customer...",phItem:"Search or type item...",
 invTitle:"INVOICE / BILL",billTo:"BILL TO",jobRef:"Job:",subtotal:"Subtotal",tax:"Tax",discount:"Discount",total:"TOTAL",advance:"Advance Paid",remain:"Remaining",outstanding:"Outstanding",
 invNoLabel:"No:",dateLabel:"Date:",timeLabel:"Time:",signStamp:"Authorized Signature",footer:"Al Ghani Steel Arts · Welding Workshop",
 payTo:"Pay to: Ghulam Yaseen",payDetails:"Payment Details",colItem:"ITEM",colQty:"QTY",colRate:"RATE",colAmt:"AMT",
@@ -821,7 +825,7 @@ paid:"Paid",billed:"Total Billed",noCust:"No customers yet.",del:"Delete",useInI
 ur:{pageTitle:"الغنی سٹیل آرٹس",pageSub:"انوائس · گاہک ریکارڈ · منی پرنٹر",
 secInvoice:"انوائس",secCustomer:"گاہک",secItems:"آئٹمز",secPayment:"ادائیگی",secSign:"نوٹس، دستخط اور مہر",secOutput:"انوائس بنائیں",secBiz:"🏢 کاروباری تفصیل",
 lblBizName:"کاروبار کا نام",lblTagline:"ٹیگ لائن",lblAddress:"کاروباری پتہ",lblPhone:"فون نمبر (· سے الگ کریں)",lblOwner:"مالک",
-lblInvNo:"انوائس نمبر",lblDate:"تاریخ",lblTime:"وقت",lblCust:"گاہک کا نام *",lblHouse:"مکان / دکان نمبر",lblCustPhone:"گاہک کا فون",lblCustAddr:"گاہک کا پتہ / علاقہ",
+lblInvNo:"انوائس نمبر",lblDate:"تاریخ",lblTime:"وقت",lblCust:"گاہک کا نام (اختیاری — خالی = واک اِن)",lblHouse:"مکان / دکان نمبر",lblCustPhone:"گاہک کا فون",lblCustAddr:"گاہک کا پتہ / علاقہ",
 lblJob:"جاب / ریفرنس",selJob:"-- جاب منتخب کریں --",selCustom:"دیگر / کسٹم...",hintItems:"آئٹم تلاش کریں۔ 📐 مربع فٹ (چوڑائی×لمبائی×ریٹ)، 📏 رننگ فٹ (فٹ×ریٹ)، یا 💰 یکمشت (جیسے ہے) منتخب کریں۔",
 btnAddItem:"+ آئٹم شامل",btnCustomItem:"+ کسٹم آئٹم",btnMultiLump:"💰 ایک ساتھ متعدد (یکمشت)",customItemTitle:"فہرست میں کسٹم آئٹم شامل کریں",customNameEn:"نام (انگریزی)",customNameUr:"نام (اردو) — اختیاری",btnSaveCustom:"محفوظ اور شامل",btnCancel:"منسوخ",multiLumpTitle:"آئٹمز منتخب کریں (یکمشت)",multiLumpHint:"کئی آئٹمز چیک کریں، پھر سب یکمشت لائنز کے طور پر شامل کریں۔",btnAddSelected:"منتخب شامل کریں",btnChangeItems:"آئٹمز تبدیل کریں",btnSelectAll:"سب منتخب",customSaved:"کسٹم آئٹم محفوظ ہو گیا",customNeedName:"انگریزی نام لکھیں",lblTax:"ٹیکس %",lblDiscount:"رعایت",lblTotal:"اس انوائس کا کل",lblAdvance:"ایڈوانس / ابھی ادا",lblRemain:"اس انوائس کی باقی",
 lblNotes:"نوٹس",lblSign:"دستخط",lblUseSig:"دستخط شامل کریں",lblUseStamp:"کاروباری مہر شامل کریں",lblAutoBk:"ہر سیو کے بعد خودکار بیک اپ (تجویز کردہ)",btnSaveBiz:"💾 کاروباری تفصیل محفوظ کریں",btnSavePr:"💾 پرنٹر سیٹنگز محفوظ کریں",bizSaved:"کاروباری تفصیل محفوظ ہو گئی",bizSaveFail:"کاروباری تفصیل محفوظ نہیں ہو سکی",prSaved:"پرنٹر سیٹنگز محفوظ ہو گئیں",prSaveFail:"پرنٹر سیٹنگز محفوظ نہیں ہو سکیں",
@@ -830,7 +834,7 @@ hintPrint:"پہلے محفوظ کریں، پھر ڈاؤن لوڈ یا پرنٹ �
 secCust:"گاہک ریکارڈ",secBackup:"بیک اپ اور ٹولز",btnCopy:"📥 ایپ کاپی محفوظ کریں (ڈیٹا کے ساتھ)",btnExport:"بیک اپ JSON",btnImport:"بیک اپ امپورٹ",btnStamp:"مہر PNG ڈاؤن لوڈ",btnQR:"QR PNG ڈاؤن لوڈ",
 hintBackup:"ہر انوائس سیو کے بعد خودکار بیک اپ ہوتا ہے۔ پرانا بیک اپ واپس لانے کے لیے صرف امپورٹ استعمال کریں۔",
 invTabL:"انوائس",custTabL:"گاہک",bankTitle:"ادائیگی (غلام یاسین)",prevLabel:"پرانا بقایا:",
-phCust:"نام لکھیں — پرانے گاہک نظر آئیں گے",phJob:"جاب کی تفصیل (یا خود لکھیں)",phSearchCust:"گاہک تلاش کریں...",phItem:"آئٹم تلاش کریں یا لکھیں...",
+phCust:"واک اِن کے لیے خالی چھوڑیں · یا نام لکھیں",phJob:"جاب کی تفصیل (یا خود لکھیں)",phSearchCust:"گاہک تلاش کریں...",phItem:"آئٹم تلاش کریں یا لکھیں...",
 invTitle:"انوائس / بل",billTo:"بل وصول کنندہ",jobRef:"جاب:",subtotal:"ذیلی کل",tax:"ٹیکس",discount:"رعایت",total:"کل",advance:"ایڈوانس ادا",remain:"باقی",outstanding:"بقایا",
 invNoLabel:"نمبر:",dateLabel:"تاریخ:",timeLabel:"وقت:",signStamp:"مجاز دستخط",footer:"الغنی سٹیل آرٹس · ویلڈنگ ورکشاپ",
 payTo:"ادائیگی: غلام یاسین",payDetails:"ادائیگی کی تفصیل",colItem:"آئٹم",colQty:"تعداد",colRate:"ریٹ",colAmt:"رقم",
@@ -1110,17 +1114,26 @@ function prevOutFor(c,invNo){
   return Math.max(0,billed-paid);
 }
 
+/* ---------- walk-in customers (name optional) ---------- */
+const WALKIN_NAME='Walk-in Customer';
+function isWalkInName(n){const k=String(n||'').trim().toLowerCase();return !k||k===WALKIN_NAME.toLowerCase()}
+function isWalkIn(){return isWalkInName(v('custName'))}
+function dispName(){return isWalkIn()?(lang==='ur'?'واک اِن گاہک':WALKIN_NAME):(v('custName')||'').trim()}
+/* walk-in sales are cash sales: paid in full unless a smaller part-payment is typed (that is refused on save) */
+function effAdv(grand){const a=+v('advance')||0;if(!isWalkIn())return a;return(a<=0||a>=grand)?grand:a}
+
 /* ---------- customer input ---------- */
 function suggestCust(){
   const q=(v('custName')||'').trim().toLowerCase();const box=el('custSuggest');
   if(!q){box.style.display='none';updatePrev();return}
-  const list=loadDB().filter(c=>c.name.toLowerCase().includes(q)||(c.phone&&c.phone.includes(q)));
+  const list=loadDB().filter(c=>!c.walkin&&!isWalkInName(c.name)&&(c.name.toLowerCase().includes(q)||(c.phone&&c.phone.includes(q))));
   if(!list.length||(list.length===1&&list[0].name.toLowerCase()===q)){box.style.display='none';updatePrev();return}
   box.innerHTML=list.slice(0,8).map(c=>'<div onclick="pickCust(\''+c.id+'\')"><span>'+esc(c.name)+(c.phone?' · '+esc(c.phone):'')+'</span><small>'+((c.credit||0)>0?('Credit: Rs '+num(c.credit)):('Out: Rs '+num(c.outstanding||0)))+'</small></div>').join('');
   box.style.display='block';updatePrev();
 }
 function pickCust(id){
   const c=loadDB().find(x=>x.id===id);if(!c)return;
+  if(c.walkin||isWalkInName(c.name)){['custName','custHouse','custPhone','custContact'].forEach(i=>el(i).value='');el('custSuggest').style.display='none';updatePrev();return}
   el('custName').value=c.name;el('custHouse').value=c.house||'';el('custPhone').value=c.phone||'';el('custContact').value=c.address||'';
   el('custSuggest').style.display='none';updatePrev();
 }
@@ -1198,6 +1211,13 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(el('syncAutoPush'))el('syncAutoPush').addEventListener('change',syncPersistFromForm);
   const sc=syncCfg();
   if(sc.apull&&syncHasCfg(sc))setTimeout(()=>syncPull(false),600);
+  // pick up changes from the other phone whenever the app is brought back to the front
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState!=='visible')return;
+    const c=syncCfg();if(!c.apull||!syncHasCfg(c)||!c.token)return;
+    if(Date.now()-(window._lastAutoPull||0)<30000)return;window._lastAutoPull=Date.now();
+    syncPull(false);
+  });
 });
 
 function setLang(l){
@@ -1217,9 +1237,19 @@ const CATALOG=[["Wires & Cables", [{"name": "Wire 3/29 (90 yd coil)", "nameUr": 
 const PRESET=[];CATALOG.forEach(([cat,list])=>list.forEach(p=>PRESET.push({name:p.name,nameUr:p.nameUr,price:p.price,cat})));
 const CUSTOM_KEY='alghanieh_custom_items',PRICE_KEY='alghanieh_prices';
 function loadCustomItems(){try{const a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function saveCustomItems(arr){try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(arr))}catch(e){}}
+/* product sync: every change to My items / default prices / barcodes is time-stamped so two phones can merge (newest change wins) */
+const PMETA_KEY='alghanieh_prod_meta';
+function loadPMeta(){try{const o=JSON.parse(localStorage.getItem(PMETA_KEY)||'{}')||{};return{ci:o.ci||{},pr:o.pr||{},bc:o.bc||{}}}catch(e){return{ci:{},pr:{},bc:{}}}}
+function savePMeta(m){try{localStorage.setItem(PMETA_KEY,JSON.stringify(m))}catch(e){}}
+function pStamp(col,oldMap,newMap){
+  let ch=false;const m=loadPMeta(),now=Date.now();
+  new Set([...Object.keys(oldMap),...Object.keys(newMap)]).forEach(k=>{if(JSON.stringify(oldMap[k])!==JSON.stringify(newMap[k])){m[col][k]=now;ch=true}});
+  if(ch){savePMeta(m);try{syncPushDebounced()}catch(e){}}
+}
+function ciMap(arr){const o={};(arr||[]).forEach(x=>{if(x&&x.name)o[keyName(x.name)]=x});return o}
+function saveCustomItems(arr,raw){if(!raw)pStamp('ci',ciMap(loadCustomItems()),ciMap(arr));try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(arr))}catch(e){}}
 function loadPrices(){try{const o=JSON.parse(localStorage.getItem(PRICE_KEY)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return{}}}
-function savePrices(o){try{localStorage.setItem(PRICE_KEY,JSON.stringify(o))}catch(e){}}
+function savePrices(o,raw){if(!raw)pStamp('pr',loadPrices(),o||{});try{localStorage.setItem(PRICE_KEY,JSON.stringify(o))}catch(e){}}
 function getAllPresets(){
   const ov=loadPrices();
   const base=PRESET.map(p=>ov[p.name]!=null?Object.assign({},p,{price:+ov[p.name]}):p);
@@ -1354,7 +1384,7 @@ const L=(en,ur)=>lang==='ur'?ur:en;
 const BC_KEY='alghanieh_barcodes',BCSEQ_KEY='alghanieh_bcseq';
 let pendingBC=null;
 function loadBC(){try{const o=JSON.parse(localStorage.getItem(BC_KEY)||'{}');return o&&typeof o==='object'&&!Array.isArray(o)?o:{}}catch(e){return{}}}
-function saveBC(o){try{localStorage.setItem(BC_KEY,JSON.stringify(o))}catch(e){}}
+function saveBC(o,raw){if(!raw)pStamp('bc',loadBC(),o||{});try{localStorage.setItem(BC_KEY,JSON.stringify(o))}catch(e){}}
 function bcOf(name){return loadBC()[keyName(name)]||''}
 function setBC(name,code){const o=loadBC();code=String(code||'').trim();if(code)o[keyName(name)]=code;else delete o[keyName(name)];saveBC(o)}
 function bcOwner(code,exceptName){const o=loadBC(),ex=keyName(exceptName);for(const k in o)if(o[k]===code&&k!==ex)return k;return null}
@@ -1775,7 +1805,7 @@ function invoiceTotal(){
   return{sub,taxA,disc,grand:sub+taxA-disc,items};
 }
 function recalcPay(){
-  const{grand}=invoiceTotal();const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);
+  const{grand}=invoiceTotal();const adv=effAdv(grand);const remain=Math.max(0,grand-adv);
   const excess=Math.max(0,adv-grand);
   const prevRaw=prevOutFor(findCust(v('custName')),v('invNo'));
   const applied=Math.min(excess,prevRaw);
@@ -1801,18 +1831,20 @@ function custLine(){return[v('custHouse').trim(),v('custPhone').trim(),v('custCo
 
 /* ---------- save / new ---------- */
 function saveAndGenerate(){
-  const name=(v('custName')||'').trim();
-  if(!name){alert(lang==='ur'?'گاہک کا نام لکھیں':'Enter customer name');el('custName').focus();return}
+  const walk=isWalkIn();
+  const name=walk?WALKIN_NAME:(v('custName')||'').trim();
   const{grand,items,sub,taxA,disc}=invoiceTotal();
   if(!items.length){
-    if(findCust(name)){toast(tr('stmtReady'),true);return}
+    if(!walk&&findCust(name)){toast(tr('stmtReady'),true);return}
     alert(lang==='ur'?'کم از کم ایک آئٹم':'Add at least one item with quantity');return
   }
-  const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AEH-'+Date.now());
+  if(walk){const a0=+v('advance')||0;if(a0>0&&a0<grand){alert(lang==='ur'?'واک اِن گاہک کا بل پورا ادا ہونا چاہیے۔ ادھار کے لیے گاہک کا نام لکھیں۔':'A walk-in bill must be paid in full. For a part payment / credit, type the customer name.');el('custName').focus();return}}
+  const adv=effAdv(grand);const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AEH-'+Date.now());
   const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items,sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
-  const db=loadDB();let c=findCustIn(db,name,v('custPhone'));
-  if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:v('custPhone'),address:v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
-  else{c.house=v('custHouse')||c.house;c.phone=v('custPhone')||c.phone;c.address=v('custContact')||c.address}
+  const db=loadDB();let c=findCustIn(db,name,walk?'':v('custPhone'));
+  if(!c){c={id:'C'+Date.now(),name,house:walk?'':v('custHouse'),phone:walk?'':v('custPhone'),address:walk?'':v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};if(walk)c.walkin=true;db.push(c)}
+  else if(!walk){c.house=v('custHouse')||c.house;c.phone=v('custPhone')||c.phone;c.address=v('custContact')||c.address}
+  else c.walkin=true;
   const prevBefore=prevOutFor(c,invNo);
   c.invoices=(c.invoices||[]).filter(i=>!(i.invNo===invNo&&i.invNo!=='PAY'));
   c.invoices.unshift(inv);recompute(c);
@@ -1820,7 +1852,7 @@ function saveAndGenerate(){
   const stored=saveDB(db);updatePrev();
   if(stored){
     const balMsg=(c.credit||0)>0?(tr('credit')+' '+fmt(c.credit)):(tr('outstanding')+' '+fmt(c.outstanding||0));
-    toast((lang==='ur'?'محفوظ! ':'Saved! ')+name+' · '+balMsg,true);
+    toast((lang==='ur'?'محفوظ! ':'Saved! ')+(walk?dispName()+(lang==='ur'?' · مکمل ادا':' · paid in full'):name+' · '+balMsg),true);
     bumpBackupCounter();if(el('autoBackup').checked)autoBackup();
     try{syncPushDebounced()}catch(e){}
   }else toast('Saved for this session only — browser storage is blocked. Use Save App Copy.',false);
@@ -1998,7 +2030,7 @@ function syncCfg(){
     repo:(v('syncRepo')||syncGet('repo')||'').trim().replace(/^https?:\/\/github\.com\//,'').replace(/\.git$/,''),
     path:(v('syncPath')||syncGet('path')||'customers-electric.json').trim().replace(/^\//,''),
     branch:(v('syncBranch')||syncGet('branch')||'main').trim()||'main',
-    token:(v('syncToken')||syncGet('token')||'').trim(),
+    token:(v('syncToken')||syncGet('token')||'').trim().replace(/^(authorization:\s*)?(bearer|token)\s+/i,'').replace(/[\s"'\u200b-\u200d\ufeff]/g,''),
     apull:el('syncAutoPull')?el('syncAutoPull').checked:syncGet('apull')!=='0',
     apush:el('syncAutoPush')?el('syncAutoPush').checked:syncGet('apush')==='1'
   };
@@ -2033,7 +2065,7 @@ function syncStatus(msg,ok){
   e.textContent=msg||'';
   e.style.color=ok===false?'#b91c1c':(ok?'#166534':'');
 }
-function parseRemote(text){const d=safeParseJSON(text);return{customers:parseCustomersPayload(d),deleted:(d&&!Array.isArray(d)&&d.deleted)||null}}
+function parseRemote(text){const d=safeParseJSON(text);return{customers:parseCustomersPayload(d),deleted:(d&&!Array.isArray(d)&&d.deleted)||null,products:(d&&!Array.isArray(d)&&d.products)||null}}
 function parseCustomersPayload(data){
   if(Array.isArray(data))return data;
   if(data&&Array.isArray(data.customers))return data.customers;
@@ -2064,20 +2096,106 @@ function safeParseJSON(text){
     }
   }
 }
+/* ----- products (My items, default prices, barcodes) travel in the same cloud file ----- */
+function buildProducts(){
+  const m=loadPMeta(),ci=ciMap(loadCustomItems()),pr=loadPrices(),bc=loadBC(),out={items:{},prices:{},barcodes:{}};
+  new Set([...Object.keys(ci),...Object.keys(m.ci)]).forEach(k=>{out.items[k]={v:ci[k]||null,t:m.ci[k]||0}});
+  new Set([...Object.keys(pr),...Object.keys(m.pr)]).forEach(k=>{out.prices[k]={v:pr[k]!=null?pr[k]:null,t:m.pr[k]||0}});
+  new Set([...Object.keys(bc),...Object.keys(m.bc)]).forEach(k=>{out.barcodes[k]={v:bc[k]||null,t:m.bc[k]||0}});
+  return out;
+}
+function mergeProducts(r){
+  if(!r||typeof r!=='object')return false;
+  const m=loadPMeta();let changed=false;
+  const ci=ciMap(loadCustomItems()),pr=loadPrices(),bc=loadBC();
+  const take=(col,remote,local)=>{
+    if(!remote||typeof remote!=='object')return false;let ch=false;
+    Object.keys(remote).forEach(k=>{
+      const e=remote[k];if(!e||typeof e!=='object')return;
+      const t=+e.t||0;if(t<=(m[col][k]||0))return; // equal or older: keep ours
+      if(e.v==null){if(k in local){delete local[k];ch=true}}
+      else if(JSON.stringify(local[k])!==JSON.stringify(e.v)){local[k]=e.v;ch=true}
+      m[col][k]=t;
+    });
+    return ch;
+  };
+  const a=take('ci',r.items,ci),b=take('pr',r.prices,pr),c=take('bc',r.barcodes,bc);
+  savePMeta(m);
+  if(a){saveCustomItems(Object.values(ci),true)}
+  if(b){savePrices(pr,true)}
+  if(c){saveBC(bc,true)}
+  changed=a||b||c;
+  if(changed){try{if(!el('pricePanel').classList.contains('hidden'))renderPriceMgr()}catch(e){}try{if(el('lblPanel')&&!el('lblPanel').classList.contains('hidden'))renderLblList()}catch(e){}}
+  return changed;
+}
+/* friendly text for GitHub errors */
+function ghErr(status,body){
+  let m='';try{m=(JSON.parse(body).message)||''}catch(e){m=String(body||'').slice(0,100)}
+  if(status===401)return L('GitHub 401 — this phone\'s token is rejected (wrong, incomplete, expired or deleted). Create a new token and paste it again, then tap “Test token”.','GitHub 401 — اس فون کا ٹوکن قبول نہیں ہوا (غلط، ادھورا، ایکسپائر یا حذف)۔ نیا ٹوکن بنا کر دوبارہ پیسٹ کریں، پھر “ٹوکن ٹیسٹ” دبائیں۔');
+  if(status===403)return L('GitHub 403 — token has no permission to write to this repo, or GitHub is rate-limiting. '+m,'GitHub 403 — ٹوکن کو اس ریپو میں لکھنے کی اجازت نہیں یا حد پوری ہو گئی۔ '+m);
+  if(status===404)return L('GitHub 404 — repo name is wrong, or the token cannot see this private repo.','GitHub 404 — ریپو کا نام غلط ہے یا ٹوکن اس پرائیویٹ ریپو کو نہیں دیکھ سکتا۔');
+  if(status===409||status===422)return L('GitHub '+status+' — the file changed on another phone; try again.','GitHub '+status+' — فائل دوسرے فون پر بدل گئی؛ دوبارہ کوشش کریں۔');
+  return 'GitHub '+status+' '+m;
+}
+function ghHeaders(c,json){const h={'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token};if(json)h['Content-Type']='application/json';return h}
+function ghContentsUrl(c,withRef){
+  const [owner,repo]=c.repo.split('/');
+  if(!owner||!repo)throw new Error(L('Repo must look like owner/name','ریپو owner/name کی شکل میں ہو'));
+  return 'https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/')+(withRef?'?ref='+encodeURIComponent(c.branch):'');
+}
+function b64ToUtf8(b){return decodeURIComponent(escape(atob((b||'').replace(/\s/g,''))))}
+/* read a file through the contents API (no cache); files over 1 MB come back without content, so fall back to the blob API */
+async function ghReadFile(c){
+  const res=await fetch(ghContentsUrl(c,true),{headers:ghHeaders(c),cache:'no-store'});
+  if(res.status===404){
+    // 404 can mean "file not created yet" OR "repo not visible to this token" — tell them apart
+    const [owner,repo]=c.repo.split('/');
+    const rr=await fetch('https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo),{headers:ghHeaders(c),cache:'no-store'});
+    if(!rr.ok)throw new Error(ghErr(rr.status===404?404:rr.status,await rr.text()));
+    return{text:'',sha:null,empty:true};
+  }
+  if(!res.ok)throw new Error(ghErr(res.status,await res.text()));
+  const j=await res.json();
+  let text;
+  if(j.content&&j.encoding==='base64')text=b64ToUtf8(j.content);
+  else{
+    const [owner,repo]=c.repo.split('/');
+    const br=await fetch('https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/git/blobs/'+j.sha,{headers:ghHeaders(c),cache:'no-store'});
+    if(!br.ok)throw new Error(ghErr(br.status,await br.text()));
+    text=b64ToUtf8((await br.json()).content);
+  }
+  return{text,sha:j.sha,empty:false};
+}
+/* Test token + repo + file, and say exactly what is wrong */
+async function syncTest(){
+  syncPersistFromForm();const c=syncCfg();
+  const say=(m,ok)=>{syncStatus(m,ok);toast(m,ok)};
+  if(!c.repo||!c.token){say(L('Enter repo and token first','پہلے ریپو اور ٹوکن لکھیں'),false);return}
+  const tk=c.token,mask=tk.slice(0,tk.startsWith('github_pat_')?11:4)+'…'+tk.slice(-4)+' ('+tk.length+' '+L('chars','حروف')+')';
+  syncStatus(L('Testing…','ٹیسٹ ہو رہا ہے…'));
+  try{
+    const u=await fetch('https://api.github.com/user',{headers:ghHeaders(c),cache:'no-store'});
+    if(u.status===401){say(L('Token '+mask+' is rejected by GitHub (401). It is wrong/incomplete/expired. A classic token is 40 characters (ghp_…), a fine-grained one ~93 (github_pat_…). Create a new one and paste it again.','ٹوکن '+mask+' کو GitHub نے مسترد کیا (401)۔ یہ غلط/ادھورا/ایکسپائر ہے۔ نیا ٹوکن بنا کر دوبارہ پیسٹ کریں۔'),false);return}
+    if(!u.ok){say(ghErr(u.status,await u.text()),false);return}
+    const [owner,repo]=c.repo.split('/');
+    const r=await fetch('https://api.github.com/repos/'+encodeURIComponent(owner||'')+'/'+encodeURIComponent(repo||''),{headers:ghHeaders(c),cache:'no-store'});
+    if(r.status===404){say(L('Token is valid, but repo “'+c.repo+'” was not found. Check the spelling, or give the token access to this repo.','ٹوکن درست ہے مگر ریپو “'+c.repo+'” نہیں ملا۔ نام چیک کریں یا ٹوکن کو اس ریپو کی رسائی دیں۔'),false);return}
+    if(!r.ok){say(ghErr(r.status,await r.text()),false);return}
+    const info=await r.json();
+    if(info.permissions&&info.permissions.push===false){say(L('Token can read the repo but cannot write. Needs “repo” scope (classic) or Contents: Read and write (fine-grained).','ٹوکن ریپو پڑھ سکتا ہے مگر لکھ نہیں سکتا۔ “repo” اجازت یا Contents: Read and write چاہیے۔'),false);return}
+    const f=await ghReadFile(c);
+    say(L('✔ All good — token '+mask+' works, repo found, '+(f.empty?'file will be created on first push.':'file found.'),'✔ سب ٹھیک — ٹوکن '+mask+' چل رہا ہے، ریپو ملا، '+(f.empty?'فائل پہلی پش پر بنے گی۔':'فائل مل گئی۔')),true);
+    syncMarkReady();
+  }catch(err){say((err&&err.message)||String(err),false)}
+}
 function syncForgetToken(){try{localStorage.removeItem(SYNC_KEYS.token)}catch(e){}const e=el('syncToken');if(e)e.value='';toast('Token removed from this phone',true)}
 function syncHasCfg(c){return !!(c.url||(c.repo&&c.path))}
 async function syncFetchRemote(c){
   // Prefer GitHub API when repo+token (works private); else public URL
   if(c.repo&&c.token){
-    const [owner,repo]=c.repo.split('/');
-    if(!owner||!repo)throw new Error('Repo must be owner/name');
-    const api='https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/')+'?ref='+encodeURIComponent(c.branch);
-    const res=await fetch(api,{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token}});
-    if(res.status===404)return{customers:[],sha:null,empty:true};
-    if(!res.ok)throw new Error('GitHub '+res.status+' '+(await res.text()).slice(0,120));
-    const j=await res.json();
-    const text=decodeURIComponent(escape(atob((j.content||'').replace(/\n/g,''))));
-    return{...parseRemote(text),sha:j.sha,empty:false};
+    const f=await ghReadFile(c);
+    if(f.empty||!f.text.trim())return{customers:[],products:null,sha:f.sha,empty:true};
+    return{...parseRemote(f.text),sha:f.sha,empty:false};
   }
   if(c.url){
     const res=await fetch(c.url+(c.url.includes('?')?'&':'?')+'_='+Date.now(),{cache:'no-store'});
@@ -2107,8 +2225,9 @@ async function syncPull(manual){
     mergeDel(remote.deleted);
     const merged=mergeDB(loadDB(),remote.customers||[]);
     saveDB(merged);
+    const prodCh=mergeProducts(remote.products);
     renderCustList();updatePrev();
-    const msg=(tr('syncPullOk')||'Pulled & merged')+' · '+(remote.customers||[]).length+' remote → '+merged.length+' total';
+    const msg=(tr('syncPullOk')||'Pulled & merged')+' · '+(remote.customers||[]).length+' remote → '+merged.length+' total'+(prodCh?' · '+L('products updated','پروڈکٹس اپڈیٹ'):'');
     syncStatus(msg,true);
     if(manual)toast(msg,true);
     if(remote.sha)try{localStorage.setItem('alghanieh_sync_sha',remote.sha)}catch(e){}
@@ -2123,38 +2242,37 @@ async function syncPull(manual){
 function utf8ToB64(str){
   return btoa(unescape(encodeURIComponent(str)));
 }
-async function syncPush(manual){
+async function syncPush(manual,_retry){
   syncPersistFromForm();
   const c=syncCfg();
   if(!c.repo||!c.token){
     if(manual){syncStatus(lang==='ur'?'پش کے لیے ریپو + ٹوکن درکار':'Repo + token required to push',false);toast(lang==='ur'?'پش کے لیے ریپو + ٹوکن درکار':'Repo + token required to push',false)}
     return;
   }
+  if(window._pushing){window._pushAgain=true;return}
+  window._pushing=true;
   try{
     if(manual)syncStatus(lang==='ur'?'بھیج رہا ہے…':'Pushing…');
-    const [owner,repo]=c.repo.split('/');
-    if(!owner||!repo)throw new Error('Repo must be owner/name');
-    const api='https://api.github.com/repos/'+encodeURIComponent(owner)+'/'+encodeURIComponent(repo)+'/contents/'+c.path.split('/').map(encodeURIComponent).join('/');
-    // get current sha
-    let sha=null;
-    const get=await fetch(api+'?ref='+encodeURIComponent(c.branch),{headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token}});
-    if(get.ok){
-      const j=await get.json();sha=j.sha;
-      // merge what is already on GitHub first, so a push never overwrites invoices added from another phone
-      try{
-        const txt=decodeURIComponent(escape(atob((j.content||'').replace(/\n/g,''))));
-        if(txt.trim()){const rr=parseRemote(txt);mergeDel(rr.deleted);saveDB(mergeDB(loadDB(),rr.customers));renderCustList();updatePrev()}
-      }catch(e){console.warn('push: remote merge skipped',e)}
+    const api=ghContentsUrl(c,false);
+    // read the current cloud file (never from cache) and merge it first, so a push never overwrites another phone's work
+    const f=await ghReadFile(c);
+    const sha=f.sha;
+    if(!f.empty&&f.text.trim()){
+      try{const rr=parseRemote(f.text);mergeDel(rr.deleted);saveDB(mergeDB(loadDB(),rr.customers));mergeProducts(rr.products);renderCustList();updatePrev()}
+      catch(e){console.warn('push: remote merge skipped',e)}
     }
-    else if(get.status!==404)throw new Error('GitHub '+get.status);
     const body={
       message:'Al Ghani sync '+new Date().toISOString(),
-      content:utf8ToB64(JSON.stringify({customers:loadDB(),deleted:loadDel()},null,2)),
+      content:utf8ToB64(JSON.stringify({customers:loadDB(),deleted:loadDel(),products:buildProducts()},null,2)),
       branch:c.branch
     };
     if(sha)body.sha=sha;
-    const put=await fetch(api,{method:'PUT',headers:{'Accept':'application/vnd.github+json','Authorization':'Bearer '+c.token,'Content-Type':'application/json'},body:JSON.stringify(body)});
-    if(!put.ok)throw new Error('GitHub '+put.status+' '+(await put.text()).slice(0,160));
+    const put=await fetch(api,{method:'PUT',headers:ghHeaders(c,true),body:JSON.stringify(body),cache:'no-store'});
+    if(!put.ok){
+      const st=put.status,tx=await put.text();
+      if((st===409||st===422)&&!_retry){window._pushing=false;return syncPush(manual,true)} // another phone pushed in between: re-read, re-merge, retry once
+      throw new Error(ghErr(st,tx));
+    }
     const out=await put.json();
     if(out.content&&out.content.sha)try{localStorage.setItem('alghanieh_sync_sha',out.content.sha)}catch(e){}
     const msg=tr('syncPushOk')||'Pushed to cloud';
@@ -2166,6 +2284,9 @@ async function syncPush(manual){
     const msg=(tr('syncFail')||'Sync failed')+': '+(err.message||err);
     syncStatus(msg,false);
     if(manual)toast(msg,false);
+  }finally{
+    window._pushing=false;
+    if(window._pushAgain){window._pushAgain=false;setTimeout(()=>syncPush(false),500)}
   }
 }
 let _pushTimer=null;
@@ -2312,9 +2433,9 @@ async function downloadQR(){
   c.toBlob(b=>{download(b,'AlGhaniEH_QR_'+inv+'.png');toast(lang==='ur'?'QR تیار':'QR ready',true)},'image/png');
 }
 function gather(){
-  const t=invoiceTotal();const adv=+v('advance')||0;const remain=Math.max(0,t.grand-adv);
+  const t=invoiceTotal();const adv=effAdv(t.grand);const remain=Math.max(0,t.grand-adv);
   const excess=Math.max(0,adv-t.grand);
-  const cust=findCust(v('custName'));
+  const cust=isWalkIn()?null:findCust(v('custName'));
   const prevRaw=prevOutFor(cust,v('invNo'));
   const applied=Math.min(excess,prevRaw); // amount of excess actually applied to previous
   const creditBal=Math.max(0,excess-prevRaw); // leftover credit after bill + previous outstanding
@@ -2514,7 +2635,7 @@ function renderMiniImpl(S,H,MEASURE){
   tx(ctx,t.invNoLabel+' '+v('invNo'),12,y,16,B);y+=21;
   tx(ctx,t.dateLabel+' '+v('invDate')+'  '+v('invTime'),12,y,16,B);y+=26;
   tx(ctx,t.billTo,12,y,15,B);y+=22;
-  const cn=para(ctx,v('custName')||'—',12,y,20,{stroke:.6},W-24,23);y+=cn*23;
+  const cn=para(ctx,dispName(),12,y,20,{stroke:.6},W-24,23);y+=cn*23;
   const cl=custLine();if(cl){const k=para(ctx,cl,12,y+2,14.5,B,W-24,18);y+=k*18+2}
   y+=8;ctx.fillStyle=K;ctx.fillRect(8,y,W-16,4);y+=8;
 
@@ -2631,7 +2752,7 @@ function renderNormalImpl(S,H,MEASURE){
   y=hdrH+76;
   tx(ctx,t.billTo,36,y+16,13,{color:GOLD});
   ctx.fillStyle=GOLD;ctx.fillRect(36,y+24,40,3);
-  const cn=para(ctx,v('custName')||'—',36,y+54,24,{color:INK},mx-60,28);let by=y+54+(cn-1)*28;
+  const cn=para(ctx,dispName(),36,y+54,24,{color:INK},mx-60,28);let by=y+54+(cn-1)*28;
   const cl=custLine();if(cl){const k=para(ctx,cl,36,by+24,16,{color:MUT,weight:'normal'},mx-60,21);by+=24+(k-1)*21}
   y=Math.max(by+22,my+110);
 
@@ -3118,7 +3239,7 @@ async function waShareFiles(files,text,title){
   window.open('https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice downloaded — attach it in WhatsApp)'),'_blank');
   toast(lang==='ur'?'فائل ڈاؤن لوڈ + واٹس ایپ کھلا':'Downloaded — attach in WhatsApp',true);
 }
-function waText(){const cust=(v('custName')||'').trim();return 'Al Ghani Electric & Hardware Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+fmt(invoiceTotal().grand)}
+function waText(){const cust=isWalkIn()?'':(v('custName')||'').trim();return 'Al Ghani Electric & Hardware Invoice'+(cust?' — '+cust:'')+' · '+v('invNo')+' · '+fmt(invoiceTotal().grand)}
 async function shareInvoiceWA(){ // PDF: crisp, never stretched
   try{
     await assetsP;const full=renderNormal(),base=(v('invNo')||'inv')+'_AlGhaniEH';
