@@ -188,6 +188,23 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .pv{position:fixed;inset:0;background:rgba(5,10,18,.92);overflow:auto;z-index:99;padding:14px;text-align:center}
 .pv img{max-width:100%;width:auto;height:auto;object-fit:contain;background:transparent;border-radius:0;box-shadow:none;image-rendering:auto;-webkit-user-drag:none}
 .pv p{color:#cbd5e1;font-size:.8rem;margin-bottom:10px}
+
+/* business module */
+.bz-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid #eef1f6;cursor:pointer}
+.bz-row b{font-size:.9rem;color:var(--navy)}.bz-row small{display:block;color:var(--mut);font-size:.74rem;font-weight:600;margin-top:2px}
+.bdg{min-width:44px;text-align:center;padding:5px 10px;border-radius:20px;font-weight:800;font-size:.82rem;background:#e7f6ec;color:#166534;flex:none}
+.bdg.low{background:#fff3cd;color:#8a5a00}.bdg.out{background:#fde2e2;color:#b91c1c}.bdg.na{background:#eef1f6;color:var(--mut)}
+.bz-ed{background:#f1f5f9;border:1px solid var(--line);border-radius:12px;padding:10px;margin:6px 0 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{border:1.5px solid var(--line);background:#f1f5f9;color:var(--navy);border-radius:20px;padding:6px 12px;font-size:.76rem;font-weight:800;cursor:pointer;font-family:inherit}
+.chips button.on{background:var(--navy);color:var(--gold2);border-color:var(--navy)}
+.stkline{font-size:.78rem;font-weight:800;margin-top:6px;color:#166534}.stkline.bad{color:#b91c1c}
+.bar{height:8px;border-radius:6px;background:#e3e8f0;overflow:hidden;margin-top:3px}.bar i{display:block;height:100%;background:var(--gold)}
+.tbl{width:100%;border-collapse:collapse;font-size:.78rem}.tbl th,.tbl td{padding:7px 4px;border-bottom:1px solid #eef1f6;text-align:right}.tbl th:first-child,.tbl td:first-child{text-align:left}
+body.urdu .tbl th:first-child,body.urdu .tbl td:first-child{text-align:right}
+.pos{color:#166534!important}.neg{color:#b91c1c!important}
+.lowbar{background:#fff3cd;border:1.5px solid #f0d27a;color:#8a5a00;border-radius:12px;padding:9px 12px;margin-top:12px;font-size:.82rem;font-weight:800;cursor:pointer}
+.tabbar button{padding-left:1px;padding-right:1px;font-size:.66rem}
 </style>
 </head>
 <body>
@@ -208,6 +225,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 <div class="warn hidden" id="bkNag" style="display:flex;gap:8px;align-items:center;justify-content:space-between"><span id="bkNagTxt"></span><button class="btn b-gold b-sm" onclick="shareBackup()" data-t="btnShare">📤 Backup now</button></div>
 <!-- ================= INVOICE ================= -->
 <section id="panelInv">
+  <div class="lowbar hidden" id="lowBar" onclick="ST.f='low';ST.q='';showTab('stock')"></div>
   <div class="warn hidden" id="storeWarn">⚠️ Opened directly from storage — the browser may keep customers separate per tab. Use <b>Customers → Save App Copy</b>, or open the app from your GitHub Pages link so data stays in one place.</div>
 
   <div class="card">
@@ -462,6 +480,10 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
     </div><!-- /toolsBody -->
   </div>
 </section>
+<section id="panelStock" class="hidden"></section>
+<section id="panelSup" class="hidden"></section>
+<section id="panelExp" class="hidden"></section>
+<section id="panelRep" class="hidden"></section>
 </main>
 
 <div class="sticky" id="stickyBar"><div class="in">
@@ -471,6 +493,10 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 <nav class="tabbar">
   <button class="on" id="tabInv" onclick="showTab('inv')"><span>📄</span><em data-t="invTabL" style="font-style:normal">Invoice</em></button>
   <button id="tabCust" onclick="showTab('cust')"><span>👥</span><em data-t="custTabL" style="font-style:normal">Customers</em></button>
+  <button id="tabStock" onclick="showTab('stock')"><span>📦</span><em style="font-style:normal">Stock</em></button>
+  <button id="tabSup" onclick="showTab('sup')"><span>🏭</span><em style="font-style:normal">Suppliers</em></button>
+  <button id="tabExp" onclick="showTab('exp')"><span>💸</span><em style="font-style:normal">Expenses</em></button>
+  <button id="tabRep" onclick="showTab('rep')"><span>📊</span><em style="font-style:normal">Reports</em></button>
 </nav>
 <div class="toast" id="toast"></div>
 <div class="pv hidden" id="pv" onclick="this.classList.add('hidden')"><p>Tap anywhere to close</p><img id="pvImg" alt="preview"></div>
@@ -1008,6 +1034,7 @@ function idb(fn){
   }catch(e){}
 }
 function saveDB(arr){
+  try{_stk=null}catch(e){}
   MEM=arr;let ok=true;const json=JSON.stringify(arr);
   try{localStorage.setItem(DB_KEY,json)}catch(e){ok=false}
   idb(db=>{try{db.transaction('kv','readwrite').objectStore('kv').put(json,DB_KEY)}catch(e){}});
@@ -1172,10 +1199,11 @@ function toggleCustCard(id,ev){
   if(!was)card.classList.add('open');
 }
 function showTab(t){
-  el('panelInv').classList.toggle('hidden',t!=='inv');el('panelCust').classList.toggle('hidden',t!=='cust');
+  const map={inv:['panelInv','tabInv'],cust:['panelCust','tabCust'],stock:['panelStock','tabStock'],sup:['panelSup','tabSup'],exp:['panelExp','tabExp'],rep:['panelRep','tabRep']};
+  Object.keys(map).forEach(k=>{el(map[k][0]).classList.toggle('hidden',k!==t);el(map[k][1]).classList.toggle('on',k===t)});
   el('stickyBar').classList.toggle('hidden',t!=='inv');
-  el('tabInv').classList.toggle('on',t==='inv');el('tabCust').classList.toggle('on',t==='cust');
   if(t==='cust')renderCustList();
+  try{bizShow(t)}catch(e){console.error(e)}
   window.scrollTo(0,0);
 }
 function installApp(){if(deferredInstall){deferredInstall.prompt();return}alert('Chrome: Menu ⋮ → Add to Home screen')}
@@ -1188,6 +1216,7 @@ function setupPWA(){
 
 document.addEventListener('DOMContentLoaded',()=>{
   initAssets();setupPWA();migrateAndSeed();restoreFromIDB();
+  try{bizTabLabels();bizLowBar()}catch(e){}
   if(!/^https?:$/.test(location.protocol))el('storeWarn').classList.remove('hidden');
   try{
     const ab=localStorage.getItem('alghanieh_autobk');
@@ -1229,6 +1258,7 @@ function setLang(l){
   document.querySelectorAll('#itemsBody input[id^="desc-"]').forEach(i=>{i.placeholder=T[l].phItem});
   renderCustList();recalcPay();
   try{lblTexts();if(!el('lblPanel').classList.contains('hidden'))renderLblList()}catch(e){}
+  try{bizTabLabels();bizRefresh(true)}catch(e){}
 }
 
 /* ---------- items (Electric & Hardware) ---------- */
@@ -1239,7 +1269,7 @@ const CUSTOM_KEY='alghanieh_custom_items',PRICE_KEY='alghanieh_prices';
 function loadCustomItems(){try{const a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 /* product sync: every change to My items / default prices / barcodes is time-stamped so two phones can merge (newest change wins) */
 const PMETA_KEY='alghanieh_prod_meta';
-function loadPMeta(){try{const o=JSON.parse(localStorage.getItem(PMETA_KEY)||'{}')||{};return{ci:o.ci||{},pr:o.pr||{},bc:o.bc||{}}}catch(e){return{ci:{},pr:{},bc:{}}}}
+function loadPMeta(){try{const o=JSON.parse(localStorage.getItem(PMETA_KEY)||'{}')||{};return{ci:o.ci||{},pr:o.pr||{},bc:o.bc||{},st:o.st||{},su:o.su||{},sl:o.sl||{},sm:o.sm||{},ex:o.ex||{}}}catch(e){return{ci:{},pr:{},bc:{},st:{},su:{},sl:{},sm:{},ex:{}}}}
 function savePMeta(m){try{localStorage.setItem(PMETA_KEY,JSON.stringify(m))}catch(e){}}
 function pStamp(col,oldMap,newMap){
   let ch=false;const m=loadPMeta(),now=Date.now();
@@ -1332,7 +1362,7 @@ function addItem(prefill){
       '<div id="pricebox-'+id+'"><label data-ti="priceL">'+esc(tr('priceL'))+'</label><input type="number" id="price-'+id+'" onfocus="this.select()" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
       '<div id="lumpbox-'+id+'" class="hidden"><label data-ti="lumpAmtL">'+esc(tr('lumpAmtL'))+'</label><input type="number" id="lamt-'+id+'" onfocus="this.select()" min="0" step="any" inputmode="decimal" placeholder="0" oninput="calc('+id+')"></div>'+
     '</div>'+
-    '<div class="pvline hidden" id="pvl-'+id+'"></div>'+
+    '<div class="pvline hidden" id="pvl-'+id+'"></div><div class="stkline hidden" id="stk-'+id+'"></div>'+
     '<div style="margin-top:6px"><label data-ti="detL">'+esc(tr('detL'))+'</label><input type="text" id="det-'+id+'" placeholder="'+esc(tr('detPh'))+'" autocomplete="off" oninput="calc('+id+')"></div>'+
     '<div class="row" style="margin-top:8px;align-items:flex-end">'+
       '<div><label data-ti="amt">'+esc(tr('amt'))+'</label><span class="amt" id="amt-'+id+'">0</span></div>'+
@@ -1356,7 +1386,7 @@ function itemSuggest(id){
   const pend=(pendingBC&&pendingBC.id===id&&Date.now()-pendingBC.t<120000)?pendingBC:null;
   const head=pend?'<div style="background:#fff7d6;color:#7a5200;font-weight:800;display:block" onclick="event.stopPropagation()">'+esc(L('🔗 New barcode '+pend.code+' — pick the item to link it','🔗 نیا بار کوڈ '+pend.code+' — لنک کرنے کے لیے آئٹم چنیں'))+' <button type="button" class="btn b-red b-sm" style="margin-inline-start:8px" onclick="pendingBC=null;itemSuggest('+id+')">✕</button></div>':'';
   if(!list.length&&!head){box.style.display='none';return}
-  box.innerHTML=head+list.map(({p,i})=>{const bc=bm[keyName(p.name)];return '<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small style="display:block">'+esc(p.cat||'')+(bc?' · ▮ '+esc(bc):'')+'</small></span><b style="white-space:nowrap;color:var(--navy)">'+(p.price>0?'Rs '+num(p.price):'—')+'</b></div>'}).join('');
+  box.innerHTML=head+list.map(({p,i})=>{const bc=bm[keyName(p.name)];return '<div onclick="pickItem('+id+','+i+')"><span>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'<small style="display:block">'+esc(p.cat||'')+(bc?' · ▮ '+esc(bc):'')+bizStockTag(p)+'</small></span><b style="white-space:nowrap;color:var(--navy)">'+(p.price>0?'Rs '+num(p.price):'—')+'</b></div>'}).join('');
   box.style.display='block';
 }
 function fillRow(id,p){
@@ -1783,6 +1813,7 @@ function calc(id){
     const show=mode==='qp'&&name&&c.rate>0&&(!known||Math.round(known.price)!==Math.round(c.rate));
     sp.classList.toggle('hidden',!show);
   }
+  try{bizStkLine(id)}catch(e){}
   recalcPay();
 }
 function renumber(){document.querySelectorAll('#itemsBody .item-card .no').forEach((b,i)=>b.textContent='#'+(i+1))}
@@ -1838,9 +1869,11 @@ function saveAndGenerate(){
     if(!walk&&findCust(name)){toast(tr('stmtReady'),true);return}
     alert(lang==='ur'?'کم از کم ایک آئٹم':'Add at least one item with quantity');return
   }
+  {const probs=bizStockProblems(items,v('invNo').trim());
+   if(probs.length){alert(L('Not enough stock:\n','اسٹاک کافی نہیں:\n')+probs.map(x=>'• '+x.name+' — '+L('need ','درکار ')+qtyFmt(x.need)+L(', in stock ',', اسٹاک ')+qtyFmt(Math.max(0,x.have))).join('\n')+L('\n\nReduce the quantity, or fix the stock in the Stock tab.','\n\nمقدار کم کریں یا اسٹاک ٹیب میں اسٹاک درست کریں۔'));return}}
   if(walk){const a0=+v('advance')||0;if(a0>0&&a0<grand){alert(lang==='ur'?'واک اِن گاہک کا بل پورا ادا ہونا چاہیے۔ ادھار کے لیے گاہک کا نام لکھیں۔':'A walk-in bill must be paid in full. For a part payment / credit, type the customer name.');el('custName').focus();return}}
   const adv=effAdv(grand);const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AEH-'+Date.now());
-  const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items,sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
+  const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items:bizStampItems(items),sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
   const db=loadDB();let c=findCustIn(db,name,walk?'':v('custPhone'));
   if(!c){c={id:'C'+Date.now(),name,house:walk?'':v('custHouse'),phone:walk?'':v('custPhone'),address:walk?'':v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};if(walk)c.walkin=true;db.push(c)}
   else if(!walk){c.house=v('custHouse')||c.house;c.phone=v('custPhone')||c.phone;c.address=v('custContact')||c.address}
@@ -1849,7 +1882,7 @@ function saveAndGenerate(){
   c.invoices=(c.invoices||[]).filter(i=>!(i.invNo===invNo&&i.invNo!=='PAY'));
   c.invoices.unshift(inv);recompute(c);
   {const D=loadDel();if(D.i[invNo]){delete D.i[invNo];saveDel(D)}}
-  const stored=saveDB(db);updatePrev();
+  const stored=saveDB(db);updatePrev();try{bizRefresh()}catch(e){}
   if(stored){
     const balMsg=(c.credit||0)>0?(tr('credit')+' '+fmt(c.credit)):(tr('outstanding')+' '+fmt(c.outstanding||0));
     toast((lang==='ur'?'محفوظ! ':'Saved! ')+(walk?dispName()+(lang==='ur'?' · مکمل ادا':' · paid in full'):name+' · '+balMsg),true);
@@ -1878,6 +1911,7 @@ function renderTotals(){
   el('totPendSub').textContent=sub;
 }
 function renderCustList(){
+  try{bizRefresh()}catch(e){}
   // Ensure credit field is up to date for older saved data
   let all=loadDB();let dirty=false;
   all.forEach(c=>{const before=c.credit;recompute(c);if(c.credit!==before)dirty=true});
@@ -1922,7 +1956,7 @@ function renderCustList(){
         ${meta?`<div class="meta">${meta}</div>`:''}
         <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}${invN?`<span>${invN} inv</span>`:''}</div>
         <div class="hist-list">${hist}</div>
-        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
+        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}<button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
       </div>
     </div>`;
   }).join('');
@@ -2102,6 +2136,7 @@ function buildProducts(){
   new Set([...Object.keys(ci),...Object.keys(m.ci)]).forEach(k=>{out.items[k]={v:ci[k]||null,t:m.ci[k]||0}});
   new Set([...Object.keys(pr),...Object.keys(m.pr)]).forEach(k=>{out.prices[k]={v:pr[k]!=null?pr[k]:null,t:m.pr[k]||0}});
   new Set([...Object.keys(bc),...Object.keys(m.bc)]).forEach(k=>{out.barcodes[k]={v:bc[k]||null,t:m.bc[k]||0}});
+  out.biz={};Object.keys(BIZ_COLS).forEach(col=>{const mp=bizLoad(col),o=out.biz[col]={};new Set([...Object.keys(mp),...Object.keys(m[col])]).forEach(k=>{o[k]={v:mp[k]||null,t:m[col][k]||0}})});
   return out;
 }
 function mergeProducts(r){
@@ -2120,12 +2155,13 @@ function mergeProducts(r){
     return ch;
   };
   const a=take('ci',r.items,ci),b=take('pr',r.prices,pr),c=take('bc',r.barcodes,bc);
+  let bz=false;const bzr=r.biz||{};Object.keys(BIZ_COLS).forEach(col=>{const loc=bizLoad(col);if(take(col,bzr[col],loc)){bizSave(col,loc,true);bz=true}});
   savePMeta(m);
   if(a){saveCustomItems(Object.values(ci),true)}
   if(b){savePrices(pr,true)}
   if(c){saveBC(bc,true)}
-  changed=a||b||c;
-  if(changed){try{if(!el('pricePanel').classList.contains('hidden'))renderPriceMgr()}catch(e){}try{if(el('lblPanel')&&!el('lblPanel').classList.contains('hidden'))renderLblList()}catch(e){}}
+  changed=a||b||c||bz;
+  if(changed){try{bizRefresh()}catch(e){}try{if(!el('pricePanel').classList.contains('hidden'))renderPriceMgr()}catch(e){}try{if(el('lblPanel')&&!el('lblPanel').classList.contains('hidden'))renderLblList()}catch(e){}}
   return changed;
 }
 /* friendly text for GitHub errors */
@@ -3271,6 +3307,482 @@ async function printMini(){
   win.document.write('<html><head><title>Print</title><style>body{margin:0;text-align:center}img{max-width:100%}@media print{img{width:58mm}}</style></head><body><img src="'+url+'" onload="setTimeout(function(){window.print()},300)"></body></html>');
   win.document.close();
 }
+</script>
+<script id="bizModule">
+/* ====================================================================
+   BUSINESS MODULE — stock · purchase/sale price · suppliers · expenses · reports
+   Everything is stored locally and also travels in the GitHub sync file ("products.biz").
+   Stock on hand is DERIVED, never stored as a number, so two phones can never overwrite each other:
+     qty = adjustments + supplier purchases − sales (invoice lines flagged st:1)
+   ==================================================================== */
+const BIZ_COLS={st:'alghanieh_stock',su:'alghanieh_suppliers',sl:'alghanieh_supledger',sm:'alghanieh_stockadj',ex:'alghanieh_expenses'};
+const BIZ_CFG_KEY='alghanieh_biz_cfg',BIZ_PIN_KEY='alghanieh_owner_pin';
+const EXP_CATS=[['Rent','کرایہ'],['Electricity / Gas / Water','بجلی / گیس / پانی'],['Salary / Wages','تنخواہ / مزدوری'],['Transport','ٹرانسپورٹ'],['Tea / Food','چائے / کھانا'],['Repairs','مرمت'],['Phone / Internet','فون / انٹرنیٹ'],['Packing','پیکنگ'],['Marketing','مارکیٹنگ'],['Tax / Fees','ٹیکس / فیس'],['Other','دیگر']];
+let _stk=null;
+const ST={f:null,q:'',open:null},SUP={open:null,form:null,bill:null},EXPS={month:null,edit:null},REP={p:'month',from:'',to:''};
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function bizLoad(c){try{const o=JSON.parse(localStorage.getItem(BIZ_COLS[c])||'{}');return o&&typeof o==='object'&&!Array.isArray(o)?o:{}}catch(e){return{}}}
+function bizSave(c,map,raw){if(!raw)pStamp(c,bizLoad(c),map);try{localStorage.setItem(BIZ_COLS[c],JSON.stringify(map))}catch(e){}_stk=null}
+function bzCfg(){try{return Object.assign({block:true},JSON.parse(localStorage.getItem(BIZ_CFG_KEY)||'{}'))}catch(e){return{block:true}}}
+function bzSetCfg(o){try{localStorage.setItem(BIZ_CFG_KEY,JSON.stringify(Object.assign(bzCfg(),o)))}catch(e){}}
+const todayStr=()=>localDate(new Date());
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x};
+const money=n=>(n<0?'−':'')+'Rs '+num(Math.abs(n));
+function resolveKey(desc){const p=findPreset(desc);return keyName(p?p.name:desc)}
+function presetByKey(k){return getAllPresets().find(x=>keyName(x.name)===k)||null}
+function nameOfKey(k){const p=presetByKey(k);if(p)return lang==='ur'?(p.nameUr||p.name):p.name;const r=bizLoad('st')[k];return r&&r.name?r.name:k}
+
+/* ---------- owner PIN (hides purchase prices, profit, suppliers, expenses from staff) ---------- */
+async function pinHash(p){try{const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('alghani|'+p));return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('')}catch(e){let h=5381;for(const c of 'alghani|'+p)h=((h<<5)+h+c.charCodeAt(0))|0;return 'x'+h}}
+function hasPin(){try{return !!localStorage.getItem(BIZ_PIN_KEY)}catch(e){return false}}
+function bzLocked(){return hasPin()&&!window._bzOK}
+async function bzUnlock(){
+  const p=v('pinIn');if(!p)return;
+  if((await pinHash(p))===localStorage.getItem(BIZ_PIN_KEY)){window._bzOK=true;bizRefresh(true)}
+  else{toast(L('Wrong PIN','غلط پن'),false);const e=el('pinIn');if(e){e.value='';e.focus()}}
+}
+function bzLock(){window._bzOK=false;bizRefresh(true);toast(L('Locked','لاک ہو گیا'),true)}
+async function bzSetPin(){
+  const a=prompt(L('New owner PIN (4–8 digits). Staff will not see purchase prices, profit, suppliers or expenses.','نیا اونر پن (4–8 ہندسے)۔ اسٹاف کو خرید قیمت، منافع، سپلائر اور اخراجات نظر نہیں آئیں گے۔'));
+  if(a==null)return;if(!/^\d{4,8}$/.test(a.trim())){toast(L('PIN must be 4–8 digits','پن 4 سے 8 ہندسوں کا ہو'),false);return}
+  try{localStorage.setItem(BIZ_PIN_KEY,await pinHash(a.trim()))}catch(e){}
+  window._bzOK=true;toast(L('PIN saved on this phone','پن اس فون پر محفوظ'),true);renderRep();
+}
+function bzRemovePin(){if(!confirm(L('Remove the owner PIN on this phone?','اس فون سے اونر پن ہٹائیں؟')))return;try{localStorage.removeItem(BIZ_PIN_KEY)}catch(e){}renderRep()}
+function lockCard(){
+  return '<div class="card"><h2><i>🔒</i><span>'+L('Owner only','صرف مالک کے لیے')+'</span></h2><p class="hint">'+L('Enter the owner PIN to open this section.','یہ سیکشن کھولنے کے لیے اونر پن لکھیں۔')+'</p><input id="pinIn" type="password" inputmode="numeric" maxlength="8" placeholder="PIN" onkeydown="if(event.key===\'Enter\')bzUnlock()"><button class="btn b-navy" style="margin-top:10px;width:100%" onclick="bzUnlock()">'+L('Unlock','کھولیں')+'</button></div>';
+}
+
+/* ---------- stock (derived) ---------- */
+function stockInfo(excl){
+  if(!excl&&_stk)return _stk;
+  const st=bizLoad('st'),q={};
+  Object.keys(st).forEach(k=>{if(st[k]&&st[k].on!==false)q[k]=0});
+  Object.values(bizLoad('sm')).forEach(a=>{if(a&&a.k in q)q[a.k]+=+a.d||0});
+  Object.values(bizLoad('sl')).forEach(e=>{if(e&&e.type==='bill')(e.items||[]).forEach(it=>{if(it&&it.k in q)q[it.k]+=+it.qty||0})});
+  loadDB().forEach(c=>(c.invoices||[]).forEach(i=>{if(!i||i.invNo==='PAY'||(excl&&i.invNo===excl))return;(i.items||[]).forEach(it=>{if(it&&it.st&&it.sk in q)q[it.sk]-=+it.qty||0})}));
+  if(!excl)_stk=q;return q;
+}
+function stockParts(k){
+  let adj=0,buy=0,sold=0;
+  Object.values(bizLoad('sm')).forEach(a=>{if(a&&a.k===k)adj+=+a.d||0});
+  Object.values(bizLoad('sl')).forEach(e=>{if(e&&e.type==='bill')(e.items||[]).forEach(it=>{if(it&&it.k===k)buy+=+it.qty||0})});
+  loadDB().forEach(c=>(c.invoices||[]).forEach(i=>{if(!i||i.invNo==='PAY')return;(i.items||[]).forEach(it=>{if(it&&it.st&&it.sk===k)sold+=+it.qty||0})}));
+  return{adj,buy,sold};
+}
+function bizStampItems(items){
+  const st=bizLoad('st');
+  return items.map(it=>{const k=resolveKey(it.desc),r=st[k],o=Object.assign({},it,{sk:k});
+    if(r){if(r.on!==false)o.st=1;if(+r.cost>0)o.cost=+r.cost}
+    return o});
+}
+function bizStockProblems(items,excl){
+  if(!bzCfg().block)return[];
+  const q=stockInfo(excl||undefined),need={};
+  items.forEach(it=>{const k=resolveKey(it.desc);if(k in q)need[k]=(need[k]||0)+(+it.qty||0)});
+  return Object.keys(need).filter(k=>need[k]>q[k]+1e-9).map(k=>({k,name:nameOfKey(k),need:need[k],have:q[k]}));
+}
+function bizStockTag(p){const q=stockInfo(),k=keyName(p.name);return k in q?' · 📦 '+qtyFmt(q[k]):''}
+function bizStkLine(id){
+  const box=el('stk-'+id);if(!box)return;
+  const name=cleanName(v('desc-'+id));if(!name){box.classList.add('hidden');return}
+  const k=resolveKey(name),q=stockInfo();
+  if(!(k in q)){box.classList.add('hidden');return}
+  const have=q[k],want=+v('qty-'+id)||0,bad=want>have+1e-9;
+  box.className='stkline'+(bad?' bad':'');
+  box.textContent='📦 '+L('In stock: ','اسٹاک میں: ')+qtyFmt(have)+(bad?'  ⚠️ '+L('not enough','کافی نہیں'):'');
+}
+function lowItems(){
+  const st=bizLoad('st'),q=stockInfo(),out=[];
+  Object.keys(q).forEach(k=>{const r=st[k]||{},min=+r.min||0;if(q[k]<=0||(min>0&&q[k]<=min))out.push({k,qty:q[k],min,cost:+r.cost||0})});
+  return out;
+}
+function bizLowBar(){
+  const b=el('lowBar');if(!b)return;
+  const n=lowItems().length;
+  if(!n){b.classList.add('hidden');return}
+  b.classList.remove('hidden');b.textContent='⚠️ '+n+' '+L('item(s) low / out of stock — tap to see','آئٹم کم / ختم — دیکھنے کے لیے دبائیں');
+}
+function bizShow(t){
+  if(t==='stock')renderStock();else if(t==='sup')renderSup();else if(t==='exp')renderExp();else if(t==='rep')renderRep();
+  bizLowBar();
+}
+function bizRefresh(force){
+  _stk=null;
+  const vis=['Stock','Sup','Exp','Rep'].find(n=>!el('panel'+n).classList.contains('hidden'));
+  if(vis){
+    const a=document.activeElement;
+    if(force||!a||!/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))({Stock:renderStock,Sup:renderSup,Exp:renderExp,Rep:renderRep})[vis]();
+  }
+  bizLowBar();
+  document.querySelectorAll('#itemsBody .item-card').forEach(c=>{try{bizStkLine(c.id.replace('item-row-',''))}catch(e){}});
+}
+function remindCust(id){
+  const c=loadDB().find(x=>x.id===id);if(!c)return;
+  const t=L('Assalam o Alaikum '+c.name+', this is a reminder from Al Ghani Electric & Hardware: your pending balance is '+money(c.outstanding||0)+'. Please pay when convenient. Thank you.','السلام علیکم '+c.name+'، الغنی الیکٹرک اینڈ ہارڈ ویئر کی طرف سے یاد دہانی: آپ کی باقی رقم '+money(c.outstanding||0)+' ہے۔ براہ کرم سہولت سے ادا کر دیں۔ شکریہ۔');
+  window.open('https://wa.me/'+String(c.phone||'').replace(/\D/g,'')+'?text='+encodeURIComponent(t),'_blank');
+}
+function bizTabLabels(){
+  const m={tabStock:['📦','Stock','اسٹاک'],tabSup:['🏭','Suppliers','سپلائر'],tabExp:['💸','Expenses','اخراجات'],tabRep:['📊','Reports','رپورٹس']};
+  Object.keys(m).forEach(id=>{const b=el(id);if(b)b.innerHTML='<span>'+m[id][0]+'</span><em style="font-style:normal">'+L(m[id][1],m[id][2])+'</em>'});
+}
+
+/* ================= STOCK TAB ================= */
+function stSet(o){Object.assign(ST,o);renderStock()}
+function stOpen(k){ST.open=ST.open===k?null:k;renderStock()}
+function renderStock(){
+  const box=el('panelStock');if(!box)return;
+  const own=!bzLocked(),st=bizLoad('st'),q=stockInfo(),all=getAllPresets();
+  const rows=all.map(p=>{const k=keyName(p.name),r=st[k],trk=!!(r&&r.on!==false);return{p,k,r,trk,qty:trk?(q[k]||0):null,min:r?+r.min||0:0,cost:r?+r.cost||0:0}});
+  const trk=rows.filter(x=>x.trk),out=trk.filter(x=>x.qty<=0),low=trk.filter(x=>x.qty>0&&x.min>0&&x.qty<=x.min);
+  const vCost=trk.reduce((s,x)=>s+Math.max(0,x.qty)*x.cost,0),vSale=trk.reduce((s,x)=>s+Math.max(0,x.qty)*(x.p.price||0),0);
+  if(!ST.f)ST.f=trk.length?'trk':'all';
+  const qq=keyName(ST.q),bm=loadBC();
+  let list=rows.filter(x=>ST.f==='all'||(ST.f==='trk'&&x.trk)||(ST.f==='low'&&x.trk&&(x.qty<=0||low.includes(x)))||(ST.f==='out'&&x.trk&&x.qty<=0)||(ST.f==='un'&&!x.trk));
+  if(qq)list=list.filter(x=>keyName(x.p.name).includes(qq)||(x.p.nameUr||'').includes(ST.q)||keyName(x.p.cat).includes(qq)||String(bm[x.k]||'').includes(qq));
+  const total=list.length;list=list.slice(0,250);
+  const chip=(f,t,n)=>'<button class="'+(ST.f===f?'on':'')+'" onclick="stSet({f:\''+f+'\',open:null})">'+t+(n!=null?' ('+n+')':'')+'</button>';
+  let h='<div class="card"><h2><i>📦</i><span>'+L('Stock Summary','اسٹاک کا خلاصہ')+'</span></h2><div class="tot">'+
+    '<div class="tile"><small>'+L('ITEMS TRACKED','ٹریک شدہ آئٹم')+'</small><b>'+trk.length+'</b></div>'+
+    '<div class="tile"><small>'+L('LOW / OUT','کم / ختم')+'</small><b class="'+((low.length+out.length)?'neg':'')+'">'+low.length+' / '+out.length+'</b></div>'+
+    (own?'<div class="tile"><small>'+L('STOCK VALUE (BUY)','اسٹاک ویلیو (خرید)')+'</small><b>'+money(vCost)+'</b></div>':'')+
+    '<div class="tile"><small>'+L('STOCK VALUE (SALE)','اسٹاک ویلیو (فروخت)')+'</small><b>'+money(vSale)+'</b></div></div>'+
+    '<label class="ck"><input type="checkbox" '+(bzCfg().block?'checked':'')+' onchange="bzSetCfg({block:this.checked});bizRefresh()"><span>'+L('Block a sale when stock is not enough','اسٹاک کم ہو تو بل نہ بنے')+'</span></label>'+
+    '<p class="hint" style="margin-top:6px">'+L('Only items you track are counted and blocked. Tap an item to track it and set its quantity, purchase price and sale price.','صرف ٹریک کیے گئے آئٹم گنے جاتے ہیں۔ آئٹم دبا کر ٹریک کریں اور مقدار، خرید قیمت اور فروخت قیمت لکھیں۔')+'</p></div>';
+  h+='<div class="card"><details id="newProd"><summary style="cursor:pointer;font-weight:800;color:var(--navy)">➕ '+L('New product','نیا پروڈکٹ')+'</summary>'+
+    '<label>'+L('Name (English)','نام (انگریزی)')+' *</label><input id="npName" autocomplete="off">'+
+    '<label>'+L('Name (Urdu, optional)','نام (اردو، اختیاری)')+'</label><input id="npUr" autocomplete="off">'+
+    '<div class="grid2"><div><label>'+L('Sale price','فروخت قیمت')+'</label><input id="npSale" type="number" inputmode="decimal" min="0" step="any"></div>'+
+    (own?'<div><label>'+L('Purchase price','خرید قیمت')+'</label><input id="npBuy" type="number" inputmode="decimal" min="0" step="any"></div>':'<div></div>')+'</div>'+
+    '<div class="grid2"><div><label>'+L('Opening quantity','ابتدائی مقدار')+'</label><input id="npQty" type="number" inputmode="decimal" min="0" step="any"></div>'+
+    '<div><label>'+L('Low-stock level','کم اسٹاک حد')+'</label><input id="npMin" type="number" inputmode="decimal" min="0" step="any"></div></div>'+
+    '<label>'+L('Barcode (optional)','بار کوڈ (اختیاری)')+'</label><input id="npBc" autocomplete="off">'+
+    '<button class="btn b-navy" style="width:100%;margin-top:10px" onclick="stNewProduct()">'+L('Save product','پروڈکٹ محفوظ کریں')+'</button></details></div>';
+  h+='<div class="card"><input id="stSearch" placeholder="'+L('Search item, category or barcode…','آئٹم، کیٹیگری یا بار کوڈ تلاش کریں…')+'" value="'+esc(ST.q)+'" oninput="ST.q=this.value;stListOnly()" style="margin-bottom:6px">'+
+    '<div class="chips">'+chip('trk',L('Tracked','ٹریک'),trk.length)+chip('low',L('Low / Out','کم / ختم'),low.length+out.length)+chip('out',L('Out','ختم'),out.length)+chip('un',L('Not tracked','غیر ٹریک'),rows.length-trk.length)+chip('all',L('All','تمام'),rows.length)+'</div>'+
+    '<div id="stList">'+stListHTML(list,total,own)+'</div>';
+  if(low.length+out.length)h+='<button class="btn b-gold" style="width:100%;margin-top:10px" onclick="stShareReorder()">📤 '+L('Share reorder list (WhatsApp)','ری آرڈر لسٹ شیئر کریں (واٹس ایپ)')+'</button>';
+  h+='</div>';
+  box.innerHTML=h;
+}
+function stListOnly(){ /* keep the search box focused while typing */
+  const own=!bzLocked(),st=bizLoad('st'),q=stockInfo(),qq=keyName(ST.q),bm=loadBC();
+  let rows=getAllPresets().map(p=>{const k=keyName(p.name),r=st[k],trk=!!(r&&r.on!==false);return{p,k,r,trk,qty:trk?(q[k]||0):null,min:r?+r.min||0:0,cost:r?+r.cost||0:0}});
+  rows=rows.filter(x=>ST.f==='all'||(ST.f==='trk'&&x.trk)||(ST.f==='low'&&x.trk&&(x.qty<=0||(x.min>0&&x.qty<=x.min)))||(ST.f==='out'&&x.trk&&x.qty<=0)||(ST.f==='un'&&!x.trk));
+  if(qq)rows=rows.filter(x=>keyName(x.p.name).includes(qq)||(x.p.nameUr||'').includes(ST.q)||keyName(x.p.cat).includes(qq)||String(bm[x.k]||'').includes(qq));
+  const total=rows.length;el('stList').innerHTML=stListHTML(rows.slice(0,250),total,own);
+}
+function stListHTML(list,total,own){
+  if(!list.length)return '<p class="hint">'+L('Nothing here. Use “All” to see every item and tap one to start tracking it.','یہاں کچھ نہیں۔ “تمام” دبائیں اور کسی آئٹم کو دبا کر ٹریک کریں۔')+'</p>';
+  return list.map(x=>{
+    const p=x.p,cls=!x.trk?'na':(x.qty<=0?'out':(x.min>0&&x.qty<=x.min?'low':''));
+    const margin=own&&x.cost>0&&p.price>0?' · '+L('margin','مارجن')+' '+Math.round((p.price-x.cost)/p.price*100)+'%':'';
+    let r='<div class="bz-row" data-k="'+esc(x.k)+'" onclick="stOpen(this.dataset.k)"><div><b>'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+'</b><small>'+esc(p.cat||'')+' · '+L('Sale','فروخت')+' '+(p.price>0?'Rs '+num(p.price):'—')+(own&&x.cost>0?' · '+L('Buy','خرید')+' Rs '+num(x.cost):'')+margin+'</small></div><span class="bdg '+cls+'">'+(x.trk?qtyFmt(x.qty):'—')+'</span></div>';
+    if(ST.open===x.k)r+=stEditor(x,own);
+    return r;
+  }).join('')+(total>list.length?'<p class="hint">'+L('Showing first 250 — search to narrow down.','پہلے 250 دکھائے گئے — تلاش سے کم کریں۔')+'</p>':'');
+}
+function stEditor(x,own){
+  const p=x.p,pt=stockParts(x.k);
+  return '<div class="bz-ed" onclick="event.stopPropagation()">'+
+    '<div class="grid2"><div><label>'+L('Sale price','فروخت قیمت')+'</label><input id="stSale" type="number" inputmode="decimal" min="0" step="any" value="'+(p.price>0?p.price:'')+'"></div>'+
+    (own?'<div><label>'+L('Purchase price','خرید قیمت')+'</label><input id="stBuy" type="number" inputmode="decimal" min="0" step="any" value="'+(x.cost>0?x.cost:'')+'"></div>':'<div></div>')+'</div>'+
+    '<div class="grid2"><div><label>'+L('Quantity in stock (set)','اسٹاک مقدار (سیٹ)')+'</label><input id="stQty" type="number" inputmode="decimal" step="any" value="'+(x.trk?qtyFmt(x.qty):'')+'" placeholder="0"></div>'+
+    '<div><label>'+L('Low-stock level','کم اسٹاک حد')+'</label><input id="stMin" type="number" inputmode="decimal" min="0" step="any" value="'+(x.min>0?x.min:'')+'" placeholder="0"></div></div>'+
+    '<label class="ck"><input type="checkbox" id="stOn" '+(x.trk?'checked':'')+'><span>'+L('Track stock for this item','اس آئٹم کا اسٹاک ٹریک کریں')+'</span></label>'+
+    (x.trk?'<p class="hint" style="margin:6px 0 0">'+L('Bought','خریدا')+' '+qtyFmt(pt.buy)+' · '+L('Sold','فروخت')+' '+qtyFmt(pt.sold)+' · '+L('Adjusted','ایڈجسٹ')+' '+qtyFmt(pt.adj)+'</p>':'')+
+    '<div class="grid2" style="margin-top:10px"><button class="btn b-navy" data-k="'+esc(x.k)+'" onclick="stSave(this.dataset.k)">'+L('Save','محفوظ')+'</button><button class="btn b-ghost" onclick="stOpen(null)">'+L('Close','بند')+'</button></div>'+
+    (x.trk?'<div class="grid2" style="margin-top:8px"><button class="btn b-ghost b-sm" data-k="'+esc(x.k)+'" onclick="stAdj(this.dataset.k,1)">➕ '+L('Add stock','اسٹاک بڑھائیں')+'</button><button class="btn b-ghost b-sm" data-k="'+esc(x.k)+'" onclick="stAdj(this.dataset.k,-1)">➖ '+L('Damaged / lost','خراب / گم')+'</button></div>':'')+
+    '</div>';
+}
+function stSave(k){
+  const p=presetByKey(k);if(!p)return;
+  const st=bizLoad('st'),old=st[k]||{},wasOn=!!(old.on!==false&&st[k]),q=stockInfo(),cur=wasOn?(q[k]||0):0;
+  const sale=Math.max(0,+v('stSale')||0);
+  if(Math.round(sale*100)!==Math.round((p.price||0)*100)&&(sale>0||p.price>0))storeItemPrice(p.name,sale,p.nameUr);
+  const on=el('stOn').checked;
+  const cost=bzLocked()?(+old.cost||0):Math.max(0,+v('stBuy')||0);
+  const next=Object.assign({},old,{name:p.name,cost,min:Math.max(0,+v('stMin')||0),on});
+  st[k]=next;bizSave('st',st);
+  if(on){
+    const raw=v('stQty');const target=raw===''?(wasOn?cur:0):(+raw||0);
+    const d=target-cur;
+    if(Math.abs(d)>1e-9){const sm=bizLoad('sm'),id=uid();sm[id]={id,k,d,type:wasOn?'set':'opening',date:todayStr(),ts:Date.now()};bizSave('sm',sm)}
+  }
+  ST.open=null;renderStock();bizLowBar();toast(L('Saved','محفوظ ہو گیا'),true);
+}
+function stAdj(k,sign){
+  const raw=prompt(sign>0?L('Quantity to ADD:','کتنی مقدار شامل کریں:'):L('Quantity damaged / lost / returned to supplier:','کتنی مقدار خراب / گم / واپس:'));
+  if(raw==null)return;const n=parseAmt(raw);
+  if(!(n>0)){toast(L('Enter a valid quantity','درست مقدار لکھیں'),false);return}
+  const note=sign>0?'':(prompt(L('Reason (optional):','وجہ (اختیاری):'))||'');
+  const sm=bizLoad('sm'),id=uid();sm[id]={id,k,d:sign*n,type:sign>0?'add':'loss',note,date:todayStr(),ts:Date.now()};bizSave('sm',sm);
+  renderStock();bizLowBar();toast(L('Stock updated','اسٹاک اپڈیٹ'),true);
+}
+function stNewProduct(){
+  const name=cleanName(v('npName'));if(!name){toast(L('Enter the product name','پروڈکٹ کا نام لکھیں'),false);return}
+  if(findPreset(name)){toast(L('This item already exists — find it in the list and edit it.','یہ آئٹم پہلے سے موجود ہے — فہرست میں تلاش کر کے ایڈٹ کریں۔'),false);return}
+  const ur=cleanName(v('npUr'))||name,sale=Math.max(0,+v('npSale')||0);
+  storeItemPrice(name,sale,ur);
+  const k=keyName(name),st=bizLoad('st');
+  st[k]={name,cost:bzLocked()?0:Math.max(0,+v('npBuy')||0),min:Math.max(0,+v('npMin')||0),on:true};bizSave('st',st);
+  const oq=+v('npQty')||0;if(oq>0){const sm=bizLoad('sm'),id=uid();sm[id]={id,k,d:oq,type:'opening',date:todayStr(),ts:Date.now()};bizSave('sm',sm)}
+  const bc=cleanName(v('npBc'));if(bc){const own=bcOwner(bc,name);if(own){const o=loadBC();delete o[own];saveBC(o)}setBC(name,bc)}
+  ST.f='trk';ST.q='';renderStock();toast(L('Product saved','پروڈکٹ محفوظ ہو گیا'),true);
+}
+function stShareReorder(){
+  const L1=lowItems();if(!L1.length)return;
+  const lines=L1.map(x=>'• '+nameOfKey(x.k)+' — '+L('left','باقی')+' '+qtyFmt(Math.max(0,x.qty))+(x.min>0?' ('+L('min','کم از کم')+' '+qtyFmt(x.min)+')':''));
+  window.open('https://wa.me/?text='+encodeURIComponent('Al Ghani Electric & Hardware — '+L('Reorder list','ری آرڈر لسٹ')+' ('+todayStr()+')\n'+lines.join('\n')),'_blank');
+}
+
+/* ================= SUPPLIERS TAB ================= */
+function supBal(id){let d=0;Object.values(bizLoad('sl')).forEach(e=>{if(!e||e.sup!==id)return;if(e.type==='bill')d+=(+e.total||0)-(+e.paid||0);else d-=(+e.amount||0)});return d}
+function supOpen(id){SUP.open=SUP.open===id?null:id;SUP.bill=null;renderSup()}
+function renderSup(){
+  const box=el('panelSup');if(!box)return;
+  if(bzLocked()){box.innerHTML=lockCard();return}
+  const su=bizLoad('su'),sl=bizLoad('sl'),list=Object.values(su).filter(Boolean).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  const owe=list.reduce((s,x)=>s+Math.max(0,supBal(x.id)),0);
+  let h='<div class="card"><h2><i>🏭</i><span>'+L('Suppliers','سپلائرز')+'</span></h2><div class="tot"><div class="tile pend"><small>'+L('TOTAL PAYABLE — TO PAY SUPPLIERS','کل واجب الادا — سپلائرز کو دینا ہے')+'</small><b>'+money(owe)+'</b><em>'+list.length+' '+L('suppliers','سپلائرز')+'</em></div></div>'+
+    '<button class="btn b-navy" style="width:100%;margin-top:10px" onclick="SUP.form={};renderSup()">➕ '+L('Add supplier','سپلائر شامل کریں')+'</button></div>';
+  if(SUP.form){
+    const f=SUP.form;
+    h+='<div class="card"><h2><i>✏️</i><span>'+(f.id?L('Edit supplier','سپلائر ایڈٹ'):L('New supplier','نیا سپلائر'))+'</span></h2>'+
+      '<label>'+L('Name','نام')+' *</label><input id="suName" value="'+esc(f.name||'')+'">'+
+      '<label>'+L('Phone / WhatsApp','فون / واٹس ایپ')+'</label><input id="suPhone" inputmode="tel" value="'+esc(f.phone||'')+'">'+
+      '<label>'+L('Address / what they supply','پتہ / کیا سپلائی کرتے ہیں')+'</label><input id="suAddr" value="'+esc(f.address||'')+'">'+
+      '<div class="grid2" style="margin-top:10px"><button class="btn b-navy" onclick="supSave()">'+L('Save','محفوظ')+'</button><button class="btn b-ghost" onclick="SUP.form=null;renderSup()">'+L('Cancel','منسوخ')+'</button></div></div>';
+  }
+  h+='<div class="card">'+(list.length?list.map(s=>supCard(s,sl)).join(''):'<p class="hint">'+L('No suppliers yet. Add the people you buy from, then record each purchase bill and payment.','ابھی کوئی سپلائر نہیں۔ جن سے خریدتے ہیں انہیں شامل کریں، پھر ہر خریداری اور ادائیگی لکھیں۔')+'</p>')+'</div>';
+  h+='<datalist id="bzItems">'+getAllPresets().map(p=>'<option value="'+esc(p.name)+'">').join('')+'</datalist>';
+  box.innerHTML=h;
+}
+function supCard(s,sl){
+  const bal=supBal(s.id),open=SUP.open===s.id;
+  let h='<div class="bz-row" data-id="'+esc(s.id)+'" onclick="supOpen(this.dataset.id)"><div><b>'+esc(s.name)+'</b><small>'+esc([s.phone,s.address].filter(Boolean).join(' · '))+'</small></div><span class="bdg '+(bal>0?'low':(bal<0?'':'na'))+'" style="white-space:nowrap">'+(bal>0?L('Owe','دینا')+' '+money(bal):(bal<0?L('Advance','ایڈوانس')+' '+money(-bal):'Rs 0'))+'</span></div>';
+  if(!open)return h;
+  const led=Object.values(sl).filter(e=>e&&e.sup===s.id).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  h+='<div class="bz-ed" onclick="event.stopPropagation()">'+
+    '<div class="grid2"><button class="btn b-navy b-sm" onclick="billStart(\''+esc(s.id)+'\')">📥 '+L('Purchase bill','خریداری بل')+'</button><button class="btn b-gold b-sm" onclick="supPay(\''+esc(s.id)+'\')">💵 '+L('Pay supplier','ادائیگی')+'</button></div>'+
+    '<div class="grid2" style="margin-top:6px"><button class="btn b-ghost b-sm" onclick="SUP.form=Object.assign({},bizLoad(\'su\')[\''+esc(s.id)+'\']);renderSup();window.scrollTo(0,0)">✏️ '+L('Edit','ایڈٹ')+'</button><button class="btn b-ghost b-sm" onclick="supShare(\''+esc(s.id)+'\')">📤 '+L('Share balance','بیلنس شیئر')+'</button></div>'+
+    '<div class="grid2" style="margin-top:6px">'+(s.phone?'<a class="btn b-ghost b-sm" style="text-decoration:none;text-align:center" href="tel:'+esc(s.phone)+'">📞 '+L('Call','کال')+'</a>':'<span></span>')+'<button class="btn b-red b-sm" onclick="supDel(\''+esc(s.id)+'\')">🗑 '+L('Delete supplier','سپلائر حذف')+'</button></div>';
+  if(SUP.bill&&SUP.bill.sup===s.id)h+=billFormHTML();
+  h+=led.length?led.map(ledRow).join(''):'<p class="hint" style="margin-top:8px">'+L('No bills or payments yet.','ابھی کوئی بل یا ادائیگی نہیں۔')+'</p>';
+  return h+'</div>';
+}
+function ledRow(e){
+  const del='<button class="btn b-red b-sm" style="flex:none" onclick="ledDel(\''+esc(e.id)+'\')">✕</button>';
+  if(e.type==='bill'){
+    const due=(+e.total||0)-(+e.paid||0);
+    return '<div style="padding:8px 0;border-top:1px solid #dfe5ee"><div style="display:flex;justify-content:space-between;gap:8px"><div style="font-size:.84rem;font-weight:800;color:var(--navy)">📥 '+esc(e.date||'')+(e.ref?' · '+esc(e.ref):'')+'<small style="display:block;font-weight:600;color:var(--mut)">'+L('Total','کل')+' '+money(+e.total||0)+' · '+L('Paid','ادا')+' '+money(+e.paid||0)+(due>0?' · '+L('Due','باقی')+' '+money(due):'')+'</small></div>'+del+'</div>'+
+      '<small style="display:block;color:var(--mut);margin-top:3px">'+(e.items||[]).map(i=>esc(nameOfKey(i.k)||i.name)+' ×'+qtyFmt(i.qty)+' @'+num(i.cost)).join(' · ')+'</small></div>';
+  }
+  return '<div style="padding:8px 0;border-top:1px solid #dfe5ee;display:flex;justify-content:space-between;gap:8px"><div style="font-size:.84rem;font-weight:800;color:#166534">💵 '+esc(e.date||'')+' · '+L('Paid','ادا')+' '+money(+e.amount||0)+(e.note?'<small style="display:block;font-weight:600;color:var(--mut)">'+esc(e.note)+'</small>':'')+'</div>'+del+'</div>';
+}
+function supSave(){
+  const name=cleanName(v('suName'));if(!name){toast(L('Enter supplier name','سپلائر کا نام لکھیں'),false);return}
+  const su=bizLoad('su'),id=SUP.form.id||uid();
+  su[id]={id,name,phone:cleanName(v('suPhone')),address:cleanName(v('suAddr')),ts:(su[id]&&su[id].ts)||Date.now()};
+  bizSave('su',su);SUP.form=null;SUP.open=id;renderSup();toast(L('Supplier saved','سپلائر محفوظ'),true);
+}
+function supDel(id){
+  if(Object.values(bizLoad('sl')).some(e=>e&&e.sup===id)){alert(L('This supplier has bills / payments. Delete those entries first.','اس سپلائر کے بل / ادائیگیاں موجود ہیں۔ پہلے انہیں حذف کریں۔'));return}
+  if(!confirm(L('Delete this supplier?','یہ سپلائر حذف کریں؟')))return;
+  const su=bizLoad('su');delete su[id];bizSave('su',su);SUP.open=null;renderSup();
+}
+function ledDel(id){
+  const sl=bizLoad('sl'),e=sl[id];if(!e)return;
+  if(!confirm(e.type==='bill'?L('Delete this purchase bill? The stock it added will be removed.','یہ خریداری بل حذف کریں؟ اس سے بڑھا ہوا اسٹاک بھی کم ہو گا۔'):L('Delete this payment?','یہ ادائیگی حذف کریں؟')))return;
+  delete sl[id];bizSave('sl',sl);renderSup();bizLowBar();
+}
+function supPay(id){
+  const raw=prompt(L('Amount paid to supplier (Rs):','سپلائر کو ادا کی گئی رقم (Rs):'));if(raw==null)return;
+  const amt=parseAmt(raw);if(!(amt>0)){toast(L('Enter a valid amount','درست رقم لکھیں'),false);return}
+  const note=prompt(L('Note (optional):','نوٹ (اختیاری):'))||'';
+  const sl=bizLoad('sl'),eid=uid();sl[eid]={id:eid,sup:id,type:'pay',amount:amt,note,date:todayStr(),ts:Date.now()};bizSave('sl',sl);renderSup();toast(L('Payment saved','ادائیگی محفوظ'),true);
+}
+function supShare(id){
+  const s=bizLoad('su')[id];if(!s)return;const b=supBal(id);
+  const t='Al Ghani Electric & Hardware — '+s.name+'\n'+(b>0?L('We owe you: ','ہم نے آپ کو دینا ہے: '):L('Advance with you: ','آپ کے پاس ایڈوانس: '))+money(Math.abs(b))+' ('+todayStr()+')';
+  window.open('https://wa.me/'+String(s.phone||'').replace(/\D/g,'')+'?text='+encodeURIComponent(t),'_blank');
+}
+/* purchase bill */
+function billStart(id){SUP.bill={sup:id,date:todayStr(),ref:'',rows:[{name:'',qty:'',cost:''}],paid:'',upd:true};renderSup()}
+function billSet(i,f,val){SUP.bill.rows[i][f]=val;billTot()}
+function billTot(){const b=SUP.bill;const t=b.rows.reduce((s,r)=>s+(+r.qty||0)*(+r.cost||0),0);const e=el('bTot');if(e)e.textContent=money(t);return t}
+function billAddRow(){SUP.bill.rows.push({name:'',qty:'',cost:''});renderSup()}
+function billDelRow(i){SUP.bill.rows.splice(i,1);if(!SUP.bill.rows.length)SUP.bill.rows.push({name:'',qty:'',cost:''});renderSup()}
+function billFormHTML(){
+  const b=SUP.bill;
+  return '<div style="background:#fff;border:1.5px solid var(--gold2);border-radius:12px;padding:10px;margin-top:10px"><b style="color:var(--navy)">📥 '+L('New purchase bill','نیا خریداری بل')+'</b>'+
+    '<div class="grid2"><div><label>'+L('Date','تاریخ')+'</label><input type="date" value="'+esc(b.date)+'" oninput="SUP.bill.date=this.value"></div><div><label>'+L('Supplier bill no (optional)','سپلائر بل نمبر (اختیاری)')+'</label><input value="'+esc(b.ref)+'" oninput="SUP.bill.ref=this.value"></div></div>'+
+    b.rows.map((r,i)=>'<div style="border-top:1px dashed var(--line);margin-top:8px;padding-top:6px"><input list="bzItems" placeholder="'+L('Item name','آئٹم کا نام')+'" value="'+esc(r.name)+'" oninput="billSet('+i+',\'name\',this.value)" autocomplete="off"><div style="display:flex;gap:6px;margin-top:6px;align-items:center"><input type="number" inputmode="decimal" min="0" step="any" placeholder="'+L('Qty','مقدار')+'" value="'+esc(r.qty)+'" oninput="billSet('+i+',\'qty\',this.value)"><input type="number" inputmode="decimal" min="0" step="any" placeholder="'+L('Buy price each','خرید قیمت فی عدد')+'" value="'+esc(r.cost)+'" oninput="billSet('+i+',\'cost\',this.value)"><button class="btn b-red b-sm" style="flex:none" onclick="billDelRow('+i+')">✕</button></div></div>').join('')+
+    '<button class="btn b-ghost b-sm" style="margin-top:8px" onclick="billAddRow()">+ '+L('Add item','آئٹم شامل')+'</button>'+
+    '<div style="display:flex;justify-content:space-between;margin-top:10px;font-weight:800;color:var(--navy)"><span>'+L('Bill total','بل کل')+'</span><span id="bTot">'+money(billTotRaw())+'</span></div>'+
+    '<label>'+L('Paid now (cash)','ابھی ادا کیا (نقد)')+'</label><input type="number" inputmode="decimal" min="0" step="any" value="'+esc(b.paid)+'" oninput="SUP.bill.paid=this.value">'+
+    '<label class="ck"><input type="checkbox" '+(b.upd?'checked':'')+' onchange="SUP.bill.upd=this.checked"><span>'+L('Update item purchase price from this bill','اس بل سے آئٹم کی خرید قیمت اپڈیٹ کریں')+'</span></label>'+
+    '<p class="hint" style="margin:6px 0 0">'+L('Items start being tracked in Stock from this bill. If you already have some in the shop, set the real quantity in the Stock tab.','اس بل سے آئٹم اسٹاک میں ٹریک ہونا شروع ہوں گے۔ اگر دکان میں پہلے سے مال ہے تو اسٹاک ٹیب میں اصل مقدار سیٹ کریں۔')+'</p>'+
+    '<div class="grid2" style="margin-top:10px"><button class="btn b-navy" onclick="billSave()">'+L('Save bill','بل محفوظ کریں')+'</button><button class="btn b-ghost" onclick="SUP.bill=null;renderSup()">'+L('Cancel','منسوخ')+'</button></div></div>';
+}
+function billTotRaw(){return SUP.bill.rows.reduce((s,r)=>s+(+r.qty||0)*(+r.cost||0),0)}
+function billSave(){
+  const b=SUP.bill;if(!b)return;
+  const rows=b.rows.filter(r=>cleanName(r.name)||+r.qty||+r.cost);
+  if(!rows.length){toast(L('Add at least one item','کم از کم ایک آئٹم شامل کریں'),false);return}
+  for(const r of rows){if(!cleanName(r.name)||!(+r.qty>0)||!(+r.cost>=0)||r.cost===''){toast(L('Each item needs a name, quantity and purchase price','ہر آئٹم کا نام، مقدار اور خرید قیمت ضروری ہے'),false);return}}
+  const st=bizLoad('st'),items=[];
+  rows.forEach(r=>{
+    const nm=cleanName(r.name);let p=findPreset(nm);
+    if(!p){storeItemPrice(nm,0,nm);p=findPreset(nm)||{name:nm,nameUr:nm}}
+    const k=keyName(p.name),old=st[k]||{};
+    st[k]=Object.assign({},old,{name:p.name,on:true,min:+old.min||0,cost:b.upd?(+r.cost||0):(+old.cost||+r.cost||0)});
+    items.push({k,name:p.name,qty:+r.qty,cost:+r.cost});
+  });
+  bizSave('st',st);
+  const total=items.reduce((s,i)=>s+i.qty*i.cost,0),paid=Math.max(0,Math.min(total,+b.paid||0));
+  const sl=bizLoad('sl'),id=uid();
+  sl[id]={id,sup:b.sup,type:'bill',date:b.date||todayStr(),ref:cleanName(b.ref),items,total,paid,ts:Date.now()};
+  bizSave('sl',sl);SUP.bill=null;renderSup();bizLowBar();toast(L('Bill saved — stock updated','بل محفوظ — اسٹاک اپڈیٹ'),true);
+}
+
+/* ================= EXPENSES TAB ================= */
+function expCats(){const s=new Set(EXP_CATS.map(c=>c[0]));Object.values(bizLoad('ex')).forEach(e=>{if(e&&e.cat)s.add(e.cat)});return[...s]}
+function catLabel(c){const m=EXP_CATS.find(x=>x[0]===c);return m?L(m[0],m[1]):c}
+function expMonth(d){EXPS.month=d;EXPS.edit=null;renderExp()}
+function renderExp(){
+  const box=el('panelExp');if(!box)return;
+  if(bzLocked()){box.innerHTML=lockCard();return}
+  if(!EXPS.month)EXPS.month=todayStr().slice(0,7);
+  const ex=bizLoad('ex'),all=Object.values(ex).filter(Boolean),m=EXPS.month;
+  const list=all.filter(e=>(e.date||'').slice(0,7)===m).sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.ts||0)-(a.ts||0));
+  const total=list.reduce((s,e)=>s+(+e.amount||0),0),byCat={};list.forEach(e=>byCat[e.cat]=(byCat[e.cat]||0)+(+e.amount||0));
+  const cats=Object.keys(byCat).sort((a,b)=>byCat[b]-byCat[a]);
+  const [yy,mm]=m.split('-').map(Number),prev=localDate(new Date(yy,mm-2,1)).slice(0,7),next=localDate(new Date(yy,mm,1)).slice(0,7);
+  const ed=EXPS.edit?ex[EXPS.edit]:null;
+  let h='<div class="card"><h2><i>💸</i><span>'+(ed?L('Edit expense','خرچہ ایڈٹ'):L('Add expense','خرچہ شامل کریں'))+'</span></h2>'+
+    '<div class="grid2"><div><label>'+L('Date','تاریخ')+'</label><input type="date" id="exDate" value="'+esc(ed?ed.date:todayStr())+'"></div><div><label>'+L('Amount (Rs)','رقم (Rs)')+'</label><input id="exAmt" type="number" inputmode="decimal" min="0" step="any" value="'+(ed?ed.amount:'')+'"></div></div>'+
+    '<label>'+L('Category','کیٹیگری')+'</label><select id="exCat" onchange="if(this.value===\'__new\')expNewCat()">'+expCats().map(c=>'<option value="'+esc(c)+'"'+((ed?ed.cat:'Other')===c?' selected':'')+'>'+esc(catLabel(c))+'</option>').join('')+'<option value="__new">➕ '+L('New category…','نئی کیٹیگری…')+'</option></select>'+
+    '<label>'+L('Note (optional)','نوٹ (اختیاری)')+'</label><input id="exNote" value="'+esc(ed?ed.note||'':'')+'">'+
+    '<div class="grid2" style="margin-top:10px"><button class="btn b-navy" onclick="expSave()">'+(ed?L('Update','اپڈیٹ'):L('Save expense','خرچہ محفوظ'))+'</button>'+(ed?'<button class="btn b-ghost" onclick="EXPS.edit=null;renderExp()">'+L('Cancel','منسوخ')+'</button>':'<span></span>')+'</div></div>';
+  h+='<div class="card"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><button class="btn b-ghost b-sm" onclick="expMonth(\''+prev+'\')">‹</button><b style="color:var(--navy)">'+monthName(m)+'</b><button class="btn b-ghost b-sm" onclick="expMonth(\''+next+'\')">›</button></div>'+
+    '<div class="tot" style="margin-top:10px"><div class="tile pend"><small>'+L('TOTAL EXPENSES','کل اخراجات')+'</small><b>'+money(total)+'</b><em>'+list.length+' '+L('entries','اندراجات')+'</em></div></div>'+
+    cats.map(c=>'<div style="margin-top:10px"><div style="display:flex;justify-content:space-between;font-size:.8rem;font-weight:700"><span>'+esc(catLabel(c))+'</span><span>'+money(byCat[c])+'</span></div><div class="bar"><i style="width:'+Math.round(byCat[c]/total*100)+'%"></i></div></div>').join('')+'</div>';
+  h+='<div class="card">'+(list.length?list.map(e=>'<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #eef1f6"><div style="min-width:0"><b style="font-size:.88rem;color:var(--navy)">'+esc(catLabel(e.cat))+'</b><small style="display:block;color:var(--mut);font-weight:600">'+esc(e.date)+(e.note?' · '+esc(e.note):'')+'</small></div><div style="display:flex;gap:6px;align-items:center;flex:none"><b>'+money(+e.amount||0)+'</b><button class="btn b-ghost b-sm" onclick="EXPS.edit=\''+esc(e.id)+'\';renderExp();window.scrollTo(0,0)">✎</button><button class="btn b-red b-sm" onclick="expDel(\''+esc(e.id)+'\')">✕</button></div></div>').join(''):'<p class="hint">'+L('No expenses this month.','اس مہینے کوئی خرچہ نہیں۔')+'</p>')+'</div>';
+  box.innerHTML=h;
+}
+function monthName(m){const [y,mm]=m.split('-').map(Number);return new Date(y,mm-1,1).toLocaleDateString(lang==='ur'?'ur-PK':'en-GB',{month:'long',year:'numeric'})}
+function expNewCat(){
+  const n=cleanName(prompt(L('New category name:','نئی کیٹیگری کا نام:'))||'');
+  const s=el('exCat');if(!n){s.value='Other';return}
+  if(![...s.options].some(o=>o.value===n)){const o=document.createElement('option');o.value=n;o.textContent=n;s.insertBefore(o,s.lastElementChild)}
+  s.value=n;
+}
+function expSave(){
+  const amt=+v('exAmt');if(!(amt>0)){toast(L('Enter a valid amount','درست رقم لکھیں'),false);return}
+  const date=v('exDate')||todayStr(),ex=bizLoad('ex'),id=EXPS.edit||uid();
+  ex[id]={id,date,cat:v('exCat')==='__new'?'Other':v('exCat'),amount:amt,note:cleanName(v('exNote')),ts:(ex[id]&&ex[id].ts)||Date.now()};
+  bizSave('ex',ex);EXPS.edit=null;EXPS.month=date.slice(0,7);renderExp();toast(L('Expense saved','خرچہ محفوظ'),true);
+}
+function expDel(id){if(!confirm(L('Delete this expense?','یہ خرچہ حذف کریں؟')))return;const ex=bizLoad('ex');delete ex[id];bizSave('ex',ex);renderExp()}
+
+/* ================= REPORTS TAB ================= */
+function periodRange(p){
+  const now=new Date(),t=localDate(now);
+  if(p==='today')return[t,t];
+  if(p==='yest'){const y=localDate(addDays(now,-1));return[y,y]}
+  if(p==='week')return[localDate(addDays(now,-6)),t];
+  if(p==='month')return[t.slice(0,8)+'01',t];
+  if(p==='lmonth')return[localDate(new Date(now.getFullYear(),now.getMonth()-1,1)),localDate(new Date(now.getFullYear(),now.getMonth(),0))];
+  if(p==='year')return[t.slice(0,4)+'-01-01',t];
+  return[REP.from||t,REP.to||t];
+}
+function periodStats(from,to){
+  const S={n:0,sales:0,costedRev:0,cogs:0,uncosted:0,recv:0,exp:0,expBy:{},supPaid:0,items:{},days:{}};
+  const day=d=>S.days[d]||(S.days[d]={sales:0,profit:0,exp:0});
+  loadDB().forEach(c=>(c.invoices||[]).forEach(i=>{
+    const d=i.date||localDate(new Date(i.ts||Date.now()));if(d<from||d>to)return;
+    S.recv+=+i.advance||0;if(i.invNo==='PAY')return;
+    S.n++;const its=i.items||[],sub=its.reduce((s,x)=>s+(+x.amount||0),0),disc=Math.min(+i.discount||0,sub),r=sub>0?(sub-disc)/sub:1;
+    its.forEach(x=>{
+      const rev=(+x.amount||0)*r,qty=+x.qty||0,k=x.sk||keyName(x.desc),dd=day(d);
+      const a=S.items[k]||(S.items[k]={name:x.desc,qty:0,rev:0,profit:0,costed:false});
+      S.sales+=rev;dd.sales+=rev;a.qty+=qty;a.rev+=rev;
+      if(x.cost>0){const gp=rev-x.cost*qty;S.costedRev+=rev;S.cogs+=x.cost*qty;a.profit+=gp;a.costed=true;dd.profit+=gp}else S.uncosted+=rev;
+    });
+  }));
+  Object.values(bizLoad('ex')).forEach(e=>{if(!e||!e.date||e.date<from||e.date>to)return;const a=+e.amount||0;S.exp+=a;S.expBy[e.cat]=(S.expBy[e.cat]||0)+a;day(e.date).exp+=a});
+  Object.values(bizLoad('sl')).forEach(e=>{if(!e||!e.date||e.date<from||e.date>to)return;S.supPaid+=e.type==='bill'?(+e.paid||0):(+e.amount||0)});
+  S.gross=S.costedRev-S.cogs;S.net=S.gross-S.exp;return S;
+}
+function repSet(p){REP.p=p;if(p==='custom'&&!REP.from){REP.from=REP.to=todayStr()}renderRep()}
+function renderRep(){
+  const box=el('panelRep');if(!box)return;
+  if(bzLocked()){box.innerHTML=lockCard();return}
+  const [from,to]=periodRange(REP.p),S=periodStats(from,to);
+  const chip=(p,t)=>'<button class="'+(REP.p===p?'on':'')+'" onclick="repSet(\''+p+'\')">'+t+'</button>';
+  const dues=loadDB().reduce((s,c)=>s+(c.outstanding||0),0),owe=Object.values(bizLoad('su')).filter(Boolean).reduce((s,x)=>s+Math.max(0,supBal(x.id)),0);
+  const st=bizLoad('st'),q=stockInfo();let sv=0,ss=0;Object.keys(q).forEach(k=>{const r=st[k]||{},p=presetByKey(k);sv+=Math.max(0,q[k])*(+r.cost||0);ss+=Math.max(0,q[k])*((p&&p.price)||0)});
+  let h='<div class="card"><h2><i>📊</i><span>'+L('Reports','رپورٹس')+'</span>'+(hasPin()?'<button class="btn b-ghost b-sm" style="margin-inline-start:auto" onclick="bzLock()">🔒</button>':'')+'</h2>'+
+    '<div class="chips">'+chip('today',L('Today','آج'))+chip('yest',L('Yesterday','کل'))+chip('week',L('7 days','7 دن'))+chip('month',L('This month','اس مہینے'))+chip('lmonth',L('Last month','پچھلا مہینہ'))+chip('year',L('This year','اس سال'))+chip('custom',L('Custom','اپنی'))+'</div>'+
+    (REP.p==='custom'?'<div class="grid2"><div><label>'+L('From','سے')+'</label><input type="date" value="'+esc(REP.from)+'" onchange="REP.from=this.value;renderRep()"></div><div><label>'+L('To','تک')+'</label><input type="date" value="'+esc(REP.to)+'" onchange="REP.to=this.value;renderRep()"></div></div>':'')+
+    '<p class="hint" style="margin:4px 0 8px">'+from+(from!==to?' → '+to:'')+' · '+S.n+' '+L('invoices','انوائس')+'</p>'+
+    '<div class="tot"><div class="tile"><small>'+L('SALES (after discount)','فروخت (رعایت کے بعد)')+'</small><b>'+money(S.sales)+'</b></div>'+
+    '<div class="tile"><small>'+L('GROSS PROFIT','مجموعی منافع')+'</small><b class="'+(S.gross>=0?'pos':'neg')+'">'+money(S.gross)+'</b></div>'+
+    '<div class="tile"><small>'+L('EXPENSES','اخراجات')+'</small><b>'+money(S.exp)+'</b></div>'+
+    '<div class="tile paid"><small>'+L('MONEY RECEIVED','وصول شدہ رقم')+'</small><b>'+money(S.recv)+'</b></div>'+
+    '<div class="tile pend"><small>'+L('NET PROFIT (gross profit − expenses)','خالص منافع (منافع − اخراجات)')+'</small><b>'+money(S.net)+'</b><em>'+L('Cash: received − expenses − paid to suppliers = ','نقد: وصول − اخراجات − سپلائر ادائیگی = ')+money(S.recv-S.exp-S.supPaid)+'</em></div></div>'+
+    (S.uncosted>0?'<p class="hint" style="margin-top:8px">ℹ️ '+L('Profit counts only items that had a purchase price when sold. Sales without a purchase price: ','منافع صرف ان آئٹمز کا ہے جن کی خرید قیمت بل کے وقت درج تھی۔ بغیر خرید قیمت فروخت: ')+money(S.uncosted)+'</p>':'')+'</div>';
+  const items=Object.values(S.items).sort((a,b)=>(b.costed?b.profit:b.rev*0)-(a.costed?a.profit:a.rev*0)||b.rev-a.rev).slice(0,10);
+  if(items.length)h+='<div class="card"><h2><i>🏆</i><span>'+L('Top items','سب سے زیادہ بکنے والے')+'</span></h2><table class="tbl"><tr><th>'+L('Item','آئٹم')+'</th><th>'+L('Qty','مقدار')+'</th><th>'+L('Sales','فروخت')+'</th><th>'+L('Profit','منافع')+'</th></tr>'+items.map(a=>'<tr><td>'+esc(a.name)+'</td><td>'+qtyFmt(a.qty)+'</td><td>'+num(a.rev)+'</td><td class="'+(a.profit>=0?'pos':'neg')+'">'+(a.costed?num(a.profit):'—')+'</td></tr>').join('')+'</table></div>';
+  const days=Object.keys(S.days).sort().reverse();
+  if(days.length>1)h+='<div class="card"><h2><i>📅</i><span>'+L('By day','دن وار')+'</span></h2><table class="tbl"><tr><th>'+L('Date','تاریخ')+'</th><th>'+L('Sales','فروخت')+'</th><th>'+L('Profit','منافع')+'</th><th>'+L('Expenses','اخراجات')+'</th></tr>'+days.slice(0,62).map(d=>{const x=S.days[d];return '<tr><td>'+d.slice(5)+'</td><td>'+num(x.sales)+'</td><td class="'+(x.profit>=0?'pos':'neg')+'">'+num(x.profit)+'</td><td>'+num(x.exp)+'</td></tr>'}).join('')+'</table></div>';
+  const ec=Object.keys(S.expBy).sort((a,b)=>S.expBy[b]-S.expBy[a]);
+  if(ec.length)h+='<div class="card"><h2><i>💸</i><span>'+L('Expenses by category','کیٹیگری کے مطابق اخراجات')+'</span></h2>'+ec.map(c=>'<div style="display:flex;justify-content:space-between;font-size:.84rem;font-weight:700;padding:4px 0"><span>'+esc(catLabel(c))+'</span><span>'+money(S.expBy[c])+'</span></div>').join('')+'</div>';
+  h+='<div class="card"><h2><i>🧮</i><span>'+L('Where the business stands now','کاروبار کی موجودہ پوزیشن')+'</span></h2><table class="tbl"><tr><td>'+L('Customers owe you','گاہکوں سے وصول طلب')+'</td><td>'+money(dues)+'</td></tr><tr><td>'+L('You owe suppliers','سپلائرز کو دینا ہے')+'</td><td>'+money(owe)+'</td></tr><tr><td>'+L('Stock value (purchase price)','اسٹاک ویلیو (خرید)')+'</td><td>'+money(sv)+'</td></tr><tr><td>'+L('Stock value (sale price)','اسٹاک ویلیو (فروخت)')+'</td><td>'+money(ss)+'</td></tr></table></div>';
+  h+='<div class="card"><h2><i>📤</i><span>'+L('Share & export','شیئر اور ایکسپورٹ')+'</span></h2>'+
+    '<button class="btn b-gold" style="width:100%" onclick="repShare()">📤 '+L('Share this summary (WhatsApp)','یہ خلاصہ شیئر کریں (واٹس ایپ)')+'</button>'+
+    '<div class="grid2" style="margin-top:8px"><button class="btn b-ghost b-sm" onclick="csvSales()">'+L('Sales (Excel/CSV)','فروخت (CSV)')+'</button><button class="btn b-ghost b-sm" onclick="csvExpenses()">'+L('Expenses (CSV)','اخراجات (CSV)')+'</button></div>'+
+    '<div class="grid2" style="margin-top:8px"><button class="btn b-ghost b-sm" onclick="csvStock()">'+L('Stock (CSV)','اسٹاک (CSV)')+'</button><button class="btn b-ghost b-sm" onclick="csvSuppliers()">'+L('Suppliers (CSV)','سپلائرز (CSV)')+'</button></div>'+
+    '<div class="grid2" style="margin-top:8px"><button class="btn b-ghost b-sm" onclick="exportAllBiz()">'+L('Backup everything (JSON)','سب کا بیک اپ (JSON)')+'</button><button class="btn b-ghost b-sm" onclick="el(\'bizImport\').click()">'+L('Restore backup','بیک اپ بحال')+'</button></div><input type="file" id="bizImport" accept=".json" class="hidden" onchange="importAllBiz(event)">'+
+    '<hr style="border:0;border-top:1px solid var(--line);margin:14px 0 8px"><b style="color:var(--navy);font-size:.86rem">🔒 '+L('Owner PIN','اونر پن')+'</b><p class="hint" style="margin:4px 0 8px">'+L('With a PIN, staff using this phone cannot see purchase prices, profit, suppliers, expenses or reports. The PIN is kept on this phone only.','پن لگانے پر اس فون پر اسٹاف کو خرید قیمت، منافع، سپلائر، اخراجات اور رپورٹس نظر نہیں آئیں گے۔ پن صرف اسی فون پر رہتا ہے۔')+'</p>'+
+    '<div class="grid2"><button class="btn b-ghost b-sm" onclick="bzSetPin()">'+(hasPin()?L('Change PIN','پن تبدیل'):L('Set PIN','پن لگائیں'))+'</button>'+(hasPin()?'<button class="btn b-ghost b-sm" onclick="bzRemovePin()">'+L('Remove PIN','پن ہٹائیں')+'</button>':'<span></span>')+'</div></div>';
+  box.innerHTML=h;
+}
+function repShare(){
+  const [from,to]=periodRange(REP.p),S=periodStats(from,to);
+  const t='Al Ghani Electric & Hardware\n'+from+(from!==to?' → '+to:'')+'\n'+
+    L('Sales','فروخت')+': '+money(S.sales)+'\n'+L('Gross profit','مجموعی منافع')+': '+money(S.gross)+'\n'+L('Expenses','اخراجات')+': '+money(S.exp)+'\n'+L('Net profit','خالص منافع')+': '+money(S.net)+'\n'+
+    L('Received','وصول')+': '+money(S.recv)+'\n'+L('Paid to suppliers','سپلائر کو ادا')+': '+money(S.supPaid)+'\n'+L('Net cash','خالص نقد')+': '+money(S.recv-S.exp-S.supPaid);
+  window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');
+}
+function csvDownload(name,rows){
+  const c=s=>{s=String(s==null?'':s);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};
+  download(new Blob(['\ufeff'+rows.map(r=>r.map(c).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}),name+'_'+todayStr()+'.csv');
+}
+function csvSales(){
+  const [from,to]=periodRange(REP.p),rows=[['Date','Invoice','Customer','Item','Qty','Rate','Amount','Purchase price','Profit']];
+  loadDB().forEach(c=>(c.invoices||[]).forEach(i=>{if(i.invNo==='PAY')return;const d=i.date||'';if(d<from||d>to)return;(i.items||[]).forEach(x=>rows.push([d,i.invNo,c.name,x.desc,x.qty,x.rate,x.amount,x.cost||'',x.cost>0?Math.round(x.amount-x.cost*x.qty):'']))}));
+  csvDownload('AlGhani_Sales',rows);
+}
+function csvExpenses(){const rows=[['Date','Category','Amount','Note']];Object.values(bizLoad('ex')).filter(Boolean).sort((a,b)=>String(a.date).localeCompare(String(b.date))).forEach(e=>rows.push([e.date,e.cat,e.amount,e.note||'']));csvDownload('AlGhani_Expenses',rows)}
+function csvStock(){
+  const st=bizLoad('st'),q=stockInfo(),rows=[['Item','Category','Qty','Low level','Purchase price','Sale price','Value (purchase)','Value (sale)']];
+  getAllPresets().forEach(p=>{const k=keyName(p.name),r=st[k];if(!r||r.on===false)return;const n=q[k]||0;rows.push([p.name,p.cat||'',n,r.min||0,r.cost||0,p.price||0,Math.round(n*(r.cost||0)),Math.round(n*(p.price||0))])});
+  csvDownload('AlGhani_Stock',rows);
+}
+function csvSuppliers(){
+  const su=bizLoad('su'),rows=[['Supplier','Date','Type','Bill no / Note','Total','Paid','Balance after']];
+  Object.values(su).filter(Boolean).forEach(s=>{let bal=0;Object.values(bizLoad('sl')).filter(e=>e&&e.sup===s.id).sort((a,b)=>(a.ts||0)-(b.ts||0)).forEach(e=>{if(e.type==='bill'){bal+=(+e.total||0)-(+e.paid||0);rows.push([s.name,e.date,'Bill',e.ref||'',e.total,e.paid,bal])}else{bal-=+e.amount||0;rows.push([s.name,e.date,'Payment',e.note||'','',e.amount,bal])}})});
+  csvDownload('AlGhani_Suppliers',rows);
+}
+function exportAllBiz(){download(new Blob([JSON.stringify({customers:loadDB(),deleted:loadDel(),products:buildProducts()},null,2)],{type:'application/json'}),'AlGhani_Everything_Backup_'+todayStr()+'.json');toast(L('Backup downloaded','بیک اپ ڈاؤن لوڈ ہو گیا'),true)}
+function importAllBiz(e){
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=ev=>{try{const d=safeParseJSON(ev.target.result);mergeDel(d.deleted);saveDB(mergeDB(loadDB(),parseCustomersPayload(d)));mergeProducts(d.products);renderCustList();bizRefresh(true);toast(L('Backup restored (merged)','بیک اپ بحال (ضم)'),true)}catch(err){alert('Invalid file: '+(err&&err.message||''))}};
+  r.readAsText(f);e.target.value='';
+}
+
 </script>
 </body>
 </html>
