@@ -15,6 +15,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{--navy:#0b1b2b;--navy2:#13304d;--gold:#c9a227;--gold2:#e2b93b;--bg:#f2f4f8;--card:#fff;--line:#dde4ee;--txt:#101828;--mut:#5b6b80;--ok:#15803d;--err:#b91c1c;--r:16px}
+html.dark{--navy:#7eb6ff;--navy2:#4d8fd9;--gold:#ffb84d;--gold2:#ffc233;--bg:#0f1419;--card:#1a2332;--line:#2a3548;--txt:#e8eef6;--mut:#8b9bb0;--ok:#4ade80;--err:#f87171}
+html.dark body{background:var(--bg);color:var(--txt)}
+html.dark .card{background:var(--card);border-color:var(--line)}
+html.dark input,html.dark select,html.dark textarea{background:#121a24;color:var(--txt);border-color:var(--line)}
+html.dark .b-ghost{background:#243044;color:var(--txt)}
+html.dark .top{background:linear-gradient(160deg,#0a1a33 0%,#122a4d 100%)}
+html.dark .hist-card{background:var(--card);border-color:var(--line)}
+html.dark .meta{color:var(--mut)}
 html{scroll-behavior:smooth}
 body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.4;-webkit-text-size-adjust:100%;padding-bottom:calc(150px + env(safe-area-inset-bottom,0px))}
 body.urdu{direction:rtl}
@@ -167,6 +175,11 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 .pv{position:fixed;inset:0;background:rgba(5,10,18,.92);overflow:auto;z-index:99;padding:14px;text-align:center}
 .pv img{max-width:100%;width:auto;height:auto;object-fit:contain;background:transparent;border-radius:0;box-shadow:none;image-rendering:auto;-webkit-user-drag:none}
 .pv p{color:#cbd5e1;font-size:.8rem;margin-bottom:10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.chips button{border:1.5px solid var(--line);background:#f1f5f9;color:var(--navy);border-radius:20px;padding:6px 12px;font-size:.76rem;font-weight:800;cursor:pointer;font-family:inherit}
+.chips button.on{background:var(--navy);color:var(--gold2);border-color:var(--navy)}
+html.dark .chips button{background:#243044;color:var(--txt);border-color:var(--line)}
+html.dark .chips button.on{background:var(--navy);color:var(--gold2)}
 </style>
 </head>
 <body>
@@ -178,6 +191,7 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
   <div class="tools">
     <button class="pill on" id="btnEn" onclick="setLang('en')">English</button>
     <button class="pill" id="btnUr" onclick="setLang('ur')">اردو</button>
+    <button class="pill" id="btnDark" onclick="toggleDark()">🌙</button>
     <a class="pill" href="../" style="text-decoration:none;display:inline-flex;align-items:center">🔁 Switch business</a>
     <button class="pill inst" id="btnInstall" onclick="installApp()">📲 Install App</button>
   </div>
@@ -189,12 +203,11 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 <section id="panelInv">
   <div class="warn hidden" id="storeWarn">⚠️ Opened directly from storage — the browser may keep customers separate per tab. Use <b>Customers → Save App Copy</b>, or open the app from your GitHub Pages link so data stays in one place.</div>
 
-  <div class="card">
-    <h2><i>🧾</i><span data-t="secInvoice">Invoice</span></h2>
-    <label data-t="lblInvNo">Invoice No</label><input id="invNo">
-    <div class="row">
-      <div><label data-t="lblDate">Date</label><input type="date" id="invDate"></div>
-      <div><label data-t="lblTime">Time</label><input type="time" id="invTime"></div>
+  <div class="card" style="padding-bottom:10px">
+    <div class="row" style="align-items:flex-end;gap:8px">
+      <div style="flex:1.2"><label data-t="lblInvNo">Invoice No</label><input id="invNo"></div>
+      <div style="flex:1"><label data-t="lblDate">Date</label><input type="date" id="invDate"></div>
+      <div style="flex:.9"><label data-t="lblTime">Time</label><input type="time" id="invTime"></div>
     </div>
   </div>
 
@@ -205,19 +218,27 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
       <input id="custName" data-ph="phCust" placeholder="Type name — existing customers appear" autocomplete="off" oninput="suggestCust()" onfocus="suggestCust()">
       <div class="sg" id="custSuggest"></div>
     </div>
-    <div class="row">
-      <div><label data-t="lblHouse">House / Shop No</label><input id="custHouse"></div>
-      <div><label data-t="lblCustPhone">Customer Phone</label><input id="custPhone" inputmode="tel"></div>
+    <div class="row" style="margin-top:6px">
+      <div style="flex:1.1"><label data-t="lblCustPhone">Phone / WhatsApp</label><input id="custPhone" inputmode="tel" placeholder="03xx xxx xxxx"></div>
     </div>
-    <label data-t="lblCustAddr">Customer Address / Area</label><input id="custContact">
+    <div id="custPrevBox" class="out-box hidden" style="margin-top:8px"><span id="prevLabel">Previous outstanding:</span> <span id="prevOut">Rs 0</span></div>
+    <details style="margin-top:8px">
+      <summary style="font-size:.82rem;font-weight:700;color:var(--navy);cursor:pointer">More details (house, area, notes) ▾</summary>
+      <div style="margin-top:8px">
+        <div class="row">
+          <div><label data-t="lblHouse">House / Shop No</label><input id="custHouse"></div>
+        </div>
+        <label data-t="lblCustAddr">Customer Address / Area</label><input id="custContact">
+        <label style="margin-top:6px;display:block">Notes (private)</label><input id="custNote" placeholder="e.g. prefers morning delivery">
+      </div>
+    </details>
     <input type="hidden" id="jobRef" value="">
     <input type="hidden" id="jobRefSelect" value="">
-    <div id="custPrevBox" class="out-box hidden"><span id="prevLabel">Previous outstanding:</span> <span id="prevOut">Rs 0</span></div>
   </div>
 
   <div class="card">
     <h2><i>🔩</i><span data-t="secItems">Items</span></h2>
-    <p class="hint" data-t="hintItems" style="margin:-4px 0 8px">Tap the item box to search, or type your own item. Enter rates manually.</p>
+    <p class="hint" data-t="hintItems" style="margin:-4px 0 8px">Search item or type your own · enter rates</p>
     <div id="itemsBody"></div>
     <div class="grid2" style="margin-top:8px">
       <button class="btn b-ghost" style="width:100%" onclick="addItem()" data-t="btnAddItem">+ Add Item</button>
@@ -246,45 +267,52 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 
   <div class="card">
     <h2><i>💰</i><span data-t="secPayment">Payment</span></h2>
-    <div class="row">
-      <div><label data-t="lblTax">Tax %</label><input type="number" id="taxPct" value="0" min="0" step="0.5" inputmode="decimal" oninput="recalcPay()"></div>
-      <div><label data-t="lblDiscount">Discount Rs</label><input type="number" id="discount" value="0" min="0" inputmode="decimal" oninput="recalcPay()"></div>
-    </div>
-    <label data-t="lblAdvance">Advance / Paid Now (Rs)</label>
-    <input type="number" id="advance" value="0" min="0" inputmode="decimal" oninput="recalcPay()">
-    <div class="sum" style="margin-top:12px">
+    <label data-t="lblAdvance">Paid now / Advance (Rs)</label>
+    <input type="number" id="advance" value="0" min="0" inputmode="decimal" oninput="recalcPay()" onfocus="this.select()">
+    <div class="sum" style="margin-top:10px">
       <div class="row">
-        <div><div class="l" data-t="lblTotal">This Invoice Total</div><div class="big" id="dispTotal">Rs 0</div></div>
-        <div><div class="l" data-t="lblRemain">This Invoice Remaining</div><div class="big rem" id="dispRemain">Rs 0</div></div>
+        <div><div class="l" data-t="lblTotal">Total</div><div class="big" id="dispTotal">Rs 0</div></div>
+        <div><div class="l" data-t="lblRemain">Remaining</div><div class="big rem" id="dispRemain">Rs 0</div></div>
       </div>
       <div class="go" id="dispGrandOut"></div>
     </div>
+    <details style="margin-top:8px">
+      <summary style="font-size:.82rem;font-weight:700;color:var(--navy);cursor:pointer">Tax / Discount ▾</summary>
+      <div class="row" style="margin-top:8px">
+        <div><label data-t="lblTax">Tax %</label><input type="number" id="taxPct" value="0" min="0" step="0.5" inputmode="decimal" oninput="recalcPay()"></div>
+        <div><label data-t="lblDiscount">Discount Rs</label><input type="number" id="discount" value="0" min="0" inputmode="decimal" oninput="recalcPay()"></div>
+      </div>
+    </details>
   </div>
 
-  <div class="card">
-    <h2><i>✍️</i><span data-t="secSign">Notes, Signature &amp; Stamp</span></h2>
-    <label data-t="lblNotes">Notes</label>
-    <textarea id="notes" rows="2">Payment due on receipt. Thank you for choosing Al Ghani Steel Arts.</textarea>
-    <label data-t="lblSign">Signature Name</label><input id="signName" value="Ghulam Yaseen">
-    <div class="sigbox" style="margin-top:10px">
-      <canvas id="stampPrev" width="160" height="160"></canvas>
-      <img id="sigPrev" alt="signature">
-      <div style="flex:1">
-        <label class="ck"><input type="checkbox" id="useSig" checked><span data-t="lblUseSig">Add signature</span></label>
-        <label class="ck"><input type="checkbox" id="useStamp" checked><span data-t="lblUseStamp">Add business stamp</span></label>
-        <label class="ck"><input type="checkbox" id="useHist"><span data-t="lblUseHist">📜 Include account history on invoice</span></label>
+    <div class="card">
+    <details>
+      <summary style="font-size:.9rem;font-weight:800;color:var(--navy);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px"><i>✍️</i> Notes, Signature &amp; Options ▾</summary>
+      <div style="margin-top:10px">
+        <label data-t="lblNotes">Notes</label>
+        <textarea id="notes" rows="2">Payment due on receipt. Thank you for choosing Al Ghani Steel Arts.</textarea>
+        <label data-t="lblSign">Signature Name</label><input id="signName" value="Ghulam Yaseen">
+        <div class="sigbox" style="margin-top:10px">
+          <canvas id="stampPrev" width="160" height="160"></canvas>
+          <img id="sigPrev" alt="signature">
+          <div style="flex:1">
+            <label class="ck"><input type="checkbox" id="useSig" checked><span data-t="lblUseSig">Add signature</span></label>
+            <label class="ck"><input type="checkbox" id="useStamp" checked><span data-t="lblUseStamp">Add business stamp</span></label>
+            <label class="ck"><input type="checkbox" id="useHist"><span data-t="lblUseHist">📜 Include account history on invoice</span></label>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="bank" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    </details>
+    <div class="bank" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:10px">
       <div style="flex:1;min-width:180px">
         <strong id="bankTitle" data-t="bankTitle">Payment (Ghulam Yaseen)</strong>
         <div class="bank-lines">Nayapay/Easypaisa: <b>0333 7681305</b><br>JazzCash: <b>0312 7080109</b><br>UBL: <b>0411332662464</b></div>
       </div>
-      <canvas id="payQrPrev" width="164" height="164" style="width:110px;height:110px;border-radius:8px;background:#fff;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25);image-rendering:pixelated" title="QR — also printed on invoice"></canvas>
+      <canvas id="payQrPrev" width="164" height="164" style="width:90px;height:90px;border-radius:8px;background:#fff;flex:none;box-shadow:0 2px 8px rgba(0,0,0,.25);image-rendering:pixelated" title="QR — also printed on invoice"></canvas>
     </div>
   </div>
 
-  <div class="card">
+<div class="card">
     <h2><i>🖨️</i><span data-t="secOutput">Create Invoice</span></h2>
     <button class="btn b-navy" style="width:100%" onclick="saveAndGenerate()" data-t="btnGen">💾 Save Invoice</button>
     <div class="grid2">
@@ -342,7 +370,12 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
   </div>
   <div class="card">
     <h2><i>👥</i><span data-t="secCust">Customer Records</span></h2>
-    <input id="custSearch" data-ph="phSearchCust" placeholder="Search customer..." oninput="renderCustList()" style="margin-bottom:12px">
+    <input id="custSearch" data-ph="phSearchCust" placeholder="Search name / phone / area..." oninput="renderCustList()" style="margin-bottom:8px">
+    <div class="chips" style="margin-bottom:10px" id="custFilterChips">
+      <button type="button" class="on" id="cfAll" onclick="setCustFilter('all')">All</button>
+      <button type="button" id="cfOut" onclick="setCustFilter('out')">Outstanding only</button>
+      <button type="button" id="cfCred" onclick="setCustFilter('cred')">Credit only</button>
+    </div>
     <div id="custList"></div>
   </div>
   <div class="card" id="toolsCard">
@@ -393,8 +426,8 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
 </main>
 
 <div class="sticky" id="stickyBar"><div class="in">
-  <div class="t"><small data-t="lblTotal">This Invoice Total</small><b id="sbTotal">Rs 0</b><b class="r" id="sbRemain"></b></div>
-  <button class="btn b-gold" onclick="saveAndGenerate()" data-t="btnSaveShort">💾 Save</button>
+  <div class="t"><small data-t="lblTotal">Total</small><b id="sbTotal">Rs 0</b><b class="r" id="sbRemain"></b></div>
+  <button class="btn b-gold" style="min-width:110px;font-size:.95rem;padding:10px 16px" onclick="saveAndGenerate()" data-t="btnSaveShort">💾 Save</button>
 </div></div>
 <nav class="tabbar">
   <button class="on" id="tabInv" onclick="showTab('inv')"><span>📄</span><em data-t="invTabL" style="font-style:normal">Invoice</em></button>
@@ -1062,7 +1095,7 @@ function suggestCust(){
 }
 function pickCust(id){
   const c=loadDB().find(x=>x.id===id);if(!c)return;
-  el('custName').value=c.name;el('custHouse').value=c.house||'';el('custPhone').value=c.phone||'';el('custContact').value=c.address||'';
+  el('custName').value=c.name;el('custHouse').value=c.house||'';el('custPhone').value=c.phone||'';el('custContact').value=c.address||'';if(el('custNote'))el('custNote').value=c.note||'';
   el('custSuggest').style.display='none';updatePrev();
 }
 function onJobSelect(){
@@ -1590,8 +1623,8 @@ function saveAndGenerate(){
   const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AG-'+Date.now());
   const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items,sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
   const db=loadDB();let c=findCustIn(db,name,v('custPhone'));
-  if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:normalizePhone(v('custPhone')),address:v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
-  else{c.house=v('custHouse')||c.house;c.phone=normalizePhone(v('custPhone'))||c.phone;c.address=v('custContact')||c.address}
+  if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:normalizePhone(v('custPhone')),address:v('custContact'),note:(v('custNote')||'').trim(),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
+  else{c.house=v('custHouse')||c.house;c.phone=normalizePhone(v('custPhone'))||c.phone;c.address=v('custContact')||c.address;const nt=(v('custNote')||'').trim();if(nt)c.note=nt}
   const prevBefore=prevOutFor(c,invNo);
   c.invoices=(c.invoices||[]).filter(i=>!(i.invNo===invNo&&i.invNo!=='PAY'));
   c.invoices.unshift(inv);recompute(c);
@@ -1607,7 +1640,7 @@ function saveAndGenerate(){
 function newInvoice(){
   if(!confirm(lang==='ur'?'نئی انوائس شروع کریں؟ (موجودہ فارم صاف ہو جائے گا)':'Start a new invoice? The current form will be cleared.'))return;
   el('itemsBody').innerHTML='';addItem();
-  ['custName','custHouse','custPhone','custContact','jobRef'].forEach(i=>el(i).value='');
+  ['custName','custHouse','custPhone','custContact','custNote','jobRef'].forEach(i=>{const e=el(i);if(e)e.value=''});
   el('jobRefSelect').value='';el('advance').value=0;el('discount').value=0;
   const now=new Date();el('invDate').value=localDate(now);el('invTime').value=localTime(now);el('invNo').value=genInvNo();
   window._reusePastItems=null;
@@ -1625,18 +1658,28 @@ function renderTotals(){
   el('totPendSub').textContent=sub;
 }
 function renderCustList(){
-  // Ensure credit field is up to date for older saved data
   let all=loadDB();let dirty=false;
   all.forEach(c=>{const before=c.credit;recompute(c);if(c.credit!==before)dirty=true});
   if(dirty)saveDB(all);
   renderTotals();
-  const q=(v('custSearch')||'').toLowerCase();
+  const q=(v('custSearch')||'').toLowerCase().trim();
+  const filter=window._custFilter||'all';
   let db=loadDB().slice().sort((a,b)=>{
-    // Outstanding first, then credit
     const ao=a.outstanding||0,bo=b.outstanding||0;
     if(bo!==ao)return bo-ao;
     return (b.credit||0)-(a.credit||0);
-  });if(q)db=db.filter(c=>c.name.toLowerCase().includes(q)||(c.phone||'').includes(q));
+  });
+  if(filter==='out')db=db.filter(c=>(c.outstanding||0)>0);
+  if(filter==='cred')db=db.filter(c=>(c.credit||0)>0);
+  if(q)db=db.filter(c=>{
+    const hay=((c.name||'')+' '+(c.phone||'')+' '+(c.house||'')+' '+(c.address||'')+' '+(c.note||'')).toLowerCase();
+    return hay.includes(q);
+  });
+  try{
+    ['cfAll','cfOut','cfCred'].forEach(id=>{const b=el(id);if(b)b.classList.remove('on')});
+    const map={all:'cfAll',out:'cfOut',cred:'cfCred'};
+    const b=el(map[filter]);if(b)b.classList.add('on');
+  }catch(e){}
   const box=el('custList');
   if(!db.length){box.innerHTML='<p class="hint">'+tr('noCust')+'</p>';return}
   box.innerHTML=db.map(c=>{
@@ -1658,6 +1701,15 @@ function renderCustList(){
     }).join('')||'<div>—</div>';
     const meta=esc([c.phone,c.house,c.address].filter(Boolean).join(' · '));
     const invN=(c.invoices||[]).length;
+    let lastInv='', lastPay='';
+    (c.invoices||[]).forEach(i=>{
+      if(i.invNo==='PAY'){if(!lastPay||(i.date||'')>lastPay)lastPay=i.date||'';}
+      else{if(!lastInv||(i.date||'')>lastInv)lastInv=i.date||'';}
+    });
+    const lastBits=[];
+    if(lastInv)lastBits.push(L('Last inv','آخری انوائس')+': '+lastInv);
+    if(lastPay)lastBits.push(L('Last pay','آخری ادائیگی')+': '+lastPay);
+    const noteLine=c.note?'<div class="meta" style="color:var(--gold2);font-style:italic">📝 '+esc(c.note)+'</div>':'';
     return `<div class="hist-card" id="hc-${c.id}" onclick="toggleCustCard('${c.id}',event)">
       <div class="hc-summary">
         <div class="avatar">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div>
@@ -1667,12 +1719,22 @@ function renderCustList(){
       </div>
       <div class="hc-detail">
         ${meta?`<div class="meta">${meta}</div>`:''}
+        ${noteLine}
+        ${lastBits.length?`<div class="meta" style="opacity:.85">${lastBits.join(' · ')}</div>`:''}
         <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}${invN?`<span>${invN} inv</span>`:''}</div>
         <div class="hist-list">${hist}</div>
-        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}${c.phone?`<a class="btn b-ghost b-sm" style="text-decoration:none;text-align:center" href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">📞 ${L('Call','کال')}</a><button class="btn b-ghost b-sm" onclick="event.stopPropagation();chatCust('${c.id}')">💬 WA</button>`:''}<button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
+        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}${c.phone?`<a class="btn b-ghost b-sm" style="text-decoration:none;text-align:center" href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">📞 ${L('Call','کال')}</a><button class="btn b-ghost b-sm" onclick="event.stopPropagation();chatCust('${c.id}')">💬 WA</button>`:''}<button class="btn b-ghost b-sm" onclick="event.stopPropagation();editCustNote('${c.id}')">📝</button><button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
       </div>
     </div>`;
   }).join('');
+}
+function setCustFilter(f){window._custFilter=f;renderCustList()}
+function editCustNote(id){
+  const db=loadDB(),c=db.find(x=>x.id===id);if(!c)return;
+  const n=prompt(L('Customer notes (private):','گاہک نوٹس (نجی):'),c.note||'');
+  if(n===null)return;
+  c.note=(n||'').trim();saveDB(db);renderCustList();
+  try{toast(L('Note saved','نوٹ محفوظ'),true)}catch(e){}
 }
 function custPastItems(c,excludeInvNo){
   if(!c||!c.invoices)return[];
@@ -1735,13 +1797,22 @@ function addPayment(id){
 }
 function remindCust(id){
   const c=loadDB().find(x=>x.id===id);if(!c)return;
-  const t=L('Assalam o Alaikum '+c.name+', this is a reminder from Al Ghani Steel Arts: your pending balance is '+fmt(c.outstanding||0)+'. Please pay when convenient. Thank you.','السلام علیکم '+c.name+'، الغنی سٹیل آرٹس کی طرف سے یاد دہانی: آپ کی باقی رقم '+fmt(c.outstanding||0)+' ہے۔ براہ کرم سہولت سے ادا کر دیں۔ شکریہ۔');
-  window.open('https://wa.me/'+toWaPhone(c.phone)+'?text='+encodeURIComponent(t),'_blank');
+  const def=L('Assalam o Alaikum '+c.name+', this is a reminder from Al Ghani Steel Arts: your pending balance is '+fmt(c.outstanding||0)+'. Please pay when convenient. Thank you.','السلام علیکم '+c.name+'، الغنی سٹیل آرٹس کی طرف سے یاد دہانی: آپ کی باقی رقم '+fmt(c.outstanding||0)+' ہے۔ براہ کرم سہولت سے ادا کر دیں۔ شکریہ۔');
+  const t=prompt(L('Edit reminder message:','یاد دہانی کا پیغام ایڈٹ کریں:'),def);
+  if(t===null||!t.trim())return;
+  window.open('https://wa.me/'+toWaPhone(c.phone)+'?text='+encodeURIComponent(t.trim()),'_blank');
 }
 function chatCust(id){
   const c=loadDB().find(x=>x.id===id);if(!c||!c.phone)return;
   window.open('https://wa.me/'+toWaPhone(c.phone),'_blank');
 }
+function toggleDark(){
+  const on=document.documentElement.classList.toggle('dark');
+  try{localStorage.setItem('alghani_dark',on?'1':'0')}catch(e){}
+  const b=el('btnDark');if(b)b.textContent=on?'☀️':'🌙';
+}
+(function(){try{if(localStorage.getItem('alghani_dark')==='1'){document.documentElement.classList.add('dark');const b=el('btnDark');if(b)b.textContent='☀️'}}catch(e){}})();
+
 function download(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.download=name;a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},3000)}
 function bkState(){try{return JSON.parse(localStorage.getItem('alghani_bk')||'{}')}catch(e){return{}}}
 function bkSet(o){try{localStorage.setItem('alghani_bk',JSON.stringify(o))}catch(e){}}
