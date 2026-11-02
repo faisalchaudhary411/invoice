@@ -235,6 +235,13 @@ details.biz summary{font-weight:800;color:var(--navy);font-size:.95rem;cursor:po
         <button class="btn b-ghost" onclick="closeCustomItem()" data-t="btnCancel">Cancel</button>
       </div>
     </div>
+    <button class="btn b-ghost" style="width:100%;margin-top:8px" onclick="openMyItemsMgr()">💲 Manage My Items (rename / delete)</button>
+    <div id="myItemsPanel" class="hidden" style="margin-top:10px;background:#f1f5f9;border-radius:12px;padding:12px;border:1px solid var(--line)">
+      <div style="font-weight:800;color:var(--navy);margin-bottom:8px">★ My saved items</div>
+      <p class="hint" style="margin:0 0 8px">✎ rename · ✕ delete</p>
+      <div id="myItemsList" style="max-height:320px;overflow:auto"></div>
+      <button class="btn b-ghost b-sm" style="margin-top:8px" onclick="closeMyItemsMgr()">Close</button>
+    </div>
   </div>
 
   <div class="card">
@@ -974,6 +981,13 @@ function toWaPhone(p){
   if(d.startsWith('3')&&d.length===10)return '92'+d;
   return d;
 }
+function normalizePhone(p){
+  let d=digits(p);if(!d)return '';
+  if(d.startsWith('92')&&d.length>=12)d='0'+d.slice(2);
+  if(d.startsWith('3')&&d.length===10)d='0'+d;
+  if(d.length===11&&d.startsWith('0'))return d.slice(0,4)+' '+d.slice(4,7)+' '+d.slice(7);
+  return d;
+}
 function custKey(c){return (c.name||'').trim().toLowerCase()}
 function applyDeletes(db){
   const D=loadDel(),out=[];
@@ -1166,6 +1180,45 @@ const CUSTOM_KEY='alghani_custom_items';
 function loadCustomItems(){try{const a=JSON.parse(localStorage.getItem(CUSTOM_KEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
 function saveCustomItems(arr){try{localStorage.setItem(CUSTOM_KEY,JSON.stringify(arr))}catch(e){}}
 function getAllPresets(){return PRESET.concat(loadCustomItems())}
+const keyName=s=>String(s||'').toLowerCase().replace(/\s+/g,' ').trim();
+function openMyItemsMgr(){
+  const p=el('myItemsPanel');
+  p.classList.toggle('hidden');
+  if(!p.classList.contains('hidden'))renderMyItems();
+}
+function closeMyItemsMgr(){el('myItemsPanel').classList.add('hidden')}
+function renderMyItems(){
+  const arr=loadCustomItems(),box=el('myItemsList');
+  if(!arr.length){box.innerHTML='<p class="hint">'+L('No custom items yet. Use + Custom Item first.','ابھی کوئی کسٹم آئٹم نہیں۔ پہلے + کسٹم آئٹم استعمال کریں۔')+'</p>';return}
+  box.innerHTML=arr.map((p,i)=>{
+    return '<div style="display:flex;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid #e3e8f0"><div style="flex:1;min-width:0;font-size:.86rem;font-weight:700">'+esc(lang==='ur'?(p.nameUr||p.name):p.name)+
+      (p.nameUr&&p.nameUr!==p.name?'<small style="display:block;color:var(--mut);font-weight:400">'+esc(p.name)+'</small>':'')+
+      '</div><button class="btn b-ghost b-sm" title="Rename" onclick="renameMyItem('+i+')">✎</button><button class="btn b-red b-sm" onclick="delMyItem('+i+')">✕</button></div>';
+  }).join('');
+}
+function delMyItem(i){
+  const arr=loadCustomItems();if(!arr[i])return;
+  if(!confirm(L('Remove this item from your list?','یہ آئٹم اپنی فہرست سے ہٹائیں؟')))return;
+  arr.splice(i,1);saveCustomItems(arr);renderMyItems();
+  try{toast(L('Deleted','حذف ہو گیا'),true)}catch(e){}
+}
+function renameMyItem(i){
+  const arr=loadCustomItems();const p=arr[i];if(!p)return;
+  const newEn=prompt(L('New name (English):','نیا نام (انگریزی):'),p.name);
+  if(newEn==null)return;
+  const name=newEn.trim();
+  if(!name){alert(tr('customNeedName'));return}
+  const newUrRaw=prompt(L('New name (Urdu) — optional:','نیا نام (اردو) — اختیاری:'),p.nameUr||p.name);
+  if(newUrRaw==null)return;
+  const nameUr=(newUrRaw||'').trim()||name;
+  const oldKey=keyName(p.name);
+  if(keyName(name)!==oldKey && arr.some(x=>keyName(x.name)===keyName(name))){
+    alert(L('This name already exists','یہ نام پہلے سے موجود ہے'));return;
+  }
+  p.name=name;p.nameUr=nameUr;
+  saveCustomItems(arr);renderMyItems();
+  try{toast(L('Name updated','نام تبدیل ہو گیا'),true)}catch(e){}
+}
 const WIDTH_OPTS=["","2 ft","2.5 ft","2.75 ft","3 ft","3.5 ft","3.75 ft","4 ft","4.5 ft","4.75 ft","5 ft","5.5 ft","6 ft"];
 const LENGTH_OPTS=["","6.5 ft","7 ft","8 ft","8.5 ft","9 ft"];
 const DEPTH_OPTS=["","5 inch","5.5 inch","10 inch"];
@@ -1537,8 +1590,8 @@ function saveAndGenerate(){
   const adv=+v('advance')||0;const remain=Math.max(0,grand-adv);const invNo=v('invNo').trim()||('AG-'+Date.now());
   const inv={invNo,date:v('invDate'),time:v('invTime'),job:v('jobRef'),items,sub,tax:taxA,discount:disc,total:grand,advance:adv,remaining:remain,ts:Date.now()};
   const db=loadDB();let c=findCustIn(db,name,v('custPhone'));
-  if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:v('custPhone'),address:v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
-  else{c.house=v('custHouse')||c.house;c.phone=v('custPhone')||c.phone;c.address=v('custContact')||c.address}
+  if(!c){c={id:'C'+Date.now(),name,house:v('custHouse'),phone:normalizePhone(v('custPhone')),address:v('custContact'),totalBilled:0,totalPaid:0,outstanding:0,invoices:[]};db.push(c)}
+  else{c.house=v('custHouse')||c.house;c.phone=normalizePhone(v('custPhone'))||c.phone;c.address=v('custContact')||c.address}
   const prevBefore=prevOutFor(c,invNo);
   c.invoices=(c.invoices||[]).filter(i=>!(i.invNo===invNo&&i.invNo!=='PAY'));
   c.invoices.unshift(inv);recompute(c);
@@ -1616,7 +1669,7 @@ function renderCustList(){
         ${meta?`<div class="meta">${meta}</div>`:''}
         <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}${invN?`<span>${invN} inv</span>`:''}</div>
         <div class="hist-list">${hist}</div>
-        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}<button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
+        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}${c.phone?`<a class="btn b-ghost b-sm" style="text-decoration:none;text-align:center" href="tel:${esc(c.phone)}" onclick="event.stopPropagation()">📞 ${L('Call','کال')}</a><button class="btn b-ghost b-sm" onclick="event.stopPropagation();chatCust('${c.id}')">💬 WA</button>`:''}<button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
       </div>
     </div>`;
   }).join('');
@@ -1684,6 +1737,10 @@ function remindCust(id){
   const c=loadDB().find(x=>x.id===id);if(!c)return;
   const t=L('Assalam o Alaikum '+c.name+', this is a reminder from Al Ghani Steel Arts: your pending balance is '+fmt(c.outstanding||0)+'. Please pay when convenient. Thank you.','السلام علیکم '+c.name+'، الغنی سٹیل آرٹس کی طرف سے یاد دہانی: آپ کی باقی رقم '+fmt(c.outstanding||0)+' ہے۔ براہ کرم سہولت سے ادا کر دیں۔ شکریہ۔');
   window.open('https://wa.me/'+toWaPhone(c.phone)+'?text='+encodeURIComponent(t),'_blank');
+}
+function chatCust(id){
+  const c=loadDB().find(x=>x.id===id);if(!c||!c.phone)return;
+  window.open('https://wa.me/'+toWaPhone(c.phone),'_blank');
 }
 function download(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.download=name;a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},3000)}
 function bkState(){try{return JSON.parse(localStorage.getItem('alghani_bk')||'{}')}catch(e){return{}}}
