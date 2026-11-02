@@ -806,6 +806,7 @@ function refreshPayQR(){
 const el=id=>document.getElementById(id);
 const v=id=>{const e=el(id);return e?e.value:''};
 const tr=k=>T[lang][k]||T.en[k]||k;
+const L=(en,ur)=>lang==='ur'?ur:en;
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>Math.round(n).toLocaleString('en-PK');
 const fmt=n=>'Rs '+num(n);
@@ -966,6 +967,13 @@ function mergeDel(r){
 }
 function invKey(i){return i.invNo==='PAY'?'PAY|'+i.ts:String(i.invNo)}
 function digits(x){return String(x||'').replace(/\D/g,'')}
+function toWaPhone(p){
+  let d=digits(p);if(!d)return '';
+  if(d.startsWith('92')&&d.length>=11)return d;
+  if(d.startsWith('0')&&d.length===11)return '92'+d.slice(1);
+  if(d.startsWith('3')&&d.length===10)return '92'+d;
+  return d;
+}
 function custKey(c){return (c.name||'').trim().toLowerCase()}
 function applyDeletes(db){
   const D=loadDel(),out=[];
@@ -1608,7 +1616,7 @@ function renderCustList(){
         ${meta?`<div class="meta">${meta}</div>`:''}
         <div class="nums"><span>${tr('billed')}: ${fmt(c.totalBilled||0)}</span><span>${tr('paid')}: ${fmt(c.totalPaid||0)}</span>${balSpan}${invN?`<span>${invN} inv</span>`:''}</div>
         <div class="hist-list">${hist}</div>
-        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button><button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
+        <div class="hc-act"><button class="btn b-navy b-sm" onclick="event.stopPropagation();loadCustToInv('${c.id}')">${tr('useInInv')}</button><button class="btn b-ghost b-sm" onclick="event.stopPropagation();addPayment('${c.id}')">${tr('addPay')}</button>${(c.outstanding||0)>0&&!c.walkin?`<button class="btn b-gold b-sm" onclick="event.stopPropagation();remindCust('${c.id}')">🔔 ${L('Remind','یاد دہانی')}</button>`:''}<button class="btn b-red b-sm" onclick="event.stopPropagation();delCust('${c.id}')">${tr('del')}</button></div>
       </div>
     </div>`;
   }).join('');
@@ -1671,6 +1679,11 @@ function addPayment(id){
   const db=loadDB();const c=db.find(x=>x.id===id);if(!c)return;
   c.invoices=c.invoices||[];c.invoices.unshift({invNo:'PAY',date:localDate(new Date()),job:'Payment received',items:[],total:0,advance:amt,remaining:0,ts:Date.now()});
   recompute(c);saveDB(db);renderCustList();updatePrev();toast('Payment saved',true);try{syncPushDebounced()}catch(e){}
+}
+function remindCust(id){
+  const c=loadDB().find(x=>x.id===id);if(!c)return;
+  const t=L('Assalam o Alaikum '+c.name+', this is a reminder from Al Ghani Steel Arts: your pending balance is '+fmt(c.outstanding||0)+'. Please pay when convenient. Thank you.','السلام علیکم '+c.name+'، الغنی سٹیل آرٹس کی طرف سے یاد دہانی: آپ کی باقی رقم '+fmt(c.outstanding||0)+' ہے۔ براہ کرم سہولت سے ادا کر دیں۔ شکریہ۔');
+  window.open('https://wa.me/'+toWaPhone(c.phone)+'?text='+encodeURIComponent(t),'_blank');
 }
 function download(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.download=name;a.href=u;a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove()},3000)}
 function bkState(){try{return JSON.parse(localStorage.getItem('alghani_bk')||'{}')}catch(e){return{}}}
@@ -2832,7 +2845,7 @@ async function waShareFiles(files,text,title){
     if(navigator.canShare&&navigator.canShare({files})){await navigator.share({files,title,text});toast(lang==='ur'?'انوائس شیئر ہو گئی':'Invoice shared',true);return}
   }catch(e){if(e&&e.name==='AbortError')return}
   files.forEach(f=>download(f,f.name));
-  const phone=(v('custPhone')||'').replace(/\D/g,'');
+  const phone=toWaPhone(v('custPhone'));
   window.open('https://wa.me/'+(phone||'')+'?text='+encodeURIComponent(text+'\n(Invoice downloaded — attach it in WhatsApp)'),'_blank');
   toast(lang==='ur'?'فائل ڈاؤن لوڈ + واٹس ایپ کھلا':'Downloaded — attach in WhatsApp',true);
 }
